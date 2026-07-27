@@ -1,26 +1,14 @@
+const Alumni = require("../models/Alumni");
 const MentorshipRequest = require("../models/MentorshipRequest");
-const User = require("../models/User");
 
 // @route  GET /api/mentorship/recommended
-// Returns a list of alumni the logged-in student can send a mentorship
-// request to. Excludes alumni the student already has a pending or
-// accepted request with.
+// Returns alumni who are public and open to mentoring, for the student-side
+// "Recommended Mentors" grid.
 const getRecommendedMentors = async (req, res) => {
   try {
-    const studentId = req.user.id;
-
-    // Alumni already requested (pending/accepted) — don't recommend them again
-    const existingRequests = await MentorshipRequest.find({
-      student: studentId,
-      status: { $in: ["pending", "accepted"] },
-    }).select("alumni");
-
-    const excludedAlumniIds = existingRequests.map((r) => r.alumni.toString());
-
-    const mentors = await User.find({
-      role: "alumni",
-      _id: { $nin: excludedAlumniIds },
-    }).select("fullName email profileImage department jobTitle company skills");
+    const mentors = await Alumni.find({ isPublic: true, openToMentorship: true })
+      .populate("user", "fullName email")
+      .limit(20);
 
     res.json(mentors);
   } catch (error) {
@@ -29,36 +17,35 @@ const getRecommendedMentors = async (req, res) => {
 };
 
 // @route  POST /api/mentorship/request
-// @body   { alumniId, message }
-// Student sends a mentorship request to a specific alumni.
+// @body   { alumniId, message? }  — alumniId is the Alumni document's own _id
+// Creates a mentorship request from the logged-in student to that alumni.
 const sendMentorshipRequest = async (req, res) => {
   try {
     const { alumniId, message } = req.body;
-    const studentId = req.user.id;
+    const studentUserId = req.user.id;
 
     if (!alumniId) {
       return res.status(400).json({ message: "alumniId is required" });
     }
 
-    const alumni = await User.findById(alumniId);
-    if (!alumni || alumni.role !== "alumni") {
+    const alumni = await Alumni.findById(alumniId);
+    if (!alumni) {
       return res.status(404).json({ message: "Alumni not found" });
     }
 
-    // Avoid duplicate pending requests to the same alumni
-    const alreadyPending = await MentorshipRequest.findOne({
-      student: studentId,
-      alumni: alumniId,
+    // Don't let a student spam the same alumni while a request is still pending.
+    const existingPending = await MentorshipRequest.findOne({
+      student: studentUserId,
+      alumni: alumni.user,
       status: "pending",
     });
-
-    if (alreadyPending) {
-      return res.status(400).json({ message: "You already have a pending request with this alumni" });
+    if (existingPending) {
+      return res.status(400).json({ message: "You already have a pending request with this mentor" });
     }
 
     const request = await MentorshipRequest.create({
-      student: studentId,
-      alumni: alumniId,
+      student: studentUserId,
+      alumni: alumni.user,
       message,
     });
 
@@ -69,11 +56,12 @@ const sendMentorshipRequest = async (req, res) => {
 };
 
 // @route  GET /api/mentorship/my-requests
-// All mentorship requests the logged-in student has sent, most recent first.
+// Returns every mentorship request the logged-in student has sent, newest first —
+// powers the "Request Status" panel.
 const getMyRequests = async (req, res) => {
   try {
     const requests = await MentorshipRequest.find({ student: req.user.id })
-      .populate("alumni", "fullName email profileImage department jobTitle company")
+      .populate("alumni", "fullName email")
       .sort({ createdAt: -1 });
 
     res.json(requests);
@@ -82,8 +70,4 @@ const getMyRequests = async (req, res) => {
   }
 };
 
-module.exports = {
-  getRecommendedMentors,
-  sendMentorshipRequest,
-  getMyRequests,
-};
+module.exports = { getRecommendedMentors, sendMentorshipRequest, getMyRequests };
