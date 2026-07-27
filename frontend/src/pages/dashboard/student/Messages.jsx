@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { useSelector } from "react-redux";
-import { useLocation } from "react-router-dom";
 import {
   Search,
   SquarePen,
@@ -14,21 +13,67 @@ import {
   Check,
   CheckCheck,
   Loader2,
+  X,
+  FileText,
+  Trash2,
 } from "lucide-react";
 import { connectSocket, getSocket } from "../../../utils/socket";
 
 /**
- * Messages page — file: src/pages/dashboard/student/Messages.jsx
- * Now real-time: REST loads history, Socket.io delivers live messages.
+ * Messages page — file: src/pages/dashboard/alumni/Messages.jsx
+ * Identical to the student version — the chat UI is role-agnostic,
+ * it just shows whoever the other participant in the conversation is.
  */
+
+const API_BASE = "http://localhost:5000";
 
 const getToken = () => JSON.parse(localStorage.getItem("user"))?.token;
 const authHeader = () => ({ headers: { Authorization: `Bearer ${getToken()}` } });
 
-export default function Messages() {
+// Resolves a stored path (e.g. "/uploads/avatars/xxx.png") or a full URL into
+// something an <img> tag can use directly.
+const resolveUrl = (path) => {
+  if (!path) return null;
+  return path.startsWith("http") ? path : `${API_BASE}${path}`;
+};
+
+// Avatar with graceful fallback to initials when the user has no profileImage.
+function Avatar({ user, size = 40 }) {
+  const src = resolveUrl(user?.profileImage);
+  const initials = user?.fullName
+    ?.split(" ")
+    .map((n) => n[0])
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
+
+  if (src) {
+    return (
+      <img
+        src={src}
+        alt={user?.fullName}
+        style={{ height: size, width: size }}
+        className="rounded-full object-cover shrink-0"
+        onError={(e) => {
+          e.currentTarget.style.display = "none";
+          e.currentTarget.nextSibling.style.display = "flex";
+        }}
+      />
+    );
+  }
+
+  return (
+    <div
+      style={{ height: size, width: size }}
+      className="rounded-full bg-primary/10 text-primary flex items-center justify-center text-sm font-semibold shrink-0"
+    >
+      {initials || "?"}
+    </div>
+  );
+}
+
+export default function AlumniMessages() {
   const { user } = useSelector((state) => state.auth);
-  const location = useLocation();
-  const incomingConversationId = location.state?.conversationId;
 
   const [conversations, setConversations] = useState([]);
   const [activeId, setActiveId] = useState(null);
@@ -37,7 +82,15 @@ export default function Messages() {
   const [loadingConvos, setLoadingConvos] = useState(true);
   const [loadingMessages, setLoadingMessages] = useState(false);
   const [typing, setTyping] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [filePreview, setFilePreview] = useState(null); // object URL for image preview
+  const [menuOpen, setMenuOpen] = useState(false);
+
   const bottomRef = useRef(null);
+  const fileInputRef = useRef(null); // any file (Paperclip)
+  const imageInputRef = useRef(null); // images only (ImageIcon)
+  const menuRef = useRef(null);
 
   const activeConvo = conversations.find((c) => c._id === activeId);
   const otherPerson = activeConvo?.participants.find((p) => p._id !== user._id);
@@ -48,16 +101,15 @@ export default function Messages() {
 
     socket.on("receiveMessage", (msg) => {
       setMessages((prev) => (msg.conversation === activeIdRef.current ? [...prev, msg] : prev));
-      // bump that conversation to the top of the inbox with the new preview
       setConversations((prev) =>
         prev
-          .map((c) => (c._id === msg.conversation ? { ...c, lastMessage: msg.text } : c))
+          .map((c) =>
+            c._id === msg.conversation
+              ? { ...c, lastMessage: msg.text || (msg.fileType === "image" ? "📷 Photo" : "📎 File") }
+              : c
+          )
           .sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt))
       );
-    });
-
-    socket.on("messageSent", (msg) => {
-      setMessages((prev) => [...prev, msg]);
     });
 
     socket.on("typing", ({ conversationId }) => {
@@ -67,10 +119,19 @@ export default function Messages() {
       }
     });
 
+    // Fired when the other participant deletes the conversation.
+    socket.on("conversationDeleted", ({ conversationId }) => {
+      setConversations((prev) => prev.filter((c) => c._id !== conversationId));
+      if (activeIdRef.current === conversationId) {
+        setActiveId(null);
+        setMessages([]);
+      }
+    });
+
     return () => {
       socket.off("receiveMessage");
-      socket.off("messageSent");
       socket.off("typing");
+      socket.off("conversationDeleted");
     };
   }, []);
 
@@ -81,20 +142,24 @@ export default function Messages() {
     activeIdRef.current = activeId;
   }, [activeId]);
 
+  // Close the three-dots menu on outside click
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (menuRef.current && !menuRef.current.contains(e.target)) {
+        setMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   // 2. Load the conversation list on mount
   useEffect(() => {
     const fetchConversations = async () => {
       try {
-        const { data } = await axios.get(
-          "http://localhost:5000/api/messages/conversations",
-          authHeader()
-        );
+        const { data } = await axios.get(`${API_BASE}/api/messages/conversations`, authHeader());
         setConversations(data);
-        if (incomingConversationId) {
-          setActiveId(incomingConversationId);
-        } else if (data.length > 0) {
-          setActiveId(data[0]._id);
-        }
+        if (data.length > 0) setActiveId(data[0]._id);
       } catch (err) {
         console.error(err);
       } finally {
@@ -110,10 +175,7 @@ export default function Messages() {
     const fetchMessages = async () => {
       setLoadingMessages(true);
       try {
-        const { data } = await axios.get(
-          `http://localhost:5000/api/messages/${activeId}`,
-          authHeader()
-        );
+        const { data } = await axios.get(`${API_BASE}/api/messages/${activeId}`, authHeader());
         setMessages(data);
       } catch (err) {
         console.error(err);
@@ -129,15 +191,85 @@ export default function Messages() {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  const handleSend = () => {
-    if (!draft.trim() || !activeConvo || !otherPerson) return;
-    const socket = getSocket();
-    socket.emit("sendMessage", {
-      conversationId: activeId,
-      text: draft,
-      toUserId: otherPerson._id,
-    });
-    setDraft("");
+  // Clean up the object URL used for image previews
+  useEffect(() => {
+    return () => {
+      if (filePreview) URL.revokeObjectURL(filePreview);
+    };
+  }, [filePreview]);
+
+  const handlePickFile = (e, isImage) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (isImage && !file.type.startsWith("image/")) {
+      alert("Please select an image file.");
+      return;
+    }
+
+    setSelectedFile(file);
+    setFilePreview(file.type.startsWith("image/") ? URL.createObjectURL(file) : null);
+    e.target.value = ""; // allow re-selecting the same file later
+  };
+
+  const clearSelectedFile = () => {
+    setSelectedFile(null);
+    setFilePreview(null);
+  };
+
+  // Sends via the REST endpoint (multer handles the optional file), then
+  // notifies the other participant live over the socket with the saved message.
+  const handleSend = async () => {
+    if ((!draft.trim() && !selectedFile) || !activeConvo || !otherPerson || sending) return;
+
+    setSending(true);
+    try {
+      const formData = new FormData();
+      formData.append("text", draft.trim());
+      if (selectedFile) formData.append("file", selectedFile);
+
+      const { data: savedMessage } = await axios.post(
+        `${API_BASE}/api/messages/${activeId}`,
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${getToken()}`,
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
+      setMessages((prev) => [...prev, savedMessage]);
+      setConversations((prev) =>
+        prev
+          .map((c) =>
+            c._id === activeId
+              ? {
+                  ...c,
+                  lastMessage:
+                    savedMessage.text || (savedMessage.fileType === "image" ? "📷 Photo" : "📎 File"),
+                  updatedAt: new Date().toISOString(),
+                }
+              : c
+          )
+          .sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt))
+      );
+
+      // Push it live to the other participant. Requires a matching listener
+      // in server.js, e.g.:
+      //   socket.on("notifyMessage", ({ toUserId, message }) => {
+      //     io.to(toUserId).emit("receiveMessage", message);
+      //   });
+      getSocket()?.emit("notifyMessage", { toUserId: otherPerson._id, message: savedMessage });
+
+      setDraft("");
+      clearSelectedFile();
+    } catch (err) {
+      console.error(err);
+      alert(err.response?.data?.message || "Failed to send message.");
+    } finally {
+      setSending(false);
+    }
   };
 
   const handleTyping = () => {
@@ -149,6 +281,32 @@ export default function Messages() {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSend();
+    }
+  };
+
+  const handleDeleteChat = async () => {
+    if (!activeId) return;
+    const confirmed = window.confirm("Delete this chat permanently? This cannot be undone.");
+    if (!confirmed) return;
+
+    try {
+      await axios.delete(`${API_BASE}/api/messages/conversations/${activeId}`, authHeader());
+
+      // let the other participant know their side should drop it too
+      if (otherPerson) {
+        getSocket()?.emit("deleteConversation", {
+          toUserId: otherPerson._id,
+          conversationId: activeId,
+        });
+      }
+
+      setConversations((prev) => prev.filter((c) => c._id !== activeId));
+      setMessages([]);
+      setActiveId(null);
+      setMenuOpen(false);
+    } catch (err) {
+      console.error(err);
+      alert(err.response?.data?.message || "Failed to delete conversation.");
     }
   };
 
@@ -193,11 +351,7 @@ export default function Messages() {
                     activeId === c._id ? "bg-blue-50 border-r-2 border-primary" : "hover:bg-gray-50"
                   }`}
                 >
-                  <img
-                    src={`https://i.pravatar.cc/150?u=${other?._id}`}
-                    alt={other?.fullName}
-                    className="h-11 w-11 rounded-full object-cover shrink-0"
-                  />
+                  <Avatar user={other} size={44} />
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold text-dark truncate">{other?.fullName}</p>
                     <p className="text-sm text-gray-500 truncate mt-0.5">
@@ -216,20 +370,31 @@ export default function Messages() {
         <div className="hidden sm:flex flex-1 flex-col">
           <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
             <div className="flex items-center gap-3">
-              <img
-                src={`https://i.pravatar.cc/150?u=${otherPerson?._id}`}
-                alt={otherPerson?.fullName}
-                className="h-10 w-10 rounded-full object-cover"
-              />
+              <Avatar user={otherPerson} size={40} />
               <p className="font-semibold text-dark">{otherPerson?.fullName}</p>
             </div>
             <div className="flex items-center gap-5">
               <button className="text-gray-400 hover:text-dark">
                 <Phone size={18} />
               </button>
-              <button className="text-gray-400 hover:text-dark">
-                <MoreVertical size={18} />
-              </button>
+              <div className="relative" ref={menuRef}>
+                <button
+                  onClick={() => setMenuOpen((v) => !v)}
+                  className="text-gray-400 hover:text-dark"
+                >
+                  <MoreVertical size={18} />
+                </button>
+                {menuOpen && (
+                  <div className="absolute right-0 mt-2 w-44 bg-white border border-gray-100 shadow-lg rounded-xl py-1.5 z-10">
+                    <button
+                      onClick={handleDeleteChat}
+                      className="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-500 hover:bg-red-50"
+                    >
+                      <Trash2 size={14} /> Delete Chat
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
@@ -244,15 +409,42 @@ export default function Messages() {
                 return (
                   <div key={m._id} className={`flex mb-4 ${isMe ? "justify-end" : "justify-start"}`}>
                     <div className={`max-w-[70%] flex flex-col ${isMe ? "items-end" : "items-start"}`}>
-                      <div
-                        className={`px-4 py-2.5 rounded-2xl text-sm leading-relaxed ${
-                          isMe
-                            ? "bg-primary text-white rounded-br-sm"
-                            : "bg-white text-dark rounded-bl-sm border border-gray-100"
-                        }`}
-                      >
-                        {m.text}
-                      </div>
+                      {m.fileUrl && m.fileType === "image" && (
+                        <a href={resolveUrl(m.fileUrl)} target="_blank" rel="noreferrer">
+                          <img
+                            src={resolveUrl(m.fileUrl)}
+                            alt={m.fileName || "attachment"}
+                            className="max-w-[240px] rounded-xl border border-gray-100 mb-1"
+                          />
+                        </a>
+                      )}
+
+                      {m.fileUrl && m.fileType === "file" && (
+                        <a
+                          href={resolveUrl(m.fileUrl)}
+                          target="_blank"
+                          rel="noreferrer"
+                          className={`flex items-center gap-2 px-3 py-2 rounded-xl border mb-1 text-sm ${
+                            isMe ? "bg-primary/5 border-primary/20 text-primary" : "bg-gray-50 border-gray-200 text-dark"
+                          }`}
+                        >
+                          <FileText size={16} />
+                          <span className="truncate max-w-[160px]">{m.fileName || "Attachment"}</span>
+                        </a>
+                      )}
+
+                      {m.text && (
+                        <div
+                          className={`px-4 py-2.5 rounded-2xl text-sm leading-relaxed ${
+                            isMe
+                              ? "bg-primary text-white rounded-br-sm"
+                              : "bg-white text-dark rounded-bl-sm border border-gray-100"
+                          }`}
+                        >
+                          {m.text}
+                        </div>
+                      )}
+
                       <div className="flex items-center gap-1 mt-1 px-1">
                         <span className="text-[11px] text-gray-400">
                           {new Date(m.createdAt).toLocaleTimeString([], {
@@ -260,7 +452,12 @@ export default function Messages() {
                             minute: "2-digit",
                           })}
                         </span>
-                        {isMe && (m.seen ? <CheckCheck size={12} className="text-primary" /> : <Check size={12} className="text-gray-400" />)}
+                        {isMe &&
+                          (m.seen ? (
+                            <CheckCheck size={12} className="text-primary" />
+                          ) : (
+                            <Check size={12} className="text-gray-400" />
+                          ))}
                       </div>
                     </div>
                   </div>
@@ -281,11 +478,51 @@ export default function Messages() {
           </div>
 
           <div className="border-t border-gray-100 px-6 py-4">
+            {/* Selected file / image preview, shown above the input before sending */}
+            {selectedFile && (
+              <div className="flex items-center gap-3 bg-gray-50 border border-gray-100 rounded-xl px-3 py-2 mb-2">
+                {filePreview ? (
+                  <img src={filePreview} alt="preview" className="h-12 w-12 rounded-lg object-cover" />
+                ) : (
+                  <div className="h-12 w-12 rounded-lg bg-gray-200 flex items-center justify-center">
+                    <FileText size={18} className="text-gray-500" />
+                  </div>
+                )}
+                <span className="flex-1 text-sm text-gray-600 truncate">{selectedFile.name}</span>
+                <button onClick={clearSelectedFile} className="text-gray-400 hover:text-red-500">
+                  <X size={16} />
+                </button>
+              </div>
+            )}
+
             <div className="flex items-center gap-3 bg-gray-100 rounded-2xl px-4 py-2.5">
-              <button className="text-gray-400 hover:text-dark shrink-0">
+              <input
+                type="file"
+                ref={fileInputRef}
+                className="hidden"
+                accept=".pdf,.doc,.docx,.png,.jpg,.jpeg,.webp,.gif"
+                onChange={(e) => handlePickFile(e, false)}
+              />
+              <input
+                type="file"
+                ref={imageInputRef}
+                className="hidden"
+                accept="image/*"
+                onChange={(e) => handlePickFile(e, true)}
+              />
+
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                className="text-gray-400 hover:text-dark shrink-0"
+                title="Attach file"
+              >
                 <Paperclip size={18} />
               </button>
-              <button className="text-gray-400 hover:text-dark shrink-0">
+              <button
+                onClick={() => imageInputRef.current?.click()}
+                className="text-gray-400 hover:text-dark shrink-0"
+                title="Attach image"
+              >
                 <ImageIcon size={18} />
               </button>
               <input
@@ -303,9 +540,11 @@ export default function Messages() {
               </button>
               <button
                 onClick={handleSend}
-                className="flex items-center gap-1.5 bg-primary text-white text-sm font-medium px-4 py-2 rounded-xl shrink-0 hover:opacity-90 transition-opacity"
+                disabled={sending || (!draft.trim() && !selectedFile)}
+                className="flex items-center gap-1.5 bg-primary text-white text-sm font-medium px-4 py-2 rounded-xl shrink-0 hover:opacity-90 transition-opacity disabled:opacity-50"
               >
-                Send <Send size={14} />
+                {sending ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
+                Send
               </button>
             </div>
           </div>
