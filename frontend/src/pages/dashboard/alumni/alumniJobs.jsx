@@ -1,0 +1,300 @@
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
+import axios from "axios";
+import { Plus, Briefcase, Users, TrendingUp, History, Trash2, Loader2, Lightbulb, Sparkles } from "lucide-react";
+
+const API_BASE = "http://localhost:5000/api";
+const PAGE_SIZE = 4;
+
+function StatCard({ icon: Icon, note, value, label }) {
+  return (
+    <div className="bg-white rounded-xl border border-gray-200 p-5 flex flex-col gap-2">
+      <div className="flex items-center justify-between">
+        <span className="w-9 h-9 rounded-lg bg-blue-50 text-primary flex items-center justify-center">
+          <Icon size={18} />
+        </span>
+        {note && <span className="text-sm font-medium text-primary">{note}</span>}
+      </div>
+      <span className="text-3xl font-bold text-gray-900">{value}</span>
+      <span className="text-sm text-gray-500">{label}</span>
+    </div>
+  );
+}
+
+function AvatarStack({ applicants = [], count }) {
+  const shown = applicants.slice(0, 2);
+  const extra = count - shown.length;
+  return (
+    <div className="flex items-center -space-x-2">
+      {shown.map((a, i) => (
+        <img
+          key={i}
+          src={a.avatarUrl || `https://i.pravatar.cc/150?u=${a._id || i}`}
+          alt=""
+          className="h-8 w-8 rounded-full object-cover border-2 border-white"
+        />
+      ))}
+      {extra > 0 && (
+        <span className="h-8 w-8 rounded-full bg-dark text-white text-xs font-semibold flex items-center justify-center border-2 border-white">
+          +{extra}
+        </span>
+      )}
+    </div>
+  );
+}
+
+const STATUS_STYLES = {
+  Active: "bg-blue-50 text-primary",
+  Closed: "bg-gray-100 text-gray-500",
+  Draft: "bg-amber-50 text-amber-600",
+};
+
+export default function AlumniJobs() {
+  const navigate = useNavigate();
+  const { token } = useSelector((state) => state.auth);
+  const authHeader = { headers: { Authorization: `Bearer ${token}` } };
+
+  const [jobs, setJobs] = useState([]);
+  const [stats, setStats] = useState({
+    totalPostings: 0,
+    newThisWeek: 0,
+    totalApplicants: 0,
+    unreadApplicants: 0,
+    fillRate: 0,
+  });
+  const [totalCount, setTotalCount] = useState(0);
+  const [page, setPage] = useState(1);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  const fetchJobs = async () => {
+    setLoading(true);
+    setError("");
+    try {
+      const { data } = await axios.get(`${API_BASE}/alumni/jobs`, {
+        ...authHeader,
+        params: { page, pageSize: PAGE_SIZE },
+      });
+      setJobs(data.jobs || []);
+      setTotalCount(data.totalCount || 0);
+      setStats(data.stats || stats);
+    } catch (err) {
+      setError(err.response?.data?.message || "Could not load your job postings.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchJobs();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page]);
+
+  const handleDelete = async (jobId) => {
+    try {
+      await axios.delete(`${API_BASE}/alumni/jobs/${jobId}`, authHeader);
+      fetchJobs();
+    } catch (err) {
+      setError(err.response?.data?.message || "Could not delete this posting.");
+    }
+  };
+
+  const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
+  const rangeStart = totalCount === 0 ? 0 : (page - 1) * PAGE_SIZE + 1;
+  const rangeEnd = Math.min(page * PAGE_SIZE, totalCount);
+
+  return (
+    <div>
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-600 text-sm rounded-xl px-4 py-2.5 mb-5">
+          {error}
+        </div>
+      )}
+
+      {/* Header */}
+      <div className="flex flex-wrap items-start justify-between gap-4 mb-6">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">My Job Postings</h1>
+          <p className="text-gray-500 mt-1">
+            Manage your active recruitment and review incoming alumni applications.
+          </p>
+        </div>
+        <button
+          onClick={() => navigate("/dashboard/alumni/jobs/new")}
+          className="flex items-center gap-2 bg-primary text-white text-sm font-medium px-5 py-2.5 rounded-lg hover:opacity-90"
+        >
+          <Plus size={16} /> Post New Job
+        </button>
+      </div>
+
+      {/* Stats */}
+      <div className="grid sm:grid-cols-3 gap-5 mb-8">
+        <StatCard
+          icon={Briefcase}
+          note={stats.newThisWeek ? `+${stats.newThisWeek} this week` : null}
+          value={stats.totalPostings}
+          label="Total Postings"
+        />
+        <StatCard
+          icon={Users}
+          note={stats.unreadApplicants ? `${stats.unreadApplicants} unread` : null}
+          value={stats.totalApplicants}
+          label="Total Applicants"
+        />
+        <StatCard icon={TrendingUp} value={`${stats.fillRate}%`} label="Fill Rate" />
+      </div>
+
+      {/* Postings table */}
+      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        <table className="w-full text-left">
+          <thead>
+            <tr className="bg-gray-50 text-xs font-semibold text-gray-500 uppercase tracking-wide">
+              <th className="px-5 py-3">Job Title</th>
+              <th className="px-5 py-3">Date Posted</th>
+              <th className="px-5 py-3">Applicants</th>
+              <th className="px-5 py-3">Status</th>
+              <th className="px-5 py-3 text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {loading ? (
+              <tr>
+                <td colSpan={5} className="px-5 py-10 text-center text-gray-400">
+                  <Loader2 size={18} className="animate-spin inline mr-2" />
+                  Loading postings...
+                </td>
+              </tr>
+            ) : jobs.length === 0 ? (
+              <tr>
+                <td colSpan={5} className="px-5 py-10 text-center text-sm text-gray-400">
+                  No job postings yet.
+                </td>
+              </tr>
+            ) : (
+              jobs.map((job) => {
+                const isClosed = job.status === "Closed";
+                return (
+                  <tr key={job._id} className="border-t border-gray-100">
+                    <td className="px-5 py-4">
+                      <p
+                        className={`font-semibold ${isClosed ? "text-gray-400" : "text-primary"}`}
+                      >
+                        {job.title}
+                      </p>
+                      <p className={`text-sm ${isClosed ? "text-gray-300" : "text-gray-500"}`}>
+                        {job.department} • {job.location}
+                      </p>
+                    </td>
+                    <td className="px-5 py-4 text-sm text-gray-500">{job.datePosted}</td>
+                    <td className="px-5 py-4">
+                      {job.applicantCount > 1 ? (
+                        <div className="flex items-center gap-3">
+                          <AvatarStack applicants={job.applicants} count={job.applicantCount} />
+                          <span className="text-sm text-gray-700">
+                            {job.applicantCount} Applicants
+                          </span>
+                        </div>
+                      ) : (
+                        <span className="text-sm text-gray-700">
+                          {job.applicantCount} Applicant{job.applicantCount === 1 ? "" : "s"}
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-5 py-4">
+                      <span
+                        className={`text-xs font-medium rounded-full px-3 py-1.5 ${
+                          STATUS_STYLES[job.status] || "bg-gray-100 text-gray-500"
+                        }`}
+                      >
+                        {job.status}
+                      </span>
+                    </td>
+                    <td className="px-5 py-4">
+                      <div className="flex justify-end gap-3 text-gray-400">
+                        <button aria-label="View history" className="hover:text-gray-700">
+                          <History size={16} />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(job._id)}
+                          aria-label="Delete posting"
+                          className="hover:text-red-500"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })
+            )}
+          </tbody>
+        </table>
+
+        <div className="flex items-center justify-between px-5 py-3 bg-gray-50 border-t border-gray-100">
+          <p className="text-sm text-gray-500">
+            Showing {rangeStart}-{rangeEnd} of {totalCount} postings
+          </p>
+          <div className="flex items-center gap-1.5">
+            <button
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={page === 1}
+              className="h-8 w-8 rounded-lg flex items-center justify-center text-gray-400 disabled:opacity-40"
+            >
+              ‹
+            </button>
+            {Array.from({ length: Math.min(totalPages, 3) }, (_, i) => i + 1).map((n) => (
+              <button
+                key={n}
+                onClick={() => setPage(n)}
+                className={`h-8 w-8 rounded-lg text-sm font-medium ${
+                  page === n ? "bg-dark text-white" : "text-gray-600 hover:bg-gray-100"
+                }`}
+              >
+                {n}
+              </button>
+            ))}
+            <button
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              disabled={page === totalPages}
+              className="h-8 w-8 rounded-lg flex items-center justify-center text-gray-400 disabled:opacity-40"
+            >
+              ›
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Bottom promo cards */}
+      <div className="grid md:grid-cols-2 gap-5 mt-6">
+        <div className="bg-blue-50 rounded-xl p-5 flex gap-3">
+          <Lightbulb size={20} className="text-primary shrink-0 mt-0.5" />
+          <div>
+            <h3 className="font-semibold text-gray-900">Boost Your Visibility</h3>
+            <p className="text-sm text-gray-600 mt-1">
+              Job posts shared directly with your alumni network see 40% higher quality
+              applications on average.
+            </p>
+            <button className="text-sm font-medium text-primary hover:underline mt-2">
+              Learn how to boost →
+            </button>
+          </div>
+        </div>
+
+        <div className="bg-gray-100 rounded-xl p-5 flex gap-3">
+          <Sparkles size={20} className="text-gray-700 shrink-0 mt-0.5" />
+          <div>
+            <h3 className="font-semibold text-gray-900">AI Job Description Tool</h3>
+            <p className="text-sm text-gray-600 mt-1">
+              Use our new AI assistant to draft a compelling job description based on your
+              alumni requirements.
+            </p>
+            <button className="text-sm font-medium text-gray-700 hover:underline mt-2">
+              Try AI Drafting →
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

@@ -1,0 +1,41 @@
+const mongoose = require("mongoose");
+
+/**
+ * Job — posted by an Alumni, browsed/applied to by Students.
+ * `savedBy` is a simple bookmark list (student user IDs) — powers
+ * the bookmark icon on each job card without needing a separate model.
+ */
+const jobSchema = new mongoose.Schema(
+  {
+    title: { type: String, required: true },
+    company: { type: String, required: true },
+    location: { type: String, required: true },
+    department: { type: String }, // e.g. "Design", "Marketing" — shown next to location on the card
+
+    type: {
+      type: String,
+      enum: ["Full-time", "Part-time", "Internship", "Remote"],
+      required: true,
+    },
+
+    status: {
+      type: String,
+      enum: ["Active", "Closed", "Draft"],
+      default: "Active",
+    },
+
+    payRange: { type: String },        // e.g. "$35 - $45 / hr"
+    description: { type: String },
+
+    postedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User", // must be an alumni
+      required: true,
+    },
+
+    savedBy: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+  },
+  { timestamps: true } // createdAt used to show the "NEW" badge (e.g. < 3 days old)
+);
+
+module.exports = mongoose.model("Job", jobSchema);
