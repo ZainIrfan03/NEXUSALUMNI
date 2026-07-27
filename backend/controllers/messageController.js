@@ -1,4 +1,4 @@
- const Conversation = require("../models/Conversation");
+const Conversation = require("../models/Conversation");
 const Message = require("../models/Message");
 
 // @route  GET /api/messages/conversations
@@ -6,7 +6,7 @@ const Message = require("../models/Message");
 const getMyConversations = async (req, res) => {
   try {
     const conversations = await Conversation.find({ participants: req.user.id })
-      .populate("participants", "fullName email role")
+      .populate("participants", "fullName email role profileImage")
       .sort({ lastMessageAt: -1 });
 
     res.json(conversations);
@@ -38,6 +38,34 @@ const startConversation = async (req, res) => {
   }
 };
 
+// @route  DELETE /api/messages/conversations/:conversationId
+// Deletes a conversation and all its messages permanently.
+// Called from the three-dots menu -> "Delete Chat".
+const deleteConversation = async (req, res) => {
+  try {
+    const { conversationId } = req.params;
+
+    const conversation = await Conversation.findById(conversationId);
+    if (!conversation) {
+      return res.status(404).json({ message: "Conversation not found" });
+    }
+
+    const isParticipant = conversation.participants.some(
+      (p) => p.toString() === req.user.id
+    );
+    if (!isParticipant) {
+      return res.status(403).json({ message: "Not authorized to delete this chat" });
+    }
+
+    await Message.deleteMany({ conversation: conversationId });
+    await Conversation.findByIdAndDelete(conversationId);
+
+    res.json({ message: "Conversation deleted" });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
 // @route  GET /api/messages/:conversationId
 // Full message history for one conversation.
 const getMessages = async (req, res) => {
@@ -52,22 +80,43 @@ const getMessages = async (req, res) => {
 };
 
 // @route  POST /api/messages/:conversationId
-// @body   { text }
-// Saves a message to the DB. The socket layer (server.js) additionally
-// emits it live to the other participant — this route is the source of truth.
+// @body   { text }  (multipart/form-data)
+// @file   file       (optional — image or document, handled by uploadChat middleware)
+// Saves a message to the DB, with an optional attached image/file.
+// The socket layer (server.js) additionally emits it live to the other participant.
 const sendMessage = async (req, res) => {
   try {
     const { text } = req.body;
     const { conversationId } = req.params;
 
+    let fileUrl = null;
+    let fileType = null;
+    let fileName = null;
+
+    if (req.file) {
+      fileUrl = `/uploads/chat/${req.file.filename}`;
+      fileType = req.file.mimetype.startsWith("image/") ? "image" : "file";
+      fileName = req.file.originalname;
+    }
+
+    if (!text && !fileUrl) {
+      return res.status(400).json({ message: "Message text or file is required" });
+    }
+
     const message = await Message.create({
       conversation: conversationId,
       sender: req.user.id,
-      text,
+      text: text || "",
+      fileUrl,
+      fileType,
+      fileName,
     });
 
+    const lastMessagePreview =
+      text || (fileType === "image" ? "📷 Photo" : "📎 File");
+
     await Conversation.findByIdAndUpdate(conversationId, {
-      lastMessage: text,
+      lastMessage: lastMessagePreview,
       lastMessageAt: new Date(),
     });
 
@@ -77,4 +126,10 @@ const sendMessage = async (req, res) => {
   }
 };
 
-module.exports = { getMyConversations, startConversation, getMessages, sendMessage };
+module.exports = {
+  getMyConversations,
+  startConversation,
+  deleteConversation,
+  getMessages,
+  sendMessage,
+};

@@ -1,141 +1,89 @@
-const Conversation = require("../models/Conversation");
-const Message = require("../models/Message");
+const MentorshipRequest = require("../models/MentorshipRequest");
+const User = require("../models/User");
 
-// @route  GET /api/messages/conversations
-// List of the logged-in user's conversations (for the Inbox list).
-const getMyConversations = async (req, res) => {
+// @route  GET /api/mentorship/recommended
+// Returns a list of alumni the logged-in student can send a mentorship
+// request to. Excludes alumni the student already has a pending or
+// accepted request with.
+const getRecommendedMentors = async (req, res) => {
   try {
-    const conversations = await Conversation.find({ participants: req.user.id })
-      .populate("participants", "fullName email role profileImage")
-      .sort({ lastMessageAt: -1 });
+    const studentId = req.user.id;
 
-    res.json(conversations);
+    // Alumni already requested (pending/accepted) — don't recommend them again
+    const existingRequests = await MentorshipRequest.find({
+      student: studentId,
+      status: { $in: ["pending", "accepted"] },
+    }).select("alumni");
+
+    const excludedAlumniIds = existingRequests.map((r) => r.alumni.toString());
+
+    const mentors = await User.find({
+      role: "alumni",
+      _id: { $nin: excludedAlumniIds },
+    }).select("fullName email profileImage department jobTitle company skills");
+
+    res.json(mentors);
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
 
-// @route  POST /api/messages/conversations
-// @body   { otherUserId }
-// Finds an existing 1:1 conversation or creates a new one —
-// called when a student clicks "Message" on an alumni's profile card.
-const startConversation = async (req, res) => {
+// @route  POST /api/mentorship/request
+// @body   { alumniId, message }
+// Student sends a mentorship request to a specific alumni.
+const sendMentorshipRequest = async (req, res) => {
   try {
-    const { otherUserId } = req.body;
-    const myId = req.user.id;
+    const { alumniId, message } = req.body;
+    const studentId = req.user.id;
 
-    let conversation = await Conversation.findOne({
-      participants: { $all: [myId, otherUserId], $size: 2 },
-    });
-
-    if (!conversation) {
-      conversation = await Conversation.create({ participants: [myId, otherUserId] });
+    if (!alumniId) {
+      return res.status(400).json({ message: "alumniId is required" });
     }
 
-    res.json(conversation);
+    const alumni = await User.findById(alumniId);
+    if (!alumni || alumni.role !== "alumni") {
+      return res.status(404).json({ message: "Alumni not found" });
+    }
+
+    // Avoid duplicate pending requests to the same alumni
+    const alreadyPending = await MentorshipRequest.findOne({
+      student: studentId,
+      alumni: alumniId,
+      status: "pending",
+    });
+
+    if (alreadyPending) {
+      return res.status(400).json({ message: "You already have a pending request with this alumni" });
+    }
+
+    const request = await MentorshipRequest.create({
+      student: studentId,
+      alumni: alumniId,
+      message,
+    });
+
+    res.status(201).json(request);
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
 
-// @route  GET /api/messages/:conversationId
-// Full message history for one conversation.
-const getMessages = async (req, res) => {
+// @route  GET /api/mentorship/my-requests
+// All mentorship requests the logged-in student has sent, most recent first.
+const getMyRequests = async (req, res) => {
   try {
-    const messages = await Message.find({ conversation: req.params.conversationId }).sort({
-      createdAt: 1,
-    });
-    res.json(messages);
-  } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
-  }
-};
+    const requests = await MentorshipRequest.find({ student: req.user.id })
+      .populate("alumni", "fullName email profileImage department jobTitle company")
+      .sort({ createdAt: -1 });
 
-// @route  POST /api/messages/:conversationId
-// @body   { text }  (multipart/form-data — optional "file" field for image/attachment)
-// Saves a message to the DB. Requires either non-empty text or an uploaded
-// file (via the uploadChat multer middleware, which sets req.file).
-// The socket layer (server.js) additionally emits it live to the other
-// participant — this route is the source of truth.
-const sendMessage = async (req, res) => {
-  try {
-    const { text } = req.body;
-    const { conversationId } = req.params;
-
-    // Must have text or a file attached
-    if (!text?.trim() && !req.file) {
-      return res.status(400).json({ message: "Message must contain text or a file." });
-    }
-
-    let fileUrl = null;
-    let fileType = null;
-    let fileName = null;
-
-    if (req.file) {
-      fileUrl = `/uploads/chat/${req.file.filename}`;
-      fileType = req.file.mimetype.startsWith("image/") ? "image" : "file";
-      fileName = req.file.originalname;
-    }
-
-    const message = await Message.create({
-      conversation: conversationId,
-      sender: req.user.id,
-      text: text?.trim() || "",
-      fileUrl,
-      fileType,
-      fileName,
-    });
-
-    const lastMessagePreview = text?.trim()
-      ? text.trim()
-      : fileType === "image"
-      ? "📷 Photo"
-      : "📎 File";
-
-    await Conversation.findByIdAndUpdate(conversationId, {
-      lastMessage: lastMessagePreview,
-      lastMessageAt: new Date(),
-    });
-
-    res.status(201).json(message);
-  } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
-  }
-};
-
-// @route  DELETE /api/messages/conversations/:conversationId
-// Deletes a conversation and all its messages (used by the three-dots
-// "Delete Chat" menu option). Only a participant of the conversation
-// can delete it.
-const deleteConversation = async (req, res) => {
-  try {
-    const { conversationId } = req.params;
-
-    const conversation = await Conversation.findById(conversationId);
-    if (!conversation) {
-      return res.status(404).json({ message: "Conversation not found" });
-    }
-
-    const isParticipant = conversation.participants.some(
-      (p) => p.toString() === req.user.id
-    );
-    if (!isParticipant) {
-      return res.status(403).json({ message: "Not authorized" });
-    }
-
-    await Message.deleteMany({ conversation: conversationId });
-    await Conversation.findByIdAndDelete(conversationId);
-
-    res.json({ message: "Conversation deleted" });
+    res.json(requests);
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
 
 module.exports = {
-  getMyConversations,
-  startConversation,
-  getMessages,
-  sendMessage,
-  deleteConversation,
+  getRecommendedMentors,
+  sendMentorshipRequest,
+  getMyRequests,
 };
