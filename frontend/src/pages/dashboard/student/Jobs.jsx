@@ -12,15 +12,24 @@ import {
   HelpCircle,
   ChevronDown,
   Loader2,
+  X,
+  MapPin,
+  CalendarDays,
+  CheckCircle2,
 } from "lucide-react";
 
 /**
  * Jobs page — file: src/pages/dashboard/student/Jobs.jsx
  * Now connected to:
- *   GET  /api/jobs?type=
+ *   GET  /api/jobs?type=          (each job now also carries hasApplied)
  *   GET  /api/jobs/my-applications
  *   POST /api/jobs/:id/apply
  *   POST /api/jobs/:id/save
+ *
+ * "Apply Now" opens a job-details modal first; applying from there marks
+ * the job "✓ Applied" everywhere without a page refresh. The application
+ * then shows up on the alumni's side, where they can move it through
+ * In Review / Interview / etc.
  */
 
 const tabs = ["All Jobs", "Full-time", "Internship", "Part-time", "Remote"];
@@ -35,9 +44,9 @@ export default function Jobs() {
   const [tracking, setTracking] = useState({ applied: 0, in_review: 0, interview: 0 });
   const [loadingJobs, setLoadingJobs] = useState(true);
   const [error, setError] = useState("");
-  const [busyJobId, setBusyJobId] = useState(null); // job currently applying/saving
+  const [busyJobId, setBusyJobId] = useState(null);
+  const [selectedJob, setSelectedJob] = useState(null);
 
-  // Re-fetch jobs whenever the active tab changes
   useEffect(() => {
     const fetchJobs = async () => {
       setLoadingJobs(true);
@@ -57,19 +66,18 @@ export default function Jobs() {
     fetchJobs();
   }, [activeTab]);
 
-  // Application Tracking counts — fetched once
+  const fetchStats = async () => {
+    try {
+      const { data } = await axios.get(
+        "http://localhost:5000/api/jobs/my-applications",
+        authHeader()
+      );
+      setTracking(data);
+    } catch (err) {
+      // non-blocking — sidebar just shows 0s if this fails
+    }
+  };
   useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        const { data } = await axios.get(
-          "http://localhost:5000/api/jobs/my-applications",
-          authHeader()
-        );
-        setTracking(data);
-      } catch (err) {
-        // non-blocking — sidebar just shows 0s if this fails
-      }
-    };
     fetchStats();
   }, []);
 
@@ -77,9 +85,16 @@ export default function Jobs() {
     setBusyJobId(jobId);
     try {
       await axios.post(`http://localhost:5000/api/jobs/${jobId}/apply`, {}, authHeader());
+      setJobs((prev) => prev.map((j) => (j._id === jobId ? { ...j, hasApplied: true } : j)));
+      setSelectedJob((prev) => (prev && prev._id === jobId ? { ...prev, hasApplied: true } : prev));
       setTracking((prev) => ({ ...prev, applied: prev.applied + 1 }));
     } catch (err) {
-      setError(err.response?.data?.message || "Could not apply");
+      if (err.response?.status === 400) {
+        setJobs((prev) => prev.map((j) => (j._id === jobId ? { ...j, hasApplied: true } : j)));
+        setSelectedJob((prev) => (prev && prev._id === jobId ? { ...prev, hasApplied: true } : prev));
+      } else {
+        setError(err.response?.data?.message || "Could not apply");
+      }
     } finally {
       setBusyJobId(null);
     }
@@ -93,7 +108,6 @@ export default function Jobs() {
         {},
         authHeader()
       );
-      // Update just that job's savedBy list locally so the bookmark icon flips instantly
       setJobs((prev) =>
         prev.map((j) =>
           j._id === jobId
@@ -129,9 +143,7 @@ export default function Jobs() {
       )}
 
       <div className="grid lg:grid-cols-[1fr_320px] gap-6">
-        {/* Main column */}
         <div>
-          {/* Tabs */}
           <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
             <div className="flex flex-wrap gap-2">
               {tabs.map((t) => (
@@ -153,7 +165,6 @@ export default function Jobs() {
             </button>
           </div>
 
-          {/* Job cards */}
           {loadingJobs ? (
             <div className="flex items-center justify-center py-16 text-gray-400 gap-2">
               <Loader2 size={18} className="animate-spin" /> Loading jobs...
@@ -177,7 +188,12 @@ export default function Jobs() {
                         <Briefcase size={18} className="text-primary" />
                       </div>
                       <div className="flex items-center gap-2">
-                        {isNew && (
+                        {job.hasApplied && (
+                          <span className="flex items-center gap-1 text-[10px] font-semibold rounded-full px-2.5 py-1 bg-green-50 text-green-600">
+                            <CheckCircle2 size={11} /> APPLIED
+                          </span>
+                        )}
+                        {!job.hasApplied && isNew && (
                           <span className="text-[10px] font-semibold rounded-full px-2.5 py-1 bg-gray-100 text-gray-500">
                             NEW
                           </span>
@@ -191,7 +207,11 @@ export default function Jobs() {
                       </div>
                     </div>
 
-                    <h3 className="font-bold text-dark text-lg leading-snug mb-1">{job.title}</h3>
+                    <button onClick={() => setSelectedJob(job)} className="text-left">
+                      <h3 className="font-bold text-dark text-lg leading-snug mb-1 hover:text-primary transition-colors">
+                        {job.title}
+                      </h3>
+                    </button>
                     <p className="text-sm text-gray-500 mb-5">
                       {job.company} <span className="mx-1">•</span> {job.location}
                     </p>
@@ -208,11 +228,15 @@ export default function Jobs() {
                     </div>
 
                     <button
-                      onClick={() => handleApply(job._id)}
+                      onClick={() => setSelectedJob(job)}
                       disabled={isBusy}
-                      className="w-full text-sm font-semibold py-2.5 rounded-xl transition-colors bg-dark text-white hover:opacity-90 disabled:opacity-50"
+                      className={`w-full text-sm font-semibold py-2.5 rounded-xl transition-colors disabled:opacity-50 ${
+                        job.hasApplied
+                          ? "bg-green-50 text-green-600 cursor-default"
+                          : "bg-dark text-white hover:opacity-90"
+                      }`}
                     >
-                      {isBusy ? "Please wait..." : "Apply Now"}
+                      {job.hasApplied ? "✓ Applied" : isBusy ? "Please wait..." : "Apply Now"}
                     </button>
                   </div>
                 );
@@ -227,7 +251,6 @@ export default function Jobs() {
           </div>
         </div>
 
-        {/* Sidebar */}
         <div className="flex flex-col gap-6">
           <div className="bg-primary rounded-2xl p-5">
             <h2 className="text-white font-semibold text-lg mb-4">Application Tracking</h2>
@@ -254,7 +277,94 @@ export default function Jobs() {
         </div>
       </div>
 
-      {/* Floating help button */}
+      {selectedJob && (
+        <div
+          className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4"
+          onClick={() => setSelectedJob(null)}
+        >
+          <div
+            className="bg-white rounded-2xl max-w-lg w-full max-h-[85vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-start justify-between px-6 pt-6">
+              <div className="h-12 w-12 rounded-xl bg-blue-50 flex items-center justify-center">
+                <Briefcase size={20} className="text-primary" />
+              </div>
+              <button onClick={() => setSelectedJob(null)} className="text-gray-400 hover:text-dark">
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="px-6 pt-4 pb-2">
+              <h2 className="text-xl font-bold text-dark">{selectedJob.title}</h2>
+              <p className="text-sm text-gray-500 mt-1">
+                {selectedJob.company}
+                {selectedJob.postedBy?.fullName ? ` • Posted by ${selectedJob.postedBy.fullName}` : ""}
+              </p>
+
+              <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500 mt-4">
+                <span className="flex items-center gap-1.5">
+                  <MapPin size={14} /> {selectedJob.location}
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <Briefcase size={14} /> {selectedJob.type}
+                </span>
+                {selectedJob.payRange && (
+                  <span className="flex items-center gap-1.5">
+                    <DollarSign size={14} /> {selectedJob.payRange}
+                  </span>
+                )}
+                <span className="flex items-center gap-1.5">
+                  <CalendarDays size={14} />
+                  Posted {new Date(selectedJob.createdAt).toLocaleDateString("en-US", {
+                    month: "short",
+                    day: "numeric",
+                    year: "numeric",
+                  })}
+                </span>
+              </div>
+
+              {selectedJob.department && (
+                <span className="inline-block mt-4 text-xs font-medium bg-gray-100 text-gray-600 rounded-full px-3 py-1">
+                  {selectedJob.department}
+                </span>
+              )}
+
+              <div className="mt-5">
+                <h3 className="text-sm font-semibold text-dark mb-1.5">Job Description</h3>
+                <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-line">
+                  {selectedJob.description || "No description was provided for this role."}
+                </p>
+              </div>
+            </div>
+
+            <div className="px-6 py-5 border-t border-gray-100 mt-2">
+              <button
+                onClick={() => handleApply(selectedJob._id)}
+                disabled={selectedJob.hasApplied || busyJobId === selectedJob._id}
+                className={`w-full text-sm font-semibold py-3 rounded-xl transition-colors disabled:opacity-60 ${
+                  selectedJob.hasApplied
+                    ? "bg-green-50 text-green-600 cursor-default"
+                    : "bg-primary text-white hover:opacity-90"
+                }`}
+              >
+                {selectedJob.hasApplied
+                  ? "✓ You've applied to this role"
+                  : busyJobId === selectedJob._id
+                  ? "Submitting application..."
+                  : "Apply Now"}
+              </button>
+              {selectedJob.hasApplied && (
+                <p className="text-xs text-gray-400 text-center mt-2">
+                  The alumni who posted this job will review your application and can move it to
+                  interview from their side.
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       <button className="fixed bottom-6 right-6 h-12 w-12 rounded-full bg-primary text-white flex items-center justify-center shadow-lg hover:opacity-90 transition-opacity">
         <HelpCircle size={20} />
       </button>

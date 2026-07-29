@@ -13,7 +13,20 @@ const getJobs = async (req, res) => {
       .populate("postedBy", "fullName")
       .sort({ createdAt: -1 });
 
-    res.json(jobs);
+    // Stamp hasApplied onto each job for the logged-in student so the
+    // "Apply Now" button can show "✓ Applied" without a second round trip.
+    let appliedJobIds = new Set();
+    if (req.user.role === "student") {
+      const myApplications = await Application.find({ student: req.user.id }, "job");
+      appliedJobIds = new Set(myApplications.map((a) => String(a.job)));
+    }
+
+    const result = jobs.map((j) => ({
+      ...j.toObject(),
+      hasApplied: appliedJobIds.has(String(j._id)),
+    }));
+
+    res.json(result);
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
   }

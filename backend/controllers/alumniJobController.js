@@ -106,4 +106,84 @@ const deleteMyJob = async (req, res) => {
   }
 };
 
-module.exports = { getMyJobs, deleteMyJob };
+// @route  GET /api/alumni/jobs/:id/applicants
+// Only the alumni who posted the job can see its applicants.
+// Powers the "View Applicants" modal on the postings table.
+const getJobApplicants = async (req, res) => {
+  try {
+    const job = await Job.findOne({ _id: req.params.id, postedBy: req.user.id });
+    if (!job) {
+      return res.status(404).json({ message: "Job not found" });
+    }
+
+    const applications = await Application.find({ job: job._id })
+      .populate("student", "fullName email")
+      .sort({ createdAt: -1 });
+
+    const studentIds = applications.map((a) => a.student._id);
+    const profiles = await Student.find(
+      { user: { $in: studentIds } },
+      "user avatarUrl department session"
+    );
+    const profileMap = new Map(profiles.map((p) => [String(p.user), p]));
+
+    const applicants = applications.map((a) => {
+      const profile = profileMap.get(String(a.student._id));
+      return {
+        applicationId: a._id,
+        studentId: a.student._id,
+        fullName: a.student.fullName,
+        email: a.student.email,
+        avatarUrl: profile?.avatarUrl || null,
+        department: profile?.department,
+        session: profile?.session,
+        status: a.status,
+        appliedAt: a.createdAt,
+      };
+    });
+
+    res.json({ job: { _id: job._id, title: job.title }, applicants });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+// @route  PATCH /api/alumni/jobs/applications/:applicationId/status
+// @body   { status } — one of applied / in_review / interview / rejected / accepted
+// Moves an applicant through the pipeline (e.g. "Move to Review",
+// "Schedule Interview") from the applicants modal. Only the alumni who
+// posted the underlying job can update it.
+const updateApplicationStatus = async (req, res) => {
+  try {
+    const { status } = req.body;
+    const allowedStatuses = ["applied", "in_review", "interview", "rejected", "accepted"];
+    if (!allowedStatuses.includes(status)) {
+      return res.status(400).json({ message: "Invalid status" });
+    }
+
+    const application = await Application.findById(req.params.applicationId).populate("job");
+    if (!application) {
+      return res.status(404).json({ message: "Application not found" });
+    }
+    if (String(application.job.postedBy) !== req.user.id) {
+      return res.status(403).json({ message: "Not authorized to update this application" });
+    }
+
+    application.status = status;
+    await application.save();
+
+    res.json({
+      applicationId: application._id,
+      status: application.status,
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+module.exports = {
+  getMyJobs,
+  deleteMyJob,
+  getJobApplicants,
+  updateApplicationStatus,
+};

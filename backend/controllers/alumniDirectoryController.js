@@ -1,4 +1,5 @@
 const Student = require("../models/Student");
+const MentorshipRequest = require("../models/MentorshipRequest");
 
 const DEPARTMENT_LABELS = {
   cs: "Computer Science",
@@ -19,6 +20,9 @@ const getGraduationYear = (session) => {
 // @query  ?department=&skills=&years=&sortBy=&page=
 // Returns a paginated, filterable list of students for alumni to browse.
 // `skills` and `years` arrive as comma-separated strings from the frontend.
+// Each student includes `isMentee: boolean` — true only if THIS alumni has
+// an accepted MentorshipRequest with them, so the frontend can show a
+// "Message" icon on the card only for accepted mentees.
 const getStudentDirectory = async (req, res) => {
   try {
     const {
@@ -65,6 +69,15 @@ const getStudentDirectory = async (req, res) => {
     const start = (Number(page) - 1) * pageSize;
     const pageStudents = students.slice(start, start + pageSize);
 
+    // One query for all accepted requests this alumni has with the students
+    // on this page, instead of N queries in the map below.
+    const acceptedRequests = await MentorshipRequest.find({
+      alumni: req.user.id,
+      status: "accepted",
+      student: { $in: pageStudents.map((s) => s.user?._id).filter(Boolean) },
+    });
+    const menteeUserIds = new Set(acceptedRequests.map((r) => r.student.toString()));
+
     const formatted = pageStudents.map((s) => ({
       _id: s._id,
       fullName: s.user?.fullName,
@@ -73,6 +86,8 @@ const getStudentDirectory = async (req, res) => {
       degree: DEPARTMENT_LABELS[s.department] || s.department,
       graduationYear: getGraduationYear(s.session),
       skills: s.skills || [],
+      userId: s.user?._id, // needed by the frontend to start a conversation
+      isMentee: menteeUserIds.has(s.user?._id?.toString()),
     }));
 
     res.json({ students: formatted, totalCount });
@@ -85,6 +100,11 @@ const getStudentDirectory = async (req, res) => {
 // Returns one student's full public profile — used by the "View Profile"
 // button on the alumni-side Student Directory page.
 // :id is the Student document's own _id (same id used in the directory list).
+//
+// Also includes `isMentee: boolean` — true only if THIS alumni has an
+// accepted MentorshipRequest with this student. The frontend uses this to
+// decide whether to show the "Message" button (alumni can only chat with
+// their accepted mentees, not any student in the directory).
 const getStudentById = async (req, res) => {
   try {
     const student = await Student.findById(req.params.id).populate(
@@ -96,7 +116,16 @@ const getStudentById = async (req, res) => {
       return res.status(404).json({ message: "Student not found" });
     }
 
-    res.json(student);
+    const acceptedRequest = await MentorshipRequest.findOne({
+      student: student.user._id,
+      alumni: req.user.id,
+      status: "accepted",
+    });
+
+    res.json({
+      ...student.toObject(),
+      isMentee: !!acceptedRequest,
+    });
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
   }

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import { Filter, UserPlus, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
+import { Filter, UserPlus, Loader2, ChevronLeft, ChevronRight, Send } from "lucide-react";
 
 const API_BASE = "http://localhost:5000/api";
 
@@ -19,8 +19,9 @@ const fileUrl = (path) => {
 const SKILL_OPTIONS = ["Python", "Data Analysis", "UI/UX Design", "Public Speaking"];
 const YEAR_OPTIONS = ["2024", "2025", "2026", "2027"];
 
-function StudentCard({ student, onViewProfile }) {
+function StudentCard({ student, onViewProfile, onMessage, messagingId }) {
   const avatar = fileUrl(student.avatarUrl);
+  const isMessaging = messagingId === student._id;
 
   return (
     <div className="bg-white rounded-xl border border-gray-200 p-5 flex flex-col">
@@ -55,12 +56,26 @@ function StudentCard({ student, onViewProfile }) {
         ))}
       </div>
 
-      <button
-        onClick={() => onViewProfile(student._id)}
-        className="mt-auto w-full border border-gray-200 rounded-lg text-sm font-medium text-gray-800 py-2 hover:bg-gray-50"
-      >
-        View Profile →
-      </button>
+      <div className="mt-auto flex gap-2">
+        <button
+          onClick={() => onViewProfile(student._id)}
+          className="flex-1 border border-gray-200 rounded-lg text-sm font-medium text-gray-800 py-2 hover:bg-gray-50"
+        >
+          View Profile →
+        </button>
+
+        {/* Only accepted mentees get a quick-message shortcut on the card */}
+        {student.isMentee && (
+          <button
+            onClick={() => onMessage(student)}
+            disabled={isMessaging}
+            title="Message this mentee"
+            className="h-9 w-9 shrink-0 rounded-lg border border-gray-200 flex items-center justify-center text-gray-500 hover:border-primary hover:text-primary transition-colors disabled:opacity-50"
+          >
+            <Send size={15} />
+          </button>
+        )}
+      </div>
     </div>
   );
 }
@@ -91,6 +106,7 @@ export default function studentDirectory() {
   const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [messagingId, setMessagingId] = useState(null);
 
   const [department, setDepartment] = useState("all");
   const [skills, setSkills] = useState([]);
@@ -137,6 +153,27 @@ export default function studentDirectory() {
     setSkills([]);
     setYears([]);
     setPage(1);
+  };
+
+  // Starts (or resumes) a chat directly from the card — only ever called
+  // for students with isMentee: true. The backend still double-checks the
+  // accepted-mentorship rule in startConversation, so this can't be abused
+  // even if isMentee were spoofed client-side.
+  const handleMessage = async (student) => {
+    if (!student.userId) return;
+    setMessagingId(student._id);
+    try {
+      const { data: conversation } = await axios.post(
+        `${API_BASE}/messages/conversations`,
+        { otherUserId: student.userId },
+        authHeader
+      );
+      navigate("/dashboard/alumni/messages", { state: { conversationId: conversation._id } });
+    } catch (err) {
+      setError(err.response?.data?.message || "Could not start chat.");
+    } finally {
+      setMessagingId(null);
+    }
   };
 
   const totalPages = Math.max(1, Math.ceil(totalCount / 6));
@@ -263,6 +300,8 @@ export default function studentDirectory() {
                   key={student._id}
                   student={student}
                   onViewProfile={(id) => navigate(`/dashboard/alumni/directory/${id}`)}
+                  onMessage={handleMessage}
+                  messagingId={messagingId}
                 />
               ))}
               <InviteMoreCard />

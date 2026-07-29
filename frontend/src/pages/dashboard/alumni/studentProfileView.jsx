@@ -42,6 +42,12 @@ const getGraduationYear = (session) => {
  * Student Profile View (read-only) — file: src/pages/dashboard/alumni/StudentProfileView.jsx
  * Opened from studentDirectory.jsx via "View Profile" -> /dashboard/alumni/directory/:id
  * :id is the Student document's own _id.
+ *
+ * The "Message" button only appears when the backend confirms `isMentee: true`
+ * (an accepted MentorshipRequest exists between this alumni and this student).
+ * Alumni cannot message students who aren't their accepted mentees — this is
+ * also enforced server-side in messageController.js's startConversation, so
+ * hiding the button here is a UX nicety, not the actual security boundary.
  */
 export default function StudentProfileView() {
   const { id } = useParams();
@@ -126,6 +132,7 @@ export default function StudentProfileView() {
     department,
     session,
     openToNetworking,
+    isMentee,
   } = student || {};
 
   const graduationYear = getGraduationYear(session);
@@ -184,17 +191,20 @@ export default function StudentProfileView() {
               )}
             </div>
 
-            <button
-              onClick={handleMessage}
-              disabled={messaging}
-              className="flex items-center gap-2 text-sm font-medium text-white bg-dark rounded-xl px-5 py-2.5 hover:opacity-90 transition-opacity disabled:opacity-50"
-            >
-              {messaging ? "Opening chat..." : (
-                <>
-                  <Send size={14} /> Message
-                </>
-              )}
-            </button>
+            {/* Only shown once this alumni has accepted this student as a mentee */}
+            {isMentee && (
+              <button
+                onClick={handleMessage}
+                disabled={messaging}
+                className="flex items-center gap-2 text-sm font-medium text-white bg-dark rounded-xl px-5 py-2.5 hover:opacity-90 transition-opacity disabled:opacity-50"
+              >
+                {messaging ? "Opening chat..." : (
+                  <>
+                    <Send size={14} /> Message
+                  </>
+                )}
+              </button>
+            )}
           </div>
         </div>
       </div>

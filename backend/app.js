@@ -7,7 +7,6 @@ const cors = require("cors");
 const connectDB = require("./config/db");
 const path = require("path");
 
-
 const directoryRoutes = require("./routes/directoryRoutes");
 const mentorshipRoutes = require("./routes/mentorshipRoutes");
 const authRoutes = require("./routes/authRoutes");

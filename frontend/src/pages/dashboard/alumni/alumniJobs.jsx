@@ -2,10 +2,29 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import axios from "axios";
-import { Plus, Briefcase, Users, TrendingUp, History, Trash2, Loader2, Lightbulb, Sparkles } from "lucide-react";
+import {
+  Plus,
+  Briefcase,
+  Users,
+  TrendingUp,
+  Trash2,
+  Loader2,
+  Lightbulb,
+  Sparkles,
+  X,
+  Mail,
+} from "lucide-react";
 
 const API_BASE = "http://localhost:5000/api";
 const PAGE_SIZE = 4;
+
+// Attachments/avatars come back from the backend as relative paths
+// (e.g. "/uploads/avatars/xyz.png") — build a full URL for <img>.
+const fileUrl = (path) => {
+  if (!path) return "";
+  if (path.startsWith("http")) return path;
+  return `http://localhost:5000${path}`;
+};
 
 function StatCard({ icon: Icon, note, value, label }) {
   return (
@@ -30,7 +49,7 @@ function AvatarStack({ applicants = [], count }) {
       {shown.map((a, i) => (
         <img
           key={i}
-          src={a.avatarUrl || `https://i.pravatar.cc/150?u=${a._id || i}`}
+          src={fileUrl(a.avatarUrl) || `https://i.pravatar.cc/150?u=${a._id || i}`}
           alt=""
           className="h-8 w-8 rounded-full object-cover border-2 border-white"
         />
@@ -50,6 +69,22 @@ const STATUS_STYLES = {
   Draft: "bg-amber-50 text-amber-600",
 };
 
+// Applicant pipeline stages — same order the alumni moves someone through.
+const APPLICANT_STATUS_STYLES = {
+  applied: "bg-gray-100 text-gray-600",
+  in_review: "bg-amber-50 text-amber-600",
+  interview: "bg-blue-50 text-primary",
+  accepted: "bg-green-50 text-green-600",
+  rejected: "bg-red-50 text-red-500",
+};
+const APPLICANT_STATUS_LABELS = {
+  applied: "Applied",
+  in_review: "In Review",
+  interview: "Interview",
+  accepted: "Accepted",
+  rejected: "Rejected",
+};
+
 export default function AlumniJobs() {
   const navigate = useNavigate();
   const { token } = useSelector((state) => state.auth);
@@ -67,6 +102,12 @@ export default function AlumniJobs() {
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
+  // Applicants modal state
+  const [applicantsJob, setApplicantsJob] = useState(null); // { _id, title }
+  const [applicants, setApplicants] = useState([]);
+  const [loadingApplicants, setLoadingApplicants] = useState(false);
+  const [updatingId, setUpdatingId] = useState(null);
 
   const fetchJobs = async () => {
     setLoading(true);
@@ -97,6 +138,43 @@ export default function AlumniJobs() {
       fetchJobs();
     } catch (err) {
       setError(err.response?.data?.message || "Could not delete this posting.");
+    }
+  };
+
+  // Opens the applicants modal and loads everyone who has applied to this job.
+  const openApplicants = async (job) => {
+    setApplicantsJob({ _id: job._id, title: job.title });
+    setApplicants([]);
+    setLoadingApplicants(true);
+    try {
+      const { data } = await axios.get(`${API_BASE}/alumni/jobs/${job._id}/applicants`, authHeader);
+      setApplicants(data.applicants || []);
+    } catch (err) {
+      setError(err.response?.data?.message || "Could not load applicants.");
+      setApplicantsJob(null);
+    } finally {
+      setLoadingApplicants(false);
+    }
+  };
+
+  // Moves an applicant to a new pipeline stage (Move to Review / Schedule
+  // Interview / Accept / Reject) from the modal.
+  const handleStatusChange = async (applicationId, status) => {
+    setUpdatingId(applicationId);
+    try {
+      await axios.patch(
+        `${API_BASE}/alumni/jobs/applications/${applicationId}/status`,
+        { status },
+        authHeader
+      );
+      setApplicants((prev) =>
+        prev.map((a) => (a.applicationId === applicationId ? { ...a, status } : a))
+      );
+      fetchJobs(); // keep the postings table + unread count in sync
+    } catch (err) {
+      setError(err.response?.data?.message || "Could not update this application.");
+    } finally {
+      setUpdatingId(null);
     }
   };
 
@@ -188,18 +266,30 @@ export default function AlumniJobs() {
                     </td>
                     <td className="px-5 py-4 text-sm text-gray-500">{job.datePosted}</td>
                     <td className="px-5 py-4">
-                      {job.applicantCount > 1 ? (
-                        <div className="flex items-center gap-3">
-                          <AvatarStack applicants={job.applicants} count={job.applicantCount} />
-                          <span className="text-sm text-gray-700">
-                            {job.applicantCount} Applicants
+                      <button
+                        onClick={() => openApplicants(job)}
+                        disabled={job.applicantCount === 0}
+                        className="flex items-center gap-3 disabled:cursor-default"
+                      >
+                        {job.applicantCount > 1 ? (
+                          <>
+                            <AvatarStack applicants={job.applicants} count={job.applicantCount} />
+                            <span className="text-sm text-gray-700 hover:text-primary hover:underline">
+                              {job.applicantCount} Applicants
+                            </span>
+                          </>
+                        ) : (
+                          <span
+                            className={`text-sm ${
+                              job.applicantCount === 1
+                                ? "text-gray-700 hover:text-primary hover:underline"
+                                : "text-gray-400"
+                            }`}
+                          >
+                            {job.applicantCount} Applicant{job.applicantCount === 1 ? "" : "s"}
                           </span>
-                        </div>
-                      ) : (
-                        <span className="text-sm text-gray-700">
-                          {job.applicantCount} Applicant{job.applicantCount === 1 ? "" : "s"}
-                        </span>
-                      )}
+                        )}
+                      </button>
                     </td>
                     <td className="px-5 py-4">
                       <span
@@ -212,8 +302,13 @@ export default function AlumniJobs() {
                     </td>
                     <td className="px-5 py-4">
                       <div className="flex justify-end gap-3 text-gray-400">
-                        <button aria-label="View history" className="hover:text-gray-700">
-                          <History size={16} />
+                        <button
+                          onClick={() => openApplicants(job)}
+                          aria-label="View applicants"
+                          className="hover:text-primary"
+                          title="View applicants"
+                        >
+                          <Users size={16} />
                         </button>
                         <button
                           onClick={() => handleDelete(job._id)}
@@ -295,6 +390,95 @@ export default function AlumniJobs() {
           </div>
         </div>
       </div>
+
+      {/* Applicants modal — status dropdown moves someone through the pipeline */}
+      {applicantsJob && (
+        <div
+          className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4"
+          onClick={() => setApplicantsJob(null)}
+        >
+          <div
+            className="bg-white rounded-2xl max-w-2xl w-full max-h-[85vh] flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+              <div>
+                <h2 className="text-lg font-bold text-dark">Applicants</h2>
+                <p className="text-sm text-gray-500">{applicantsJob.title}</p>
+              </div>
+              <button
+                onClick={() => setApplicantsJob(null)}
+                className="text-gray-400 hover:text-dark"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto px-6 py-4">
+              {loadingApplicants ? (
+                <div className="flex items-center justify-center py-10 text-gray-400 gap-2">
+                  <Loader2 size={18} className="animate-spin" /> Loading applicants...
+                </div>
+              ) : applicants.length === 0 ? (
+                <p className="text-sm text-gray-400 text-center py-10">
+                  No one has applied to this job yet.
+                </p>
+              ) : (
+                <div className="flex flex-col gap-3">
+                  {applicants.map((a) => (
+                    <div
+                      key={a.applicationId}
+                      className="flex items-center gap-4 border border-gray-100 rounded-xl px-4 py-3"
+                    >
+                      <img
+                        src={fileUrl(a.avatarUrl) || `https://i.pravatar.cc/150?u=${a.studentId}`}
+                        alt={a.fullName}
+                        className="h-11 w-11 rounded-full object-cover shrink-0"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold text-dark truncate">{a.fullName}</p>
+                        <p className="text-xs text-gray-500 truncate flex items-center gap-1 mt-0.5">
+                          <Mail size={11} /> {a.email}
+                        </p>
+                        <p className="text-xs text-gray-400 mt-0.5">
+                          {[a.department, a.session].filter(Boolean).join(" • ")}
+                          {a.department || a.session ? " • " : ""}
+                          Applied {new Date(a.appliedAt).toLocaleDateString("en-US", {
+                            month: "short",
+                            day: "numeric",
+                          })}
+                        </p>
+                      </div>
+
+                      <div className="flex items-center gap-2 shrink-0">
+                        <span
+                          className={`text-xs font-medium rounded-full px-3 py-1.5 ${
+                            APPLICANT_STATUS_STYLES[a.status] || "bg-gray-100 text-gray-500"
+                          }`}
+                        >
+                          {APPLICANT_STATUS_LABELS[a.status] || a.status}
+                        </span>
+                        <select
+                          value={a.status}
+                          disabled={updatingId === a.applicationId}
+                          onChange={(e) => handleStatusChange(a.applicationId, e.target.value)}
+                          className="text-xs border border-gray-200 rounded-lg px-2 py-1.5 text-gray-600 disabled:opacity-50"
+                        >
+                          <option value="applied">Applied</option>
+                          <option value="in_review">Move to Review</option>
+                          <option value="interview">Schedule Interview</option>
+                          <option value="accepted">Accept</option>
+                          <option value="rejected">Reject</option>
+                        </select>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
