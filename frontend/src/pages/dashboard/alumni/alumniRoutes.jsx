@@ -10,6 +10,7 @@ import AlumniProfile from "./alumniProfile";
 import EditProfile from "./alumniEditProfile";
 import AlumniJobs from "./alumniJobs";
 import AlumniJobNew from "./alumniJobNew";
+import StudentProfileView from "./StudentProfileView";
 
 /**
  * alumniRoutes — every route that belongs to the Alumni role, in one place.
@@ -51,6 +52,12 @@ const alumniRoutes = (
                 // </ProtectedRoute>
             }
         />
+
+        <Route path="/dashboard/alumni/directory/:id" element={
+            //   <ProtectedRoute allowedRoles={["alumni"]}>
+            <StudentProfileView />
+            // </ProtectedRoute>
+        } />
 
         <Route path="/dashboard/alumni/mentorship" element={
             //   <ProtectedRoute allowedRoles={["alumni"]}>

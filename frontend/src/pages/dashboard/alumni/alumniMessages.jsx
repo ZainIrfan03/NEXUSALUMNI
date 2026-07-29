@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { useSelector } from "react-redux";
+import { useLocation } from "react-router-dom";
 import {
   Search,
   SquarePen,
@@ -51,6 +52,8 @@ const avatarSrc = (person) => {
 
 export default function AlumniMessages() {
   const { user } = useSelector((state) => state.auth);
+  const location = useLocation();
+  const incomingConversationId = location.state?.conversationId;
 
   const [conversations, setConversations] = useState([]);
   const [activeId, setActiveId] = useState(null);
@@ -131,7 +134,11 @@ export default function AlumniMessages() {
       try {
         const { data } = await axios.get(`${API_BASE}/messages/conversations`, authHeader());
         setConversations(data);
-        if (data.length > 0) setActiveId(data[0]._id);
+        if (incomingConversationId) {
+          setActiveId(incomingConversationId);
+        } else if (data.length > 0) {
+          setActiveId(data[0]._id);
+        }
       } catch (err) {
         console.error(err);
       } finally {

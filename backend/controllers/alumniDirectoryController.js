@@ -81,4 +81,25 @@ const getStudentDirectory = async (req, res) => {
   }
 };
 
-module.exports = { getStudentDirectory };
+// @route  GET /api/alumni/directory/:id
+// Returns one student's full public profile — used by the "View Profile"
+// button on the alumni-side Student Directory page.
+// :id is the Student document's own _id (same id used in the directory list).
+const getStudentById = async (req, res) => {
+  try {
+    const student = await Student.findById(req.params.id).populate(
+      "user",
+      "fullName email"
+    );
+
+    if (!student) {
+      return res.status(404).json({ message: "Student not found" });
+    }
+
+    res.json(student);
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+module.exports = { getStudentDirectory, getStudentById };

@@ -49,6 +49,13 @@ export default function MyProfile() {
     description: "",
   });
 
+  const [showEduForm, setShowEduForm] = useState(false);
+  const [eduForm, setEduForm] = useState({
+    school: "",
+    degree: "",
+    year: "",
+  });
+
   const fetchProfile = async () => {
     setLoading(true);
     setError("");
@@ -81,6 +88,35 @@ export default function MyProfile() {
       setShowRoleForm(false);
     } catch (err) {
       setError(err.response?.data?.message || "Could not add role.");
+    }
+  };
+
+  const handleAddEducation = async (e) => {
+    e.preventDefault();
+    if (!eduForm.school || !eduForm.degree) return;
+    try {
+      const { data } = await axios.post(
+        `${API_BASE}/student/profile/education`,
+        eduForm,
+        authHeader
+      );
+      setProfile(data);
+      setEduForm({ school: "", degree: "", year: "" });
+      setShowEduForm(false);
+    } catch (err) {
+      setError(err.response?.data?.message || "Could not add education.");
+    }
+  };
+
+  const handleDeleteEducation = async (educationId) => {
+    try {
+      const { data } = await axios.delete(
+        `${API_BASE}/student/profile/education/${educationId}`,
+        authHeader
+      );
+      setProfile(data);
+    } catch (err) {
+      setError(err.response?.data?.message || "Could not remove education.");
     }
   };
 
@@ -347,21 +383,80 @@ export default function MyProfile() {
 
           {/* Education */}
           <div className="bg-white rounded-2xl p-6">
-            <h2 className="text-lg font-semibold text-dark mb-4">Education</h2>
-            {education.length === 0 && (
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-dark">Education</h2>
+              <button
+                onClick={() => setShowEduForm(!showEduForm)}
+                className="flex items-center gap-1 text-sm font-medium text-primary"
+              >
+                <Plus size={14} /> Add
+              </button>
+            </div>
+
+            {showEduForm && (
+              <form
+                onSubmit={handleAddEducation}
+                className="border border-gray-200 rounded-xl p-4 mb-5 flex flex-col gap-3"
+              >
+                <div className="flex justify-between items-center">
+                  <p className="text-sm font-medium text-dark">New Education</p>
+                  <button type="button" onClick={() => setShowEduForm(false)}>
+                    <X size={14} className="text-gray-400" />
+                  </button>
+                </div>
+                <input
+                  type="text"
+                  placeholder="School / University"
+                  value={eduForm.school}
+                  onChange={(e) => setEduForm({ ...eduForm, school: e.target.value })}
+                  className="border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-primary"
+                  required
+                />
+                <input
+                  type="text"
+                  placeholder="Degree"
+                  value={eduForm.degree}
+                  onChange={(e) => setEduForm({ ...eduForm, degree: e.target.value })}
+                  className="border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-primary"
+                  required
+                />
+                <input
+                  type="text"
+                  placeholder="Year (e.g. 2025)"
+                  value={eduForm.year}
+                  onChange={(e) => setEduForm({ ...eduForm, year: e.target.value })}
+                  className="border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-primary"
+                />
+                <button
+                  type="submit"
+                  className="self-start text-sm font-medium text-white bg-dark rounded-lg px-4 py-2"
+                >
+                  Save Education
+                </button>
+              </form>
+            )}
+
+            {education.length === 0 && !showEduForm && (
               <p className="text-sm text-gray-400">No education added yet.</p>
             )}
             <div className="flex flex-col gap-4">
               {education.map((edu) => (
-                <div key={edu._id} className="flex gap-3">
+                <div key={edu._id} className="flex gap-3 group">
                   <div className="h-9 w-9 rounded-lg bg-gray-100 flex items-center justify-center shrink-0">
                     <GraduationCap size={16} className="text-gray-500" />
                   </div>
-                  <div>
+                  <div className="flex-1">
                     <p className="font-semibold text-dark text-sm">{edu.school}</p>
                     <p className="text-sm text-gray-500">{edu.degree}</p>
                     {edu.year && <p className="text-xs text-gray-400">{edu.year}</p>}
                   </div>
+                  <button
+                    onClick={() => handleDeleteEducation(edu._id)}
+                    className="opacity-0 group-hover:opacity-100 text-gray-300 hover:text-red-500 transition-opacity shrink-0 self-start"
+                    title="Remove"
+                  >
+                    <X size={14} />
+                  </button>
                 </div>
               ))}
             </div>

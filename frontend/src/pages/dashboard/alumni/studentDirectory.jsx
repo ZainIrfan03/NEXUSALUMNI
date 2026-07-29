@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { Filter, UserPlus, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
 
@@ -18,7 +19,7 @@ const fileUrl = (path) => {
 const SKILL_OPTIONS = ["Python", "Data Analysis", "UI/UX Design", "Public Speaking"];
 const YEAR_OPTIONS = ["2024", "2025", "2026", "2027"];
 
-function StudentCard({ student }) {
+function StudentCard({ student, onViewProfile }) {
   const avatar = fileUrl(student.avatarUrl);
 
   return (
@@ -54,7 +55,10 @@ function StudentCard({ student }) {
         ))}
       </div>
 
-      <button className="mt-auto w-full border border-gray-200 rounded-lg text-sm font-medium text-gray-800 py-2 hover:bg-gray-50">
+      <button
+        onClick={() => onViewProfile(student._id)}
+        className="mt-auto w-full border border-gray-200 rounded-lg text-sm font-medium text-gray-800 py-2 hover:bg-gray-50"
+      >
         View Profile →
       </button>
     </div>
@@ -80,6 +84,7 @@ function InviteMoreCard() {
 
 export default function studentDirectory() {
   const { token } = useSelector((state) => state.auth);
+  const navigate = useNavigate();
   const authHeader = { headers: { Authorization: `Bearer ${token}` } };
 
   const [students, setStudents] = useState([]);
@@ -254,7 +259,11 @@ export default function studentDirectory() {
           ) : (
             <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-5">
               {students.map((student) => (
-                <StudentCard key={student._id} student={student} />
+                <StudentCard
+                  key={student._id}
+                  student={student}
+                  onViewProfile={(id) => navigate(`/dashboard/alumni/directory/${id}`)}
+                />
               ))}
               <InviteMoreCard />
             </div>
