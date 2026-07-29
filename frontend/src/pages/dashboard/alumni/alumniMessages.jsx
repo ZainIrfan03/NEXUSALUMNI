@@ -13,17 +13,41 @@ import {
   Check,
   CheckCheck,
   Loader2,
+  Trash2,
+  FileText,
+  X,
 } from "lucide-react";
 import { connectSocket, getSocket } from "../../../utils/socket";
 
 /**
- * Messages page — file: src/pages/dashboard/alumni/Messages.jsx
- * Identical to the student version — the chat UI is role-agnostic,
- * it just shows whoever the other participant in the conversation is.
+ * Messages page — file: src/pages/dashboard/alumni/alumniMessages.jsx
+ * Now real-time: REST loads history, Socket.io delivers live messages.
+ * Also supports image/file attachments (multer, via REST) and deleting
+ * a whole conversation from the three-dot menu.
  */
+
+const API_BASE = "http://localhost:5000/api";
 
 const getToken = () => JSON.parse(localStorage.getItem("user"))?.token;
 const authHeader = () => ({ headers: { Authorization: `Bearer ${getToken()}` } });
+
+// Files come back from the backend as relative paths (e.g. "/uploads/chat/xyz.png"),
+// so build a full URL for <img src> / <a href>.
+const fileUrl = (p) => {
+  if (!p) return "";
+  if (p.startsWith("blob:") || p.startsWith("http")) return p;
+  return `http://localhost:5000${p}`;
+};
+
+// Real uploaded avatar when the person has one; otherwise a clean
+// initials-based avatar instead of a fake stock photo.
+const avatarSrc = (person) => {
+  if (!person) return "";
+  if (person.avatarUrl) return fileUrl(person.avatarUrl);
+  return `https://ui-avatars.com/api/?name=${encodeURIComponent(
+    person.fullName || "User"
+  )}&background=1E3A8A&color=fff&bold=true`;
+};
 
 export default function AlumniMessages() {
   const { user } = useSelector((state) => state.auth);
@@ -35,7 +59,14 @@ export default function AlumniMessages() {
   const [loadingConvos, setLoadingConvos] = useState(true);
   const [loadingMessages, setLoadingMessages] = useState(false);
   const [typing, setTyping] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [attachError, setAttachError] = useState("");
   const bottomRef = useRef(null);
+  const menuRef = useRef(null);
+  const fileInputRef = useRef(null);
+  const imageInputRef = useRef(null);
 
   const activeConvo = conversations.find((c) => c._id === activeId);
   const otherPerson = activeConvo?.participants.find((p) => p._id !== user._id);
@@ -49,7 +80,11 @@ export default function AlumniMessages() {
       // bump that conversation to the top of the inbox with the new preview
       setConversations((prev) =>
         prev
-          .map((c) => (c._id === msg.conversation ? { ...c, lastMessage: msg.text } : c))
+          .map((c) =>
+            c._id === msg.conversation
+              ? { ...c, lastMessage: msg.text || (msg.fileName ? `📎 ${msg.fileName}` : "") }
+              : c
+          )
           .sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt))
       );
     });
@@ -79,14 +114,22 @@ export default function AlumniMessages() {
     activeIdRef.current = activeId;
   }, [activeId]);
 
+  // Close the three-dot menu on outside click
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (menuRef.current && !menuRef.current.contains(e.target)) {
+        setMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   // 2. Load the conversation list on mount
   useEffect(() => {
     const fetchConversations = async () => {
       try {
-        const { data } = await axios.get(
-          "http://localhost:5000/api/messages/conversations",
-          authHeader()
-        );
+        const { data } = await axios.get(`${API_BASE}/messages/conversations`, authHeader());
         setConversations(data);
         if (data.length > 0) setActiveId(data[0]._id);
       } catch (err) {
@@ -104,10 +147,7 @@ export default function AlumniMessages() {
     const fetchMessages = async () => {
       setLoadingMessages(true);
       try {
-        const { data } = await axios.get(
-          `http://localhost:5000/api/messages/${activeId}`,
-          authHeader()
-        );
+        const { data } = await axios.get(`${API_BASE}/messages/${activeId}`, authHeader());
         setMessages(data);
       } catch (err) {
         console.error(err);
@@ -143,6 +183,70 @@ export default function AlumniMessages() {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSend();
+    }
+  };
+
+  // ── Attachments (image/file upload via multer) ──────────────────────
+  const handleFilePicked = async (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = ""; // allow picking the same file again later
+    if (!file || !activeConvo || !otherPerson) return;
+
+    setAttachError("");
+    setUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const { data: message } = await axios.post(
+        `${API_BASE}/messages/${activeId}`,
+        formData,
+        authHeader()
+      );
+
+      // Reflect it in our own chat window immediately...
+      setMessages((prev) => [...prev, message]);
+      // ...and relay it live to the other participant (attachments are
+      // saved over REST, not the socket "sendMessage" event).
+      getSocket()?.emit("fileMessageSent", { message, toUserId: otherPerson._id });
+
+      setConversations((prev) =>
+        prev
+          .map((c) =>
+            c._id === activeId ? { ...c, lastMessage: `📎 ${message.fileName}` } : c
+          )
+          .sort((a, b) => new Date(b.updatedAt || 0) - new Date(a.updatedAt || 0))
+      );
+    } catch (err) {
+      setAttachError(err.response?.data?.message || "Upload failed. Try a smaller file.");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  // ── Delete chat (three-dot menu) ─────────────────────────────────────
+  const handleDeleteChat = async () => {
+    if (!activeId) return;
+    const confirmed = window.confirm(
+      "Delete this entire conversation? This can't be undone."
+    );
+    if (!confirmed) return;
+
+    setMenuOpen(false);
+    setDeleting(true);
+    try {
+      await axios.delete(`${API_BASE}/messages/conversations/${activeId}`, authHeader());
+      setConversations((prev) => {
+        const remaining = prev.filter((c) => c._id !== activeId);
+        setActiveId(remaining.length > 0 ? remaining[0]._id : null);
+        return remaining;
+      });
+      setMessages([]);
+    } catch (err) {
+      console.error(err);
+      alert(err.response?.data?.message || "Couldn't delete this conversation.");
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -188,7 +292,7 @@ export default function AlumniMessages() {
                   }`}
                 >
                   <img
-                    src={`https://i.pravatar.cc/150?u=${other?._id}`}
+                    src={avatarSrc(other)}
                     alt={other?.fullName}
                     className="h-11 w-11 rounded-full object-cover shrink-0"
                   />
@@ -211,7 +315,7 @@ export default function AlumniMessages() {
           <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
             <div className="flex items-center gap-3">
               <img
-                src={`https://i.pravatar.cc/150?u=${otherPerson?._id}`}
+                src={avatarSrc(otherPerson)}
                 alt={otherPerson?.fullName}
                 className="h-10 w-10 rounded-full object-cover"
               />
@@ -221,9 +325,26 @@ export default function AlumniMessages() {
               <button className="text-gray-400 hover:text-dark">
                 <Phone size={18} />
               </button>
-              <button className="text-gray-400 hover:text-dark">
-                <MoreVertical size={18} />
-              </button>
+              <div className="relative" ref={menuRef}>
+                <button
+                  onClick={() => setMenuOpen((v) => !v)}
+                  className="text-gray-400 hover:text-dark"
+                >
+                  <MoreVertical size={18} />
+                </button>
+                {menuOpen && (
+                  <div className="absolute right-0 top-8 w-44 bg-white border border-gray-100 rounded-xl shadow-lg py-1 z-10">
+                    <button
+                      onClick={handleDeleteChat}
+                      disabled={deleting}
+                      className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 disabled:opacity-50"
+                    >
+                      {deleting ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}
+                      Delete Chat
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
@@ -238,15 +359,39 @@ export default function AlumniMessages() {
                 return (
                   <div key={m._id} className={`flex mb-4 ${isMe ? "justify-end" : "justify-start"}`}>
                     <div className={`max-w-[70%] flex flex-col ${isMe ? "items-end" : "items-start"}`}>
-                      <div
-                        className={`px-4 py-2.5 rounded-2xl text-sm leading-relaxed ${
-                          isMe
-                            ? "bg-primary text-white rounded-br-sm"
-                            : "bg-white text-dark rounded-bl-sm border border-gray-100"
-                        }`}
-                      >
-                        {m.text}
-                      </div>
+                      {m.fileUrl && m.fileType === "image" && (
+                        <a href={fileUrl(m.fileUrl)} target="_blank" rel="noopener noreferrer">
+                          <img
+                            src={fileUrl(m.fileUrl)}
+                            alt={m.fileName || "attachment"}
+                            className="max-w-[220px] max-h-[220px] rounded-xl mb-1 object-cover border border-gray-100"
+                          />
+                        </a>
+                      )}
+                      {m.fileUrl && m.fileType === "file" && (
+                        <a
+                          href={fileUrl(m.fileUrl)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className={`flex items-center gap-2 px-3 py-2.5 rounded-xl mb-1 text-sm max-w-[240px] ${
+                            isMe ? "bg-primary/10 text-primary" : "bg-white border border-gray-100 text-dark"
+                          }`}
+                        >
+                          <FileText size={16} className="shrink-0" />
+                          <span className="truncate">{m.fileName}</span>
+                        </a>
+                      )}
+                      {m.text && (
+                        <div
+                          className={`px-4 py-2.5 rounded-2xl text-sm leading-relaxed ${
+                            isMe
+                              ? "bg-primary text-white rounded-br-sm"
+                              : "bg-white text-dark rounded-bl-sm border border-gray-100"
+                          }`}
+                        >
+                          {m.text}
+                        </div>
+                      )}
                       <div className="flex items-center gap-1 mt-1 px-1">
                         <span className="text-[11px] text-gray-400">
                           {new Date(m.createdAt).toLocaleTimeString([], {
@@ -274,12 +419,45 @@ export default function AlumniMessages() {
             <div ref={bottomRef} />
           </div>
 
+          {attachError && (
+            <div className="flex items-center justify-between px-6 py-2 bg-red-50 text-red-600 text-xs">
+              <span>{attachError}</span>
+              <button onClick={() => setAttachError("")}>
+                <X size={14} />
+              </button>
+            </div>
+          )}
+
           <div className="border-t border-gray-100 px-6 py-4">
             <div className="flex items-center gap-3 bg-gray-100 rounded-2xl px-4 py-2.5">
-              <button className="text-gray-400 hover:text-dark shrink-0">
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".pdf,.doc,.docx,image/*"
+                hidden
+                onChange={handleFilePicked}
+              />
+              <input
+                ref={imageInputRef}
+                type="file"
+                accept="image/*"
+                hidden
+                onChange={handleFilePicked}
+              />
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploading}
+                className="text-gray-400 hover:text-dark shrink-0 disabled:opacity-50"
+                title="Attach a file"
+              >
                 <Paperclip size={18} />
               </button>
-              <button className="text-gray-400 hover:text-dark shrink-0">
+              <button
+                onClick={() => imageInputRef.current?.click()}
+                disabled={uploading}
+                className="text-gray-400 hover:text-dark shrink-0 disabled:opacity-50"
+                title="Attach an image"
+              >
                 <ImageIcon size={18} />
               </button>
               <input
@@ -289,7 +467,8 @@ export default function AlumniMessages() {
                   handleTyping();
                 }}
                 onKeyDown={handleKeyDown}
-                placeholder="Type your message..."
+                placeholder={uploading ? "Uploading attachment..." : "Type your message..."}
+                disabled={uploading}
                 className="flex-1 bg-transparent text-sm outline-none placeholder:text-gray-400"
               />
               <button className="text-gray-400 hover:text-dark shrink-0">
@@ -297,9 +476,10 @@ export default function AlumniMessages() {
               </button>
               <button
                 onClick={handleSend}
-                className="flex items-center gap-1.5 bg-primary text-white text-sm font-medium px-4 py-2 rounded-xl shrink-0 hover:opacity-90 transition-opacity"
+                disabled={uploading}
+                className="flex items-center gap-1.5 bg-primary text-white text-sm font-medium px-4 py-2 rounded-xl shrink-0 hover:opacity-90 transition-opacity disabled:opacity-50"
               >
-                Send <Send size={14} />
+                {uploading ? <Loader2 size={14} className="animate-spin" /> : <>Send <Send size={14} /></>}
               </button>
             </div>
           </div>

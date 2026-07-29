@@ -26,11 +26,10 @@ const messageSchema = new mongoose.Schema(
 );
 
 // A message must have at least text or an attachment.
-messageSchema.pre("validate", function (next) {
+messageSchema.pre("validate", function () {
   if (!this.text?.trim() && !this.fileUrl) {
-    return next(new Error("Message must contain text or an attachment."));
+    throw new Error("Message must contain text or an attachment.");
   }
-  next();
 });
 
 module.exports = mongoose.model("Message", messageSchema);

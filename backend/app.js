@@ -91,23 +91,42 @@ io.on("connection", (socket) => {
     }
   });
 
-  // The message is already saved via the REST route (POST /api/messages/:conversationId,
-  // which also handles the optional file upload through multer). The client emits this
-  // AFTER that save succeeds, just to push the saved message to the recipient live —
-  // this handler does NOT touch the database, it only relays.
-  socket.on("notifyMessage", ({ toUserId, message }) => {
-    const targetSocketId = onlineUsers.get(toUserId);
-    if (targetSocketId) {
-      io.to(targetSocketId).emit("receiveMessage", message);
+  // Client emits this to send a message
+  socket.on("sendMessage", async ({ conversationId, text, toUserId }) => {
+    try {
+      const message = await Message.create({
+        conversation: conversationId,
+        sender: socket.userId,
+        text,
+      });
+
+      await Conversation.findByIdAndUpdate(conversationId, {
+        lastMessage: text,
+        lastMessageAt: new Date(),
+      });
+
+      // Deliver instantly if the recipient is online right now
+      const targetSocketId = onlineUsers.get(toUserId);
+      if (targetSocketId) {
+        io.to(targetSocketId).emit("receiveMessage", message);
+      }
+
+      // Echo back to the sender so their UI updates from the same
+      // saved document instead of a separate optimistic message
+      socket.emit("messageSent", message);
+    } catch (error) {
+      socket.emit("messageError", { message: "Failed to send message" });
     }
   });
 
-  // Client emits this after deleting a conversation, so the other participant's
-  // inbox drops it too in real time.
-  socket.on("deleteConversation", ({ toUserId, conversationId }) => {
+  // Attachment messages are saved via the REST endpoint (multer needs a
+  // regular HTTP request), not the "sendMessage" socket event above — so
+  // once the frontend gets the saved message back from that REST call, it
+  // emits this event just to relay it live to the other participant.
+  socket.on("fileMessageSent", ({ message, toUserId }) => {
     const targetSocketId = onlineUsers.get(toUserId);
     if (targetSocketId) {
-      io.to(targetSocketId).emit("conversationDeleted", { conversationId });
+      io.to(targetSocketId).emit("receiveMessage", message);
     }
   });
 
