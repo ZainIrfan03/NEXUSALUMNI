@@ -107,7 +107,7 @@ const getMyApplicationStats = async (req, res) => {
     const applications = await Application.find({ student: req.user.id });
 
     const stats = {
-      applied: applications.length,
+      applied: applications.filter((a) => a.status === "applied").length,
       in_review: applications.filter((a) => a.status === "in_review").length,
       interview: applications.filter((a) => a.status === "interview").length,
     };

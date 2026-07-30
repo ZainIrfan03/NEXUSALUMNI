@@ -64,6 +64,7 @@ export default function Jobs() {
       }
     };
     fetchJobs();
+    fetchStats();
   }, [activeTab]);
 
   const fetchStats = async () => {
@@ -77,9 +78,6 @@ export default function Jobs() {
       // non-blocking — sidebar just shows 0s if this fails
     }
   };
-  useEffect(() => {
-    fetchStats();
-  }, []);
 
   const handleApply = async (jobId) => {
     setBusyJobId(jobId);
