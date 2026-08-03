@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useSelector } from "react-redux";
 import axios from "axios";
 import {
   Plus,
@@ -87,8 +86,6 @@ const APPLICANT_STATUS_LABELS = {
 
 export default function AlumniJobs() {
   const navigate = useNavigate();
-  const { token } = useSelector((state) => state.auth);
-  const authHeader = { headers: { Authorization: `Bearer ${token}` } };
 
   const [jobs, setJobs] = useState([]);
   const [stats, setStats] = useState({
@@ -114,7 +111,6 @@ export default function AlumniJobs() {
     setError("");
     try {
       const { data } = await axios.get(`${API_BASE}/alumni/jobs`, {
-        ...authHeader,
         params: { page, pageSize: PAGE_SIZE },
       });
       setJobs(data.jobs || []);
@@ -134,7 +130,7 @@ export default function AlumniJobs() {
 
   const handleDelete = async (jobId) => {
     try {
-      await axios.delete(`${API_BASE}/alumni/jobs/${jobId}`, authHeader);
+      await axios.delete(`${API_BASE}/alumni/jobs/${jobId}`);
       fetchJobs();
     } catch (err) {
       setError(err.response?.data?.message || "Could not delete this posting.");
@@ -147,7 +143,7 @@ export default function AlumniJobs() {
     setApplicants([]);
     setLoadingApplicants(true);
     try {
-      const { data } = await axios.get(`${API_BASE}/alumni/jobs/${job._id}/applicants`, authHeader);
+      const { data } = await axios.get(`${API_BASE}/alumni/jobs/${job._id}/applicants`);
       setApplicants(data.applicants || []);
     } catch (err) {
       setError(err.response?.data?.message || "Could not load applicants.");
@@ -164,8 +160,7 @@ export default function AlumniJobs() {
     try {
       await axios.patch(
         `${API_BASE}/alumni/jobs/applications/${applicationId}/status`,
-        { status },
-        authHeader
+        { status }
       );
       setApplicants((prev) =>
         prev.map((a) => (a.applicationId === applicationId ? { ...a, status } : a))

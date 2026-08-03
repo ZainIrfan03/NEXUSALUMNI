@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useSelector } from "react-redux";
 import axios from "axios";
 import {
   Pencil,
@@ -34,8 +33,6 @@ const fileUrl = (path) => {
  */
 export default function AlumniProfile() {
   const navigate = useNavigate();
-  const { token } = useSelector((state) => state.auth);
-  const authHeader = { headers: { Authorization: `Bearer ${token}` } };
 
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -55,7 +52,7 @@ export default function AlumniProfile() {
     setLoading(true);
     setError("");
     try {
-      const { data } = await axios.get(`${API_BASE}/alumni/profile`, authHeader);
+      const { data } = await axios.get(`${API_BASE}/alumni/profile`);
       setProfile(data);
     } catch (err) {
       setError(err.response?.data?.message || "Could not load profile.");
@@ -75,8 +72,7 @@ export default function AlumniProfile() {
     try {
       const { data } = await axios.post(
         `${API_BASE}/alumni/profile/experience`,
-        roleForm,
-        authHeader
+        roleForm
       );
       setProfile(data);
       setRoleForm({ title: "", company: "", startDate: "", endDate: "", current: false, description: "" });

@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { Filter, UserPlus, Loader2, ChevronLeft, ChevronRight, Send } from "lucide-react";
@@ -98,9 +97,7 @@ function InviteMoreCard() {
 }
 
 export default function studentDirectory() {
-  const { token } = useSelector((state) => state.auth);
   const navigate = useNavigate();
-  const authHeader = { headers: { Authorization: `Bearer ${token}` } };
 
   const [students, setStudents] = useState([]);
   const [totalCount, setTotalCount] = useState(0);
@@ -119,7 +116,6 @@ export default function studentDirectory() {
     setError("");
     try {
       const { data } = await axios.get(`${API_BASE}/alumni/directory`, {
-        ...authHeader,
         params: { department, skills: skills.join(","), years: years.join(","), sortBy, page },
       });
       setStudents(data.students || []);
@@ -165,8 +161,7 @@ export default function studentDirectory() {
     try {
       const { data: conversation } = await axios.post(
         `${API_BASE}/messages/conversations`,
-        { otherUserId: student.userId },
-        authHeader
+        { otherUserId: student.userId }
       );
       navigate("/dashboard/alumni/messages", { state: { conversationId: conversation._id } });
     } catch (err) {

@@ -84,7 +84,7 @@ const profileEndpointByRole = {
 };
 
 export default function DashboardLayout() {
-  const { user, token } = useSelector((state) => state.auth);
+  const { user } = useSelector((state) => state.auth);
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -100,11 +100,11 @@ export default function DashboardLayout() {
   // if the role has no profile endpoint yet or the request fails.
   useEffect(() => {
     const endpoint = profileEndpointByRole[user?.role];
-    if (!endpoint || !token) return;
+    if (!endpoint) return;
 
     let cancelled = false;
     axios
-      .get(`${API_BASE}${endpoint}`, { headers: { Authorization: `Bearer ${token}` } })
+      .get(`${API_BASE}${endpoint}`)
       .then(({ data }) => {
         if (!cancelled) setAvatarUrl(data.avatarUrl || "");
       })
@@ -115,7 +115,7 @@ export default function DashboardLayout() {
     return () => {
       cancelled = true;
     };
-  }, [user?.role, token]);
+  }, [user?.role]);
 
   const handleLogout = () => {
     // Best-effort: clears the httpOnly cookie server-side. Local logout still

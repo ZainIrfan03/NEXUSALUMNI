@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import {
@@ -36,9 +35,7 @@ const fileUrl = (path) => {
  * they are NOT part of the Save Profile payload.
  */
 export default function AlumniEditProfile() {
-  const { token } = useSelector((state) => state.auth);
   const navigate = useNavigate();
-  const authHeader = { headers: { Authorization: `Bearer ${token}` } };
 
   const [form, setForm] = useState({
     fullName: "",
@@ -74,7 +71,7 @@ export default function AlumniEditProfile() {
     setLoading(true);
     setError("");
     try {
-      const { data } = await axios.get(`${API_BASE}/alumni/profile`, authHeader);
+      const { data } = await axios.get(`${API_BASE}/alumni/profile`);
       setForm({
         fullName: data.user?.fullName || "",
         location: data.location || "",
@@ -131,7 +128,7 @@ export default function AlumniEditProfile() {
       const { data } = await axios.post(
         `${API_BASE}/alumni/profile/avatar`,
         formData,
-        { headers: { ...authHeader.headers, "Content-Type": "multipart/form-data" } }
+        { headers: { "Content-Type": "multipart/form-data" } }
       );
       setAvatarUrl(data.avatarUrl); // backend returns the full alumni doc
       setAvatarFile(null);
@@ -161,7 +158,7 @@ export default function AlumniEditProfile() {
       const { data } = await axios.post(
         `${API_BASE}/alumni/profile/resume`,
         formData,
-        { headers: { ...authHeader.headers, "Content-Type": "multipart/form-data" } }
+        { headers: { "Content-Type": "multipart/form-data" } }
       );
       setResumeUrl(data.resumeUrl);
       setResumeFile(null);
@@ -190,7 +187,7 @@ export default function AlumniEditProfile() {
         interests,
         isPublic,
       };
-      await axios.put(`${API_BASE}/alumni/profile`, payload, authHeader);
+      await axios.put(`${API_BASE}/alumni/profile`, payload);
       setSuccessMsg("Profile saved successfully.");
       setTimeout(() => navigate("/dashboard/alumni/profile"), 800);
     } catch (err) {

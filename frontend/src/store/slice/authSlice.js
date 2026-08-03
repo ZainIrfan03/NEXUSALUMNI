@@ -24,7 +24,6 @@ function getMockUser() {
       fullName: "Alex Sterling",
       email: "alex@test.com",
       role: mockRole, // student | alumni | faculty | admin
-      token: "mock-token",
     };
     sessionStorage.setItem("mock_user", JSON.stringify(mockUser));
     return mockUser;
@@ -39,7 +38,6 @@ const activeUser = storedUser ? JSON.parse(storedUser) : getMockUser();
 
 const initialState = {
   user: activeUser,
-  token: activeUser ? activeUser.token : null,
 };
 
 const authSlice = createSlice({
@@ -49,13 +47,11 @@ const authSlice = createSlice({
     // Called right after a successful login/register API response
     setCredentials: (state, action) => {
       state.user = action.payload;
-      state.token = action.payload.token;
       localStorage.setItem("user", JSON.stringify(action.payload));
     },
     // Called on logout
     logout: (state) => {
       state.user = null;
-      state.token = null;
       localStorage.removeItem("user");
       sessionStorage.removeItem("mock_user"); // also clear any active mock
     },

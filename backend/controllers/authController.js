@@ -90,10 +90,6 @@ const registerUser = async (req, res) => {
       fullName: user.fullName,
       email: user.email,
       role: user.role,
-      // token is still returned in the body for now so the current frontend
-      // (which stores it manually) keeps working during the migration.
-      // Once the frontend switches to the cookie, this can be dropped.
-      token,
     });
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
@@ -124,10 +120,6 @@ const loginUser = async (req, res) => {
       fullName: user.fullName,
       email: user.email,
       role: user.role,
-      // token is still returned in the body for now so the current frontend
-      // (which stores it manually) keeps working during the migration.
-      // Once the frontend switches to the cookie, this can be dropped.
-      token,
     });
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });

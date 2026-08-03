@@ -65,8 +65,7 @@ function MentorshipRequestCard({ request, onAccept, onDecline }) {
 }
 
 export default function AlumniDashboard() {
-  const { user, token } = useSelector((state) => state.auth);
-  const authHeader = { headers: { Authorization: `Bearer ${token}` } };
+  const { user } = useSelector((state) => state.auth);
 
   const [data, setData] = useState({ studentsMentored: 0, jobsPosted: 0, incomingRequests: [] });
   const [loading, setLoading] = useState(true);
@@ -76,7 +75,7 @@ export default function AlumniDashboard() {
     setLoading(true);
     setError("");
     try {
-      const { data } = await axios.get(`${API_BASE}/alumni/dashboard`, authHeader);
+      const { data } = await axios.get(`${API_BASE}/alumni/dashboard`);
       setData(data);
     } catch (err) {
       setError(err.response?.data?.message || "Could not load dashboard data.");
@@ -92,7 +91,7 @@ export default function AlumniDashboard() {
 
   const handleAccept = async (id) => {
     try {
-      await axios.post(`${API_BASE}/alumni/mentorship/requests/${id}/accept`, {}, authHeader);
+      await axios.post(`${API_BASE}/alumni/mentorship/requests/${id}/accept`, {});
       fetchOverview();
     } catch (err) {
       setError(err.response?.data?.message || "Could not accept request.");
@@ -101,7 +100,7 @@ export default function AlumniDashboard() {
 
   const handleDecline = async (id) => {
     try {
-      await axios.post(`${API_BASE}/alumni/mentorship/requests/${id}/reject`, {}, authHeader);
+      await axios.post(`${API_BASE}/alumni/mentorship/requests/${id}/reject`, {});
       fetchOverview();
     } catch (err) {
       setError(err.response?.data?.message || "Could not decline request.");

@@ -5,6 +5,7 @@ const { Server } = require("socket.io");
 const jwt = require("jsonwebtoken");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
+const cookie = require("cookie");
 const connectDB = require("./config/db");
 const path = require("path");
 
@@ -68,9 +69,13 @@ const io = new Server(httpServer, {
 const onlineUsers = new Map(); // userId -> socketId
 
 // Runs once per client connection attempt, before "connection" fires.
-// Client must connect like: io(URL, { auth: { token } })
+// Client must connect with { withCredentials: true } so the browser
+// includes the httpOnly "token" cookie in the handshake request headers
+// (socket.io doesn't parse cookies itself, so we do it manually here).
 io.use((socket, next) => {
-  const token = socket.handshake.auth?.token;
+  const rawCookie = socket.handshake.headers.cookie;
+  const token = rawCookie ? cookie.parse(rawCookie).token : null;
+
   if (!token) return next(new Error("No token provided"));
 
   try {

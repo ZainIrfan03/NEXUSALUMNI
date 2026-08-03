@@ -58,17 +58,12 @@ export default function StudentProfileView() {
   const [error, setError] = useState("");
   const [messaging, setMessaging] = useState(false);
 
-  const authHeader = () => {
-    const token = JSON.parse(localStorage.getItem("user"))?.token;
-    return { headers: { Authorization: `Bearer ${token}` } };
-  };
-
   useEffect(() => {
     const fetchStudent = async () => {
       setLoading(true);
       setError("");
       try {
-        const { data } = await axios.get(`${API_BASE}/alumni/directory/${id}`, authHeader());
+        const { data } = await axios.get(`${API_BASE}/alumni/directory/${id}`);
         setStudent(data);
       } catch (err) {
         setError(err.response?.data?.message || "Could not load this profile.");
@@ -88,8 +83,7 @@ export default function StudentProfileView() {
     try {
       const { data: conversation } = await axios.post(
         `${API_BASE}/messages/conversations`,
-        { otherUserId: studentUserId },
-        authHeader()
+        { otherUserId: studentUserId }
       );
       navigate("/dashboard/alumni/messages", {
         state: { conversationId: conversation._id },

@@ -29,8 +29,6 @@ import { connectSocket, getSocket } from "../../../utils/socket";
 
 const API_BASE = "http://localhost:5000/api";
 
-const getToken = () => JSON.parse(localStorage.getItem("user"))?.token;
-const authHeader = () => ({ headers: { Authorization: `Bearer ${getToken()}` } });
 
 // Files come back from the backend as relative paths (e.g. "/uploads/chat/xyz.png"),
 // so build a full URL for <img src> / <a href>.
@@ -76,7 +74,7 @@ export default function Messages() {
 
   // 1. Connect socket once, on mount
   useEffect(() => {
-    const socket = connectSocket(getToken());
+    const socket = connectSocket();
 
     socket.on("receiveMessage", (msg) => {
       setMessages((prev) => (msg.conversation === activeIdRef.current ? [...prev, msg] : prev));
@@ -132,7 +130,7 @@ export default function Messages() {
   useEffect(() => {
     const fetchConversations = async () => {
       try {
-        const { data } = await axios.get(`${API_BASE}/messages/conversations`, authHeader());
+        const { data } = await axios.get(`${API_BASE}/messages/conversations`);
         setConversations(data);
         if (incomingConversationId) {
           setActiveId(incomingConversationId);
@@ -154,7 +152,7 @@ export default function Messages() {
     const fetchMessages = async () => {
       setLoadingMessages(true);
       try {
-        const { data } = await axios.get(`${API_BASE}/messages/${activeId}`, authHeader());
+        const { data } = await axios.get(`${API_BASE}/messages/${activeId}`);
         setMessages(data);
       } catch (err) {
         console.error(err);
@@ -207,8 +205,7 @@ export default function Messages() {
 
       const { data: message } = await axios.post(
         `${API_BASE}/messages/${activeId}`,
-        formData,
-        authHeader()
+        formData
       );
 
       // Reflect it in our own chat window immediately...
@@ -242,7 +239,7 @@ export default function Messages() {
     setMenuOpen(false);
     setDeleting(true);
     try {
-      await axios.delete(`${API_BASE}/messages/conversations/${activeId}`, authHeader());
+      await axios.delete(`${API_BASE}/messages/conversations/${activeId}`);
       setConversations((prev) => {
         const remaining = prev.filter((c) => c._id !== activeId);
         setActiveId(remaining.length > 0 ? remaining[0]._id : null);

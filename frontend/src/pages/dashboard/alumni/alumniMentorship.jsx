@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useSelector } from "react-redux";
 import axios from "axios";
 import { ClipboardList, Users, Loader2, Send } from "lucide-react";
 
@@ -81,8 +80,6 @@ function RequestCard({ request, onAccept, onReject }) {
 
 export default function AlumniMentorship() {
   const navigate = useNavigate();
-  const { token } = useSelector((state) => state.auth);
-  const authHeader = { headers: { Authorization: `Bearer ${token}` } };
 
   const [data, setData] = useState({ activeMenteesCount: 0, requests: [], mentees: [] });
   const [loading, setLoading] = useState(true);
@@ -92,7 +89,7 @@ export default function AlumniMentorship() {
     setLoading(true);
     setError("");
     try {
-      const { data } = await axios.get(`${API_BASE}/alumni/mentorship`, authHeader);
+      const { data } = await axios.get(`${API_BASE}/alumni/mentorship`);
       setData(data);
     } catch (err) {
       setError(err.response?.data?.message || "Could not load mentorship data.");
@@ -108,7 +105,7 @@ export default function AlumniMentorship() {
 
   const handleAccept = async (id) => {
     try {
-      await axios.post(`${API_BASE}/alumni/mentorship/requests/${id}/accept`, {}, authHeader);
+      await axios.post(`${API_BASE}/alumni/mentorship/requests/${id}/accept`, {});
       fetchMentorship();
     } catch (err) {
       setError(err.response?.data?.message || "Could not accept request.");
@@ -117,7 +114,7 @@ export default function AlumniMentorship() {
 
   const handleReject = async (id) => {
     try {
-      await axios.post(`${API_BASE}/alumni/mentorship/requests/${id}/reject`, {}, authHeader);
+      await axios.post(`${API_BASE}/alumni/mentorship/requests/${id}/reject`, {});
       fetchMentorship();
     } catch (err) {
       setError(err.response?.data?.message || "Could not reject request.");
@@ -131,8 +128,7 @@ export default function AlumniMentorship() {
     try {
       const { data: conversation } = await axios.post(
         `${API_BASE}/messages/conversations`,
-        { otherUserId: menteeUserId },
-        authHeader
+        { otherUserId: menteeUserId }
       );
       navigate("/dashboard/alumni/messages", {
         state: { conversationId: conversation._id },

@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useSelector } from "react-redux";
 import axios from "axios";
 import { Briefcase, ArrowLeft, Loader2 } from "lucide-react";
 
@@ -11,8 +10,6 @@ const DEPARTMENT_OPTIONS = ["Engineering", "Design", "Marketing", "Sales", "Oper
 
 export default function AlumniJobNew() {
   const navigate = useNavigate();
-  const { token } = useSelector((state) => state.auth);
-  const authHeader = { headers: { Authorization: `Bearer ${token}` } };
 
   const [form, setForm] = useState({
     title: "",
@@ -43,7 +40,7 @@ export default function AlumniJobNew() {
 
     setSaving(true);
     try {
-      await axios.post(`${API_BASE}/jobs`, form, authHeader);
+      await axios.post(`${API_BASE}/jobs`, form);
       navigate("/dashboard/alumni/jobs");
     } catch (err) {
       setError(err.response?.data?.message || "Could not post this job. Please try again.");

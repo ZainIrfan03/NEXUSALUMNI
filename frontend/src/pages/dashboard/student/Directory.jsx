@@ -64,7 +64,6 @@ export default function Directory() {
       setLoading(true);
       setError("");
       try {
-        const token = JSON.parse(localStorage.getItem("user"))?.token;
         const { data } = await axios.get("http://localhost:5000/api/directory", {
           params: {
             page: activePage,
@@ -72,7 +71,6 @@ export default function Directory() {
             fromYear: filters.fromYear || undefined,
             toYear: filters.toYear || undefined,
           },
-          headers: { Authorization: `Bearer ${token}` },
         });
 
         // Map backend shape { _id, user: { fullName }, graduationYear, company, jobTitle }

@@ -25,10 +25,10 @@ export default function Login() {
 
     try {
       const { data } = await axios.post("http://localhost:5000/api/auth/login", form);
-        // token save karo taake future requests mein use ho sake
-   
 
-      // Save { _id, fullName, email, role, token } into Redux.
+      // Backend also sets the auth token as an httpOnly cookie (sent
+      // automatically on future requests) — nothing to store manually here.
+      // Save { _id, fullName, email, role } into Redux.
       // authSlice also mirrors it to localStorage so refresh keeps the session.
       dispatch(setCredentials(data));
 
