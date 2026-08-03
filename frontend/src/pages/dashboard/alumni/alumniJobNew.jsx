@@ -2,8 +2,11 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { Briefcase, ArrowLeft, Loader2 } from "lucide-react";
+const SOCKET_URL = import.meta.env.VITE_SOCKET_URL
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
 
-const API_BASE = "http://localhost:5000/api";
+
+const API_BASE = API_BASE_URL;
 
 const TYPE_OPTIONS = ["Full-time", "Part-time", "Internship", "Remote"];
 const DEPARTMENT_OPTIONS = ["Engineering", "Design", "Marketing", "Sales", "Operations", "Other"];

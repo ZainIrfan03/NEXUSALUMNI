@@ -1,6 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+const SOCKET_URL = import.meta.env.VITE_SOCKET_URL
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
+
 import {
   Plus,
   Briefcase,
@@ -14,7 +17,7 @@ import {
   Mail,
 } from "lucide-react";
 
-const API_BASE = "http://localhost:5000/api";
+const API_BASE = API_BASE_URL;
 const PAGE_SIZE = 4;
 
 // Attachments/avatars come back from the backend as relative paths
@@ -22,7 +25,7 @@ const PAGE_SIZE = 4;
 const fileUrl = (path) => {
   if (!path) return "";
   if (path.startsWith("http")) return path;
-  return `http://localhost:5000${path}`;
+  return `SOCKET_URL${path}`;
 };
 
 function StatCard({ icon: Icon, note, value, label }) {

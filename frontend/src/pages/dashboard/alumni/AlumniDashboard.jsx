@@ -2,8 +2,11 @@ import React, { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import axios from "axios";
 import { GraduationCap, Briefcase, Plus, FileEdit, Image, Link2, Loader2 } from "lucide-react";
+const SOCKET_URL = import.meta.env.VITE_SOCKET_URL
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
 
-const API_BASE = "http://localhost:5000/api";
+
+const API_BASE = API_BASE_URL;
 
 function StatCard({ label, value, note, icon: Icon }) {
   return (

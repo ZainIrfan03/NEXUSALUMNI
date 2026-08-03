@@ -3,6 +3,9 @@ import { Link, useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import axios from "axios";
 import { setCredentials } from "../store/slice/authSlice";
+const SOCKET_URL = import.meta.env.VITE_SOCKET_URL
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
+
 
 export default function Register() {
   const navigate = useNavigate();
@@ -33,7 +36,7 @@ export default function Register() {
     setLoading(true);
 
     try {
-      await axios.post("http://localhost:5000/api/auth/register", {
+      await axios.post(`${API_BASE_URL}/auth/register`, {
         role,
         ...form,
       });

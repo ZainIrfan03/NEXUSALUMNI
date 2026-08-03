@@ -2,8 +2,11 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { Filter, UserPlus, Loader2, ChevronLeft, ChevronRight, Send } from "lucide-react";
+const SOCKET_URL = import.meta.env.VITE_SOCKET_URL
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
 
-const API_BASE = "http://localhost:5000/api";
+
+const API_BASE = API_BASE_URL;
 
 // Files come back from the backend as relative paths (e.g. "/uploads/avatars/xyz.png"),
 // so build a full URL for <img src>. Stale blob: URLs (from old preview-only
@@ -12,7 +15,7 @@ const fileUrl = (path) => {
   if (!path) return "";
   if (path.startsWith("blob:")) return "";
   if (path.startsWith("http")) return path;
-  return `http://localhost:5000${path}`;
+  return `SOCKET_URL${path}`;
 };
 
 const SKILL_OPTIONS = ["Python", "Data Analysis", "UI/UX Design", "Public Speaking"];

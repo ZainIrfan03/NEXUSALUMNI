@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+const SOCKET_URL = import.meta.env.VITE_SOCKET_URL
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
+
 import {
   SlidersHorizontal,
   Bookmark,
@@ -35,7 +38,6 @@ import {
 const tabs = ["All Jobs", "Full-time", "Internship", "Part-time", "Remote"];
 
 const getToken = () => JSON.parse(localStorage.getItem("user"))?.token;
-const authHeader = () => ({ headers: { Authorization: `Bearer ${getToken()}` } });
 const currentUserId = () => JSON.parse(localStorage.getItem("user"))?._id;
 
 export default function Jobs() {
@@ -52,9 +54,9 @@ export default function Jobs() {
       setLoadingJobs(true);
       setError("");
       try {
-        const { data } = await axios.get("http://localhost:5000/api/jobs", {
+        const { data } = await axios.get(API_BASE_URL , {
           params: { type: activeTab },
-          ...authHeader(),
+          
         });
         setJobs(data);
       } catch (err) {
@@ -70,8 +72,7 @@ export default function Jobs() {
   const fetchStats = async () => {
     try {
       const { data } = await axios.get(
-        "http://localhost:5000/api/jobs/my-applications",
-        authHeader()
+        "API_BASE_URL/jobs/my-applications",
       );
       setTracking(data);
     } catch (err) {
@@ -82,7 +83,7 @@ export default function Jobs() {
   const handleApply = async (jobId) => {
     setBusyJobId(jobId);
     try {
-      await axios.post(`http://localhost:5000/api/jobs/${jobId}/apply`, {}, authHeader());
+      await axios.post(`API_BASE_URL/jobs/${jobId}/apply`, {});
       setJobs((prev) => prev.map((j) => (j._id === jobId ? { ...j, hasApplied: true } : j)));
       setSelectedJob((prev) => (prev && prev._id === jobId ? { ...prev, hasApplied: true } : prev));
       setTracking((prev) => ({ ...prev, applied: prev.applied + 1 }));
@@ -102,9 +103,8 @@ export default function Jobs() {
     setBusyJobId(jobId);
     try {
       const { data } = await axios.post(
-        `http://localhost:5000/api/jobs/${jobId}/save`,
+        `API_BASE_URL/jobs/${jobId}/save`,
         {},
-        authHeader()
       );
       setJobs((prev) =>
         prev.map((j) =>

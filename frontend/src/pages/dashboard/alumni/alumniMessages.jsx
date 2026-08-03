@@ -2,6 +2,9 @@ import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { useSelector } from "react-redux";
 import { useLocation } from "react-router-dom";
+const SOCKET_URL = import.meta.env.VITE_SOCKET_URL
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
+
 import {
   Search,
   SquarePen,
@@ -27,7 +30,7 @@ import { connectSocket, getSocket } from "../../../utils/socket";
  * a whole conversation from the three-dot menu.
  */
 
-const API_BASE = "http://localhost:5000/api";
+const API_BASE = API_BASE_URL;
 
 
 // Files come back from the backend as relative paths (e.g. "/uploads/chat/xyz.png"),
@@ -35,7 +38,7 @@ const API_BASE = "http://localhost:5000/api";
 const fileUrl = (p) => {
   if (!p) return "";
   if (p.startsWith("blob:") || p.startsWith("http")) return p;
-  return `http://localhost:5000${p}`;
+  return `SOCKET_URL${p}`;
 };
 
 // Real uploaded avatar when the person has one; otherwise a clean

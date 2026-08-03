@@ -2,6 +2,9 @@ import React, { useState, useEffect, useRef } from "react";
 import { Outlet, NavLink, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import axios from "axios";
+const SOCKET_URL = import.meta.env.VITE_SOCKET_URL
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
+
 import {
   LayoutDashboard,
   User,
@@ -22,7 +25,7 @@ import {
 import { logout } from "../store/slice/authSlice";
 import { disconnectSocket } from "../utils/socket";
 
-const API_BASE = "http://localhost:5000/api";
+const API_BASE = API_BASE_URL;
 
 // Files come back from the backend as relative paths (e.g. "/uploads/avatars/xyz.png"),
 // so build a full URL for <img src> when it doesn't already start with "http".
@@ -32,7 +35,7 @@ const fileUrl = (path) => {
   // They only work in the browser tab that created them, so treat as invalid.
   if (path.startsWith("blob:")) return "";
   if (path.startsWith("http")) return path;
-  return `http://localhost:5000${path}`;
+  return `API_BASE${path}`;
 };
 
 /**

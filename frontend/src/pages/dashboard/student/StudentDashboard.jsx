@@ -2,6 +2,9 @@ import React, { useState, useEffect } from "react";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+const SOCKET_URL = import.meta.env.VITE_SOCKET_URL
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
+
 import {
   Users,
   Users2,
@@ -16,7 +19,7 @@ import {
 } from "lucide-react";
 
 const getToken = () => JSON.parse(localStorage.getItem("user"))?.token;
-const authHeader = () => ({ headers: { Authorization: `Bearer ${getToken()}` } });
+
 
 // Formats a date as "2h ago", "5d ago", etc. for the activity feed
 const timeAgo = (dateString) => {
@@ -53,8 +56,8 @@ export default function StudentDashboard() {
     const fetchStats = async () => {
       try {
         const { data } = await axios.get(
-          "http://localhost:5000/api/student/dashboard",
-          authHeader()
+          "API_BASE_URL/student/dashboard",
+         
         );
         setStatsData(data);
       } catch (err) {
@@ -67,8 +70,8 @@ export default function StudentDashboard() {
     const fetchMentors = async () => {
       try {
         const { data } = await axios.get(
-          "http://localhost:5000/api/mentorship/recommended",
-          authHeader()
+          "API_BASE_URL/mentorship/recommended",
+         
         );
         setMentors(
           data.slice(0, 2).map((a) => ({
@@ -88,8 +91,8 @@ export default function StudentDashboard() {
     const fetchActivity = async () => {
       try {
         const { data } = await axios.get(
-          "http://localhost:5000/api/student/activity",
-          authHeader()
+          "API_BASE_URL/student/activity",
+         
         );
         setActivity(data);
       } catch (err) {

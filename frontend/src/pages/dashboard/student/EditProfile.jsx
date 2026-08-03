@@ -14,16 +14,19 @@ import {
   MapPin,
   Loader2,
 } from "lucide-react";
+const SOCKET_URL = import.meta.env.VITE_SOCKET_URL
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
+
 
 // Files come back from the backend as relative paths (e.g. "/uploads/avatars/xyz.png"),
 // so build a full URL for <img src> / <a href> when they don't already start with "blob:" or "http".
 const fileUrl = (path) => {
   if (!path) return "";
   if (path.startsWith("blob:") || path.startsWith("http")) return path;
-  return `http://localhost:5000${path}`;
+  return ` SOCKET_URL${path}`;
 };
 
-const API_BASE = "http://localhost:5000/api";
+const API_BASE = API_BASE_URL;
 
 /**
  * Edit Profile page — file: src/pages/dashboard/student/EditProfile.jsx
@@ -33,7 +36,7 @@ const API_BASE = "http://localhost:5000/api";
 export default function EditProfile() {
   const { token } = useSelector((state) => state.auth);
   const navigate = useNavigate();
-  const authHeader = { headers: { Authorization: `Bearer ${token}` } };
+ 
 
   const [form, setForm] = useState({
     fullName: "",
@@ -69,7 +72,7 @@ export default function EditProfile() {
     setLoading(true);
     setError("");
     try {
-      const { data } = await axios.get(`${API_BASE}/student/profile`, authHeader);
+      const { data } = await axios.get(`${API_BASE}/student/profile`);
       setForm({
         fullName: data.user?.fullName || "",
         location: data.location || "",
@@ -126,7 +129,7 @@ export default function EditProfile() {
         `${API_BASE}/student/profile/avatar`,
         formData,
         {
-          headers: { ...authHeader.headers, "Content-Type": "multipart/form-data" },
+          headers: {  "Content-Type": "multipart/form-data" },
         }
       );
       setAvatarUrl(data.avatarUrl);
@@ -157,7 +160,7 @@ export default function EditProfile() {
         `${API_BASE}/student/profile/resume`,
         formData,
         {
-          headers: { ...authHeader.headers, "Content-Type": "multipart/form-data" },
+          headers: {  "Content-Type": "multipart/form-data" },
         }
       );
       setResumeUrl(data.resumeUrl);
@@ -186,7 +189,7 @@ export default function EditProfile() {
         resumeUrl,
         avatarUrl,
       };
-      await axios.put(`${API_BASE}/student/profile`, payload, authHeader);
+      await axios.put(`${API_BASE}/student/profile`, payload);
       setSuccessMsg("Profile saved successfully.");
       // Give the user a moment to see the success message, then go back to View Mode
       setTimeout(() => navigate("/dashboard/student/profile"), 800);

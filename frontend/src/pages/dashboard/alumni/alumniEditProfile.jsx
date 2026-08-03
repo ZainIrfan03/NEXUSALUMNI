@@ -1,6 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+const SOCKET_URL = import.meta.env.VITE_SOCKET_URL
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
+
 import {
   UserCog,
   FileText,
@@ -14,7 +17,7 @@ import {
   Loader2,
 } from "lucide-react";
 
-const API_BASE = "http://localhost:5000/api";
+const API_BASE = API_BASE_URL;
 
 // Files come back from the backend as relative paths (e.g. "/uploads/avatars/xyz.png"),
 // so build a full URL for <img src> / <a href>. Stale blob: URLs (from old

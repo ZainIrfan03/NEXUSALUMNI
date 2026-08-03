@@ -1,6 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
+const SOCKET_URL = import.meta.env.VITE_SOCKET_URL
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
+
 import axios from "axios";
 import {
   Pencil,
@@ -33,7 +36,7 @@ const fileUrl = (path) => {
 export default function MyProfile() {
   const navigate = useNavigate();
   const { token } = useSelector((state) => state.auth);
-  const authHeader = { headers: { Authorization: `Bearer ${token}` } };
+ 
 
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -60,7 +63,7 @@ export default function MyProfile() {
     setLoading(true);
     setError("");
     try {
-      const { data } = await axios.get(`${API_BASE}/student/profile`, authHeader);
+      const { data } = await axios.get(`${API_BASE}/student/profile`);
       setProfile(data);
     } catch (err) {
       setError(err.response?.data?.message || "Could not load profile.");
@@ -81,7 +84,7 @@ export default function MyProfile() {
       const { data } = await axios.post(
         `${API_BASE}/student/profile/experience`,
         roleForm,
-        authHeader
+      
       );
       setProfile(data);
       setRoleForm({ title: "", company: "", startDate: "", endDate: "", current: false, description: "" });
@@ -98,7 +101,7 @@ export default function MyProfile() {
       const { data } = await axios.post(
         `${API_BASE}/student/profile/education`,
         eduForm,
-        authHeader
+     
       );
       setProfile(data);
       setEduForm({ school: "", degree: "", year: "" });
@@ -112,7 +115,7 @@ export default function MyProfile() {
     try {
       const { data } = await axios.delete(
         `${API_BASE}/student/profile/education/${educationId}`,
-        authHeader
+        
       );
       setProfile(data);
     } catch (err) {

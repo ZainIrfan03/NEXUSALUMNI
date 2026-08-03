@@ -1,4 +1,6 @@
 import { io } from "socket.io-client";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ;
+const SOCKET_URL = import.meta.env.VITE_SOCKET_URL ;
 
 /**
  * Single shared socket instance for the whole app.
@@ -11,7 +13,7 @@ let socket = null;
 export const connectSocket = () => {
   if (socket?.connected) return socket;
 
-  socket = io("http://localhost:5000", {
+  socket = io(SOCKET_URL, {
     withCredentials: true,
   });
 

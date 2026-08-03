@@ -2,6 +2,9 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { Compass, Clock3, GraduationCap, Loader2, MessageCircle } from "lucide-react";
+const SOCKET_URL = import.meta.env.VITE_SOCKET_URL
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
+
 
 /**
  * Mentorship Hub — file: src/pages/dashboard/student/Mentorship.jsx
@@ -18,7 +21,7 @@ const fileUrl = (path) => {
   if (!path) return "";
   if (path.startsWith("blob:")) return "";
   if (path.startsWith("http")) return path;
-  return `http://localhost:5000${path}`;
+  return `SOCKET_URL${path}`;
 };
 
 function MentorAvatar({ name, img }) {
@@ -45,7 +48,6 @@ const statusStyles = {
 const REQUEST_PAGE_SIZE = 4; // how many "Request Status" rows to reveal per "Load More" click
 
 const getToken = () => JSON.parse(localStorage.getItem("user"))?.token;
-const authHeader = () => ({ headers: { Authorization: `Bearer ${getToken()}` } });
 
 export default function Mentorship() {
   const navigate = useNavigate();
@@ -62,8 +64,8 @@ export default function Mentorship() {
     const fetchMentors = async () => {
       try {
         const { data } = await axios.get(
-          "http://localhost:5000/api/mentorship/recommended",
-          authHeader()
+          "API_BASE_URL/mentorship/recommended",
+         
         );
         // Map backend Alumni shape -> what the cards below render
         // `img` resolves through fileUrl() so relative upload paths get the
@@ -89,8 +91,8 @@ export default function Mentorship() {
     const fetchRequests = async () => {
       try {
         const { data } = await axios.get(
-          "http://localhost:5000/api/mentorship/my-requests",
-          authHeader()
+          "API_BASE_URL/mentorship/my-requests",
+         
         );
         setRequests(data);
       } catch (err) {
@@ -108,9 +110,9 @@ export default function Mentorship() {
     setSendingId(mentor.alumniUserId);
     try {
       const { data: newRequest } = await axios.post(
-        "http://localhost:5000/api/mentorship/request",
+        "API_BASE_URL/mentorship/request",
         { alumniId: mentor.alumniDocId }, // backend does Alumni.findById(alumniId)
-        authHeader()
+       
       );
       // Prepend the new request so "Request Status" updates immediately
       setRequests((prev) => [
@@ -136,9 +138,8 @@ export default function Mentorship() {
   const handleStartChat = async (mentor) => {
     try {
       const { data: conversation } = await axios.post(
-        "http://localhost:5000/api/messages/conversations",
+        "API_BASE_URL/messages/conversations",
         { otherUserId: mentor.alumniUserId },
-        authHeader()
       );
       navigate("/dashboard/student/messages", {
         state: { conversationId: conversation._id },

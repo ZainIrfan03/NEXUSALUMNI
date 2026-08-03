@@ -4,6 +4,9 @@ import { useDispatch } from "react-redux";
 import axios from "axios";
 import { Mail, Lock, Eye, EyeOff, ArrowRight } from "lucide-react";
 import { setCredentials } from "../store/slice/authSlice";
+const SOCKET_URL = import.meta.env.VITE_SOCKET_URL
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
+
 
 export default function Login() {
   const navigate = useNavigate();
@@ -24,7 +27,7 @@ export default function Login() {
     setLoading(true);
 
     try {
-      const { data } = await axios.post("http://localhost:5000/api/auth/login", form);
+      const { data } = await axios.post(`${API_BASE_URL}/auth/login`, form)
 
       // Backend also sets the auth token as an httpOnly cookie (sent
       // automatically on future requests) — nothing to store manually here.

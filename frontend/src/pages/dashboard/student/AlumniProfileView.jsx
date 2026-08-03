@@ -2,8 +2,11 @@ import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { ArrowLeft, MapPin, Briefcase, GraduationCap, Loader2, Send } from "lucide-react";
+const SOCKET_URL = import.meta.env.VITE_SOCKET_URL
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
 
-const API_BASE = "http://localhost:5000/api";
+
+const API_BASE = API_BASE_URL;
 
 // Files come back from the backend as relative paths (e.g. "/uploads/avatars/xyz.png"),
 // so build a full URL for <img src>. Stale blob: URLs (from old preview-only
@@ -12,7 +15,7 @@ const fileUrl = (path) => {
   if (!path) return "";
   if (path.startsWith("blob:")) return "";
   if (path.startsWith("http")) return path;
-  return `http://localhost:5000${path}`;
+  return `SOCKET_URL${path}`;
 };
 
 /**
@@ -31,17 +34,15 @@ export default function AlumniProfileView() {
   const [checkingRequest, setCheckingRequest] = useState(true); // true until the check below finishes
   const [requesting, setRequesting] = useState(false);
 
-  const authHeader = () => {
-    const token = JSON.parse(localStorage.getItem("user"))?.token;
-    return { headers: { Authorization: `Bearer ${token}` } };
-  };
+ const token = JSON.parse(localStorage.getItem("user"))?.token;
+  
 
   useEffect(() => {
     const fetchAlumni = async () => {
       setLoading(true);
       setError("");
       try {
-        const { data } = await axios.get(`${API_BASE}/directory/${id}`, authHeader());
+        const { data } = await axios.get(`${API_BASE}/directory/${id}`);
         setAlumni(data);
       } catch (err) {
         setError(err.response?.data?.message || "Could not load this profile.");
@@ -62,7 +63,7 @@ export default function AlumniProfileView() {
         return;
       }
       try {
-        const { data } = await axios.get(`${API_BASE}/mentorship/my-requests`, authHeader());
+        const { data } = await axios.get(`${API_BASE}/mentorship/my-requests`);
         const existing = data.find((r) => r.alumni?._id?.toString() === alumniUserId.toString());
         setRequestStatus(existing?.status || null);
       } catch {
@@ -81,7 +82,6 @@ export default function AlumniProfileView() {
       await axios.post(
         `${API_BASE}/mentorship/request`,
         { alumniId: alumni._id },
-        authHeader()
       );
       setRequestStatus("pending");
     } catch (err) {

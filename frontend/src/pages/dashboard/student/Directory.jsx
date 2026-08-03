@@ -2,6 +2,9 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { ChevronDown, LayoutGrid, List, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
+const SOCKET_URL = import.meta.env.VITE_SOCKET_URL
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
+
 
 /**
  * Alumni Directory — file: src/pages/dashboard/student/Directory.jsx
@@ -16,7 +19,7 @@ const fileUrl = (path) => {
   if (!path) return "";
   if (path.startsWith("blob:")) return "";
   if (path.startsWith("http")) return path;
-  return `http://localhost:5000${path}`;
+  return `SOCKET_URL${path}`;
 };
 
 const departments = ["Engineering", "Marketing", "Product"];
@@ -64,7 +67,7 @@ export default function Directory() {
       setLoading(true);
       setError("");
       try {
-        const { data } = await axios.get("http://localhost:5000/api/directory", {
+        const { data } = await axios.get(`${API_BASE_URL}/directory`, {
           params: {
             page: activePage,
             limit: 6,
