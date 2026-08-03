@@ -9,8 +9,8 @@ import Login from "./pages/Login";
 import DashboardLayout from "./layouts/DashboardLayout";
 import StudentDashboard from "./pages/dashboard/student/StudentDashboard";
 import ProtectedRoute from "./routes/protectedRoute";
-import studentRoutes from "./pages/dashboard/student/studentRoutes";
-import alumniRoutes from "./pages/dashboard/alumni/alumniRoutes";
+import studentRoutes from "./pages/dashboard/student/StudentRoutes";
+import alumniRoutes from "./pages/dashboard/alumni/AlumniRoutes";
 
 
 function App() {

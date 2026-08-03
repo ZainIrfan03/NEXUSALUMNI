@@ -1,8 +1,8 @@
 import React from "react";
 import Hero from "../components/home/Hero";
 import Features from "../components/home/Features";
-import FeaturedAlumni from "../components/home/featuredAlumni";
-import SuccessStories from "../components/home/successStories";
+import FeaturedAlumni from "../components/home/FeaturedAlumni";
+import SuccessStories from "../components/home/SuccessStories";
 
 export default function Home() {
   return (
