@@ -1,11 +1,15 @@
 const jwt = require("jsonwebtoken");
 
-// Verifies the JWT sent in the Authorization header ("Bearer <token>")
-// and attaches the decoded { id, role } to req.user for use in protected routes.
+// Verifies the JWT and attaches the decoded { id, role } to req.user for use
+// in protected routes. Prefers the httpOnly "token" cookie; falls back to the
+// old "Authorization: Bearer <token>" header while the frontend is still
+// being migrated over to cookie-based auth.
 const protect = (req, res, next) => {
-  let token = req.headers.authorization?.startsWith("Bearer")
-    ? req.headers.authorization.split(" ")[1]
-    : null;
+  let token = req.cookies?.token || null;
+
+  if (!token && req.headers.authorization?.startsWith("Bearer")) {
+    token = req.headers.authorization.split(" ")[1];
+  }
 
   if (!token) {
     return res.status(401).json({ message: "Not authorized, no token" });

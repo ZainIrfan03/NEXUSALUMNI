@@ -4,6 +4,7 @@ const http = require("http");
 const { Server } = require("socket.io");
 const jwt = require("jsonwebtoken");
 const cors = require("cors");
+const cookieParser = require("cookie-parser");
 const connectDB = require("./config/db");
 const path = require("path");
 
@@ -29,8 +30,11 @@ const app = express();
 
 const FRONTEND_URL = "http://localhost:5173"; // apna frontend URL
 
-app.use(cors({ origin: FRONTEND_URL })); // allow requests from the React frontend
+// credentials: true is required so the browser is allowed to send/receive
+// the httpOnly auth cookie across origins (frontend on :5173, backend on :5000)
+app.use(cors({ origin: FRONTEND_URL, credentials: true }));
 app.use(express.json());  // parse JSON request bodies
+app.use(cookieParser());  // parse cookies into req.cookies
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // Routes
@@ -56,7 +60,7 @@ app.get("/", (req, res) => {
 // Express needs a raw http server so Socket.io can attach to the same port.
 const httpServer = http.createServer(app);
 const io = new Server(httpServer, {
-  cors: { origin: FRONTEND_URL },
+  cors: { origin: FRONTEND_URL, credentials: true },
 });
 
 // Tracks which socket belongs to which logged-in user, so a message can be

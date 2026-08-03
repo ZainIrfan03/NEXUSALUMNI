@@ -8,6 +8,18 @@ const generateToken = (id, role) => {
   return jwt.sign({ id, role }, process.env.JWT_SECRET, { expiresIn: "30d" });
 };
 
+// Sets the JWT as an httpOnly cookie so client-side JS can never read it
+// (protects against XSS token theft). `secure` is only forced in production
+// because it requires HTTPS, which localhost doesn't have during dev.
+const setTokenCookie = (res, token) => {
+  res.cookie("token", token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days — matches JWT expiry
+  });
+};
+
 // @route  POST /api/auth/register
 // Public registration — only "student" and "alumni" are allowed here.
 // Creates the base User first, then the matching profile document
@@ -70,12 +82,18 @@ const registerUser = async (req, res) => {
       await Alumni.create({ user: user._id, graduationYear, company, jobTitle });
     }
 
+    const token = generateToken(user._id, user.role);
+    setTokenCookie(res, token);
+
     res.status(201).json({
       _id: user._id,
       fullName: user.fullName,
       email: user.email,
       role: user.role,
-      token: generateToken(user._id, user.role),
+      // token is still returned in the body for now so the current frontend
+      // (which stores it manually) keeps working during the migration.
+      // Once the frontend switches to the cookie, this can be dropped.
+      token,
     });
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
@@ -98,16 +116,34 @@ const loginUser = async (req, res) => {
       return res.status(401).json({ message: "Invalid email or password" });
     }
 
+    const token = generateToken(user._id, user.role);
+    setTokenCookie(res, token);
+
     res.json({
       _id: user._id,
       fullName: user.fullName,
       email: user.email,
       role: user.role,
-      token: generateToken(user._id, user.role),
+      // token is still returned in the body for now so the current frontend
+      // (which stores it manually) keeps working during the migration.
+      // Once the frontend switches to the cookie, this can be dropped.
+      token,
     });
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
 
-module.exports = { registerUser, loginUser };
+// @route  POST /api/auth/logout
+// Clears the httpOnly auth cookie. Options passed to clearCookie must match
+// the options used in setTokenCookie or the browser won't remove it.
+const logoutUser = (req, res) => {
+  res.clearCookie("token", {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+  });
+  res.json({ message: "Logged out successfully" });
+};
+
+module.exports = { registerUser, loginUser, logoutUser };

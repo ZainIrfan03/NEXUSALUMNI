@@ -20,6 +20,7 @@ import {
   X,
 } from "lucide-react";
 import { logout } from "../store/slice/authSlice";
+import { disconnectSocket } from "../utils/socket";
 
 const API_BASE = "http://localhost:5000/api";
 
@@ -117,6 +118,11 @@ export default function DashboardLayout() {
   }, [user?.role, token]);
 
   const handleLogout = () => {
+    // Best-effort: clears the httpOnly cookie server-side. Local logout still
+    // proceeds even if this fails (e.g. network hiccup) — the user shouldn't
+    // get stuck unable to log out.
+    axios.post(`${API_BASE}/auth/logout`).catch(() => {});
+    disconnectSocket();
     dispatch(logout());
     navigate("/login");
   };
