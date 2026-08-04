@@ -34,9 +34,9 @@ export default function Hero() {
         {/* Right: illustration card */}
         <div className="relative rounded-2xl overflow-hidden bg-gradient-to-br from-white to-blue-50 border border-gray-200 aspect-[4/3] flex flex-col justify-between p-8">
           <div className="flex items-center justify-center gap-6">
-            {[0, 1, 2, 3].map((i) => (
+            {["member-a", "member-b", "member-c", "member-d"].map((memberKey) => (
               <div
-                key={i}
+                key={memberKey}
                 className="h-16 w-16 rounded-xl bg-white shadow-sm border border-gray-100 flex items-center justify-center"
               >
                 <Users size={22} className="text-primary" />
