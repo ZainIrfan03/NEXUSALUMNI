@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from "../../../api/axios";
 const SOCKET_URL = import.meta.env.VITE_SOCKET_URL
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
 
 import {
   Plus,
@@ -17,7 +16,6 @@ import {
   Mail,
 } from "lucide-react";
 
-const API_BASE = API_BASE_URL;
 const PAGE_SIZE = 4;
 
 // Attachments/avatars come back from the backend as relative paths
@@ -25,7 +23,7 @@ const PAGE_SIZE = 4;
 const fileUrl = (path) => {
   if (!path) return "";
   if (path.startsWith("http")) return path;
-  return `SOCKET_URL${path}`;
+  return `${SOCKET_URL}${path}`;
 };
 
 function StatCard({ icon: Icon, note, value, label }) {
@@ -48,10 +46,10 @@ function AvatarStack({ applicants = [], count }) {
   const extra = count - shown.length;
   return (
     <div className="flex items-center -space-x-2">
-      {shown.map((a, i) => (
+      {shown.map((applicant, index) => (
         <img
-          key={i}
-          src={fileUrl(a.avatarUrl) || `https://i.pravatar.cc/150?u=${a._id || i}`}
+          key={applicant._id || index}
+          src={fileUrl(applicant.avatarUrl) || `https://i.pravatar.cc/150?u=${applicant._id || index}`}
           alt=""
           className="h-8 w-8 rounded-full object-cover border-2 border-white"
         />
@@ -113,7 +111,7 @@ export default function AlumniJobs() {
     setLoading(true);
     setError("");
     try {
-      const { data } = await axios.get(`${API_BASE}/alumni/jobs`, {
+      const { data } = await api.get(`/alumni/jobs`, {
         params: { page, pageSize: PAGE_SIZE },
       });
       setJobs(data.jobs || []);
@@ -133,7 +131,7 @@ export default function AlumniJobs() {
 
   const handleDelete = async (jobId) => {
     try {
-      await axios.delete(`${API_BASE}/alumni/jobs/${jobId}`);
+      await api.delete(`/alumni/jobs/${jobId}`);
       fetchJobs();
     } catch (err) {
       setError(err.response?.data?.message || "Could not delete this posting.");
@@ -146,7 +144,7 @@ export default function AlumniJobs() {
     setApplicants([]);
     setLoadingApplicants(true);
     try {
-      const { data } = await axios.get(`${API_BASE}/alumni/jobs/${job._id}/applicants`);
+      const { data } = await api.get(`/alumni/jobs/${job._id}/applicants`);
       setApplicants(data.applicants || []);
     } catch (err) {
       setError(err.response?.data?.message || "Could not load applicants.");
@@ -161,12 +159,14 @@ export default function AlumniJobs() {
   const handleStatusChange = async (applicationId, status) => {
     setUpdatingId(applicationId);
     try {
-      await axios.patch(
-        `${API_BASE}/alumni/jobs/applications/${applicationId}/status`,
+      await api.patch(
+        `/alumni/jobs/applications/${applicationId}/status`,
         { status }
       );
-      setApplicants((prev) =>
-        prev.map((a) => (a.applicationId === applicationId ? { ...a, status } : a))
+      setApplicants((previousApplicants) =>
+        previousApplicants.map((applicant) =>
+          applicant.applicationId === applicationId ? { ...applicant, status } : applicant
+        )
       );
       fetchJobs(); // keep the postings table + unread count in sync
     } catch (err) {
@@ -330,25 +330,25 @@ export default function AlumniJobs() {
           </p>
           <div className="flex items-center gap-1.5">
             <button
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              onClick={() => setPage((currentPage) => Math.max(1, currentPage - 1))}
               disabled={page === 1}
               className="h-8 w-8 rounded-lg flex items-center justify-center text-gray-400 disabled:opacity-40"
             >
               ‹
             </button>
-            {Array.from({ length: Math.min(totalPages, 3) }, (_, i) => i + 1).map((n) => (
+            {Array.from({ length: Math.min(totalPages, 3) }, (_, index) => index + 1).map((pageNumber) => (
               <button
-                key={n}
-                onClick={() => setPage(n)}
+                key={pageNumber}
+                onClick={() => setPage(pageNumber)}
                 className={`h-8 w-8 rounded-lg text-sm font-medium ${
-                  page === n ? "bg-dark text-white" : "text-gray-600 hover:bg-gray-100"
+                  page === pageNumber ? "bg-dark text-white" : "text-gray-600 hover:bg-gray-100"
                 }`}
               >
-                {n}
+                {pageNumber}
               </button>
             ))}
             <button
-              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              onClick={() => setPage((currentPage) => Math.min(totalPages, currentPage + 1))}
               disabled={page === totalPages}
               className="h-8 w-8 rounded-lg flex items-center justify-center text-gray-400 disabled:opacity-40"
             >
@@ -397,7 +397,7 @@ export default function AlumniJobs() {
         >
           <div
             className="bg-white rounded-2xl max-w-2xl w-full max-h-[85vh] flex flex-col"
-            onClick={(e) => e.stopPropagation()}
+            onClick={(event) => event.stopPropagation()}
           >
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
               <div>
@@ -423,25 +423,25 @@ export default function AlumniJobs() {
                 </p>
               ) : (
                 <div className="flex flex-col gap-3">
-                  {applicants.map((a) => (
+                  {applicants.map((applicant) => (
                     <div
-                      key={a.applicationId}
+                      key={applicant.applicationId}
                       className="flex items-center gap-4 border border-gray-100 rounded-xl px-4 py-3"
                     >
                       <img
-                        src={fileUrl(a.avatarUrl) || `https://i.pravatar.cc/150?u=${a.studentId}`}
-                        alt={a.fullName}
+                        src={fileUrl(applicant.avatarUrl) || `https://i.pravatar.cc/150?u=${applicant.studentId}`}
+                        alt={applicant.fullName}
                         className="h-11 w-11 rounded-full object-cover shrink-0"
                       />
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold text-dark truncate">{a.fullName}</p>
+                        <p className="text-sm font-semibold text-dark truncate">{applicant.fullName}</p>
                         <p className="text-xs text-gray-500 truncate flex items-center gap-1 mt-0.5">
-                          <Mail size={11} /> {a.email}
+                          <Mail size={11} /> {applicant.email}
                         </p>
                         <p className="text-xs text-gray-400 mt-0.5">
-                          {[a.department, a.session].filter(Boolean).join(" • ")}
-                          {a.department || a.session ? " • " : ""}
-                          Applied {new Date(a.appliedAt).toLocaleDateString("en-US", {
+                          {[applicant.department, applicant.session].filter(Boolean).join(" • ")}
+                          {applicant.department || applicant.session ? " • " : ""}
+                          Applied {new Date(applicant.appliedAt).toLocaleDateString("en-US", {
                             month: "short",
                             day: "numeric",
                           })}
@@ -451,15 +451,15 @@ export default function AlumniJobs() {
                       <div className="flex items-center gap-2 shrink-0">
                         <span
                           className={`text-xs font-medium rounded-full px-3 py-1.5 ${
-                            APPLICANT_STATUS_STYLES[a.status] || "bg-gray-100 text-gray-500"
+                            APPLICANT_STATUS_STYLES[applicant.status] || "bg-gray-100 text-gray-500"
                           }`}
                         >
-                          {APPLICANT_STATUS_LABELS[a.status] || a.status}
+                          {APPLICANT_STATUS_LABELS[applicant.status] || applicant.status}
                         </span>
                         <select
-                          value={a.status}
-                          disabled={updatingId === a.applicationId}
-                          onChange={(e) => handleStatusChange(a.applicationId, e.target.value)}
+                          value={applicant.status}
+                          disabled={updatingId === applicant.applicationId}
+                          onChange={(event) => handleStatusChange(applicant.applicationId, event.target.value)}
                           className="text-xs border border-gray-200 rounded-lg px-2 py-1.5 text-gray-600 disabled:opacity-50"
                         >
                           <option value="applied">Applied</option>

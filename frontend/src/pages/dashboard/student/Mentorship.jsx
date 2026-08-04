@@ -1,10 +1,8 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
+import api from "../../../api/axios";
 import { useNavigate } from "react-router-dom";
 import { Compass, Clock3, GraduationCap, Loader2, MessageCircle } from "lucide-react";
 const SOCKET_URL = import.meta.env.VITE_SOCKET_URL
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
-
 
 /**
  * Mentorship Hub — file: src/pages/dashboard/student/Mentorship.jsx
@@ -21,7 +19,7 @@ const fileUrl = (path) => {
   if (!path) return "";
   if (path.startsWith("blob:")) return "";
   if (path.startsWith("http")) return path;
-  return `SOCKET_URL${path}`;
+  return `${SOCKET_URL}${path}`;
 };
 
 function MentorAvatar({ name, img }) {
@@ -47,8 +45,6 @@ const statusStyles = {
 
 const REQUEST_PAGE_SIZE = 4; // how many "Request Status" rows to reveal per "Load More" click
 
-const getToken = () => JSON.parse(localStorage.getItem("user"))?.token;
-
 export default function Mentorship() {
   const navigate = useNavigate();
   const [mentors, setMentors] = useState([]);
@@ -63,22 +59,19 @@ export default function Mentorship() {
   useEffect(() => {
     const fetchMentors = async () => {
       try {
-        const { data } = await axios.get(
-          "API_BASE_URL/mentorship/recommended",
-         
-        );
+        const { data } = await api.get(`/mentorship/recommended`);
         // Map backend Alumni shape -> what the cards below render
         // `img` resolves through fileUrl() so relative upload paths get the
         // correct host prefix; empty string means "no avatar" -> initials fallback.
-        const mapped = data.map((a) => ({
-          alumniUserId: a.user?._id,     // needed when sending a request (must be the User id)
-          alumniDocId: a._id,
-          name: a.user?.fullName || "Unknown",
-          role: a.jobTitle || "Alumni",
-          company: a.company || "",
-          badges: a.graduationYear ? [`Alumni '${String(a.graduationYear).slice(-2)}`] : [],
+        const mapped = data.map((alumnus) => ({
+          alumniUserId: alumnus.user?._id,     // needed when sending a request (must be the User id)
+          alumniDocId: alumnus._id,
+          name: alumnus.user?.fullName || "Unknown",
+          role: alumnus.jobTitle || "Alumni",
+          company: alumnus.company || "",
+          badges: alumnus.graduationYear ? [`Alumni '${String(alumnus.graduationYear).slice(-2)}`] : [],
           desc: "", // no bio field on Alumni yet — add one later if needed
-          img: fileUrl(a.avatarUrl),
+          img: fileUrl(alumnus.avatarUrl),
         }));
         setMentors(mapped);
       } catch (err) {
@@ -90,10 +83,7 @@ export default function Mentorship() {
 
     const fetchRequests = async () => {
       try {
-        const { data } = await axios.get(
-          "API_BASE_URL/mentorship/my-requests",
-         
-        );
+        const { data } = await api.get(`/mentorship/my-requests`);
         setRequests(data);
       } catch (err) {
         setError(err.response?.data?.message || "Failed to load requests");
@@ -109,10 +99,9 @@ export default function Mentorship() {
   const handleSendRequest = async (mentor) => {
     setSendingId(mentor.alumniUserId);
     try {
-      const { data: newRequest } = await axios.post(
-        "API_BASE_URL/mentorship/request",
+      const { data: newRequest } = await api.post(
+        `/mentorship/request`,
         { alumniId: mentor.alumniDocId }, // backend does Alumni.findById(alumniId)
-       
       );
       // Prepend the new request so "Request Status" updates immediately
       setRequests((prev) => [
@@ -131,14 +120,14 @@ export default function Mentorship() {
   // r.alumni._id is included automatically by populate (even with a select
   // string), so this comparison works as long as ids are stringified on both sides.
   const getRequestStatus = (alumniUserId) =>
-    requests.find((r) => r.alumni?._id?.toString() === alumniUserId?.toString())?.status;
+    requests.find((request) => request.alumni?._id?.toString() === alumniUserId?.toString())?.status;
 
   // Creates (or finds an existing) conversation with this mentor, then
   // jumps to the Messages page with that conversation pre-selected.
   const handleStartChat = async (mentor) => {
     try {
-      const { data: conversation } = await axios.post(
-        "API_BASE_URL/messages/conversations",
+      const { data: conversation } = await api.post(
+        `/messages/conversations`,
         { otherUserId: mentor.alumniUserId },
       );
       navigate("/dashboard/student/messages", {
@@ -182,9 +171,9 @@ export default function Mentorship() {
             </div>
           ) : (
             <div className="grid sm:grid-cols-2 gap-5">
-              {mentors.map((m) => {
-                const isSending = sendingId === m.alumniUserId;
-                const status = getRequestStatus(m.alumniUserId);
+              {mentors.map((mentor) => {
+                const isSending = sendingId === mentor.alumniUserId;
+                const status = getRequestStatus(mentor.alumniUserId);
                 const canChat = status === "accepted" || status === "completed";
                 // Only "pending" locks the button — a decline lets the student try again.
                 const isLocked = isSending || status === "pending" || canChat;
@@ -202,26 +191,26 @@ export default function Mentorship() {
                   : "Send Request";
 
                 return (
-                  <div key={m.alumniDocId} className="bg-white rounded-2xl p-5 flex flex-col">
+                  <div key={mentor.alumniDocId} className="bg-white rounded-2xl p-5 flex flex-col">
                     <div className="flex items-start gap-3 mb-3">
-                      <MentorAvatar name={m.name} img={m.img} />
+                      <MentorAvatar name={mentor.name} img={mentor.img} />
                       <div>
-                        <p className="font-semibold text-dark">{m.name}</p>
+                        <p className="font-semibold text-dark">{mentor.name}</p>
                         <p className="text-sm text-primary font-medium">
-                          {m.role} {m.company && <span className="text-gray-400">•</span>}{" "}
-                          {m.company}
+                          {mentor.role} {mentor.company && <span className="text-gray-400">•</span>}{" "}
+                          {mentor.company}
                         </p>
                       </div>
                     </div>
 
-                    {m.badges.length > 0 && (
+                    {mentor.badges.length > 0 && (
                       <div className="flex gap-2 mb-3">
-                        {m.badges.map((b) => (
+                        {mentor.badges.map((badge) => (
                           <span
-                            key={b}
+                            key={badge}
                             className="text-[11px] font-semibold text-primary bg-blue-50 rounded-md px-2 py-1"
                           >
-                            {b.toUpperCase()}
+                            {badge.toUpperCase()}
                           </span>
                         ))}
                       </div>
@@ -233,7 +222,7 @@ export default function Mentorship() {
                       {/* Chat is only possible once the alumni has accepted the request */}
                       {canChat && (
                         <button
-                          onClick={() => handleStartChat(m)}
+                          onClick={() => handleStartChat(mentor)}
                           className="h-9 w-9 rounded-xl border border-gray-200 flex items-center justify-center text-gray-500 hover:border-primary hover:text-primary transition-colors shrink-0"
                           title="Message this mentor"
                         >
@@ -241,7 +230,7 @@ export default function Mentorship() {
                         </button>
                       )}
                       <button
-                        onClick={() => handleSendRequest(m)}
+                        onClick={() => handleSendRequest(mentor)}
                         disabled={isLocked}
                         className={`text-sm font-medium px-4 py-2 rounded-xl transition-colors ${
                           isLocked
@@ -279,20 +268,20 @@ export default function Mentorship() {
                     so anything within the current "page" scrolls instead of
                     stretching the card. */}
                 <div className="flex flex-col max-h-[280px] overflow-y-auto pr-1">
-                  {visibleRequests.map((r, i) => (
+                  {visibleRequests.map((request, index) => (
                     <div
-                      key={r._id}
+                      key={request._id}
                       className={`flex items-start gap-3 py-3 ${
-                        i !== visibleRequests.length - 1 ? "border-b border-gray-100" : ""
+                        index !== visibleRequests.length - 1 ? "border-b border-gray-100" : ""
                       }`}
                     >
                       <div className="h-9 w-9 rounded-lg bg-gray-100 text-dark text-xs font-semibold flex items-center justify-center shrink-0">
-                        {r.alumni?.fullName?.split(" ").map((w) => w[0]).join("") || "?"}
+                        {request.alumni?.fullName?.split(" ").map((word) => word[0]).join("") || "?"}
                       </div>
                       <div className="flex-1">
-                        <p className="text-sm font-medium text-dark">{r.alumni?.fullName}</p>
+                        <p className="text-sm font-medium text-dark">{request.alumni?.fullName}</p>
                         <p className="text-xs text-gray-400">
-                          Sent: {new Date(r.createdAt).toLocaleDateString("en-US", {
+                          Sent: {new Date(request.createdAt).toLocaleDateString("en-US", {
                             month: "short",
                             day: "numeric",
                             year: "numeric",
@@ -300,9 +289,9 @@ export default function Mentorship() {
                         </p>
                       </div>
                       <span
-                        className={`text-[10px] font-semibold rounded-full px-2 py-1 whitespace-nowrap ${statusStyles[r.status]}`}
+                        className={`text-[10px] font-semibold rounded-full px-2 py-1 whitespace-nowrap ${statusStyles[request.status]}`}
                       >
-                        {r.status.toUpperCase()}
+                        {request.status.toUpperCase()}
                       </span>
                     </div>
                   ))}
@@ -310,7 +299,7 @@ export default function Mentorship() {
 
                 {hasMoreRequests && (
                   <button
-                    onClick={() => setVisibleRequestCount((c) => c + REQUEST_PAGE_SIZE)}
+                    onClick={() => setVisibleRequestCount((currentCount) => currentCount + REQUEST_PAGE_SIZE)}
                     className="w-full text-sm font-medium text-primary hover:underline pt-3 mt-1 border-t border-gray-100"
                   >
                     Load More

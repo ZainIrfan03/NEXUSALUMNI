@@ -1,9 +1,8 @@
 import React, { useState, useEffect, useRef } from "react";
-import axios from "axios";
+import api from "../../../api/axios";
 import { useSelector } from "react-redux";
 import { useLocation } from "react-router-dom";
 const SOCKET_URL = import.meta.env.VITE_SOCKET_URL
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
 
 import {
   Search,
@@ -30,15 +29,12 @@ import { connectSocket, getSocket } from "../../../utils/socket";
  * a whole conversation from the three-dot menu.
  */
 
-const API_BASE = API_BASE_URL;
-
-
 // Files come back from the backend as relative paths (e.g. "/uploads/chat/xyz.png"),
 // so build a full URL for <img src> / <a href>.
-const fileUrl = (p) => {
-  if (!p) return "";
-  if (p.startsWith("blob:") || p.startsWith("http")) return p;
-  return `SOCKET_URL${p}`;
+const fileUrl = (path) => {
+  if (!path) return "";
+  if (path.startsWith("blob:") || path.startsWith("http")) return path;
+  return `${SOCKET_URL}${path}`;
 };
 
 // Real uploaded avatar when the person has one; otherwise a clean
@@ -72,8 +68,8 @@ export default function Messages() {
   const fileInputRef = useRef(null);
   const imageInputRef = useRef(null);
 
-  const activeConvo = conversations.find((c) => c._id === activeId);
-  const otherPerson = activeConvo?.participants.find((p) => p._id !== user._id);
+  const activeConvo = conversations.find((conversation) => conversation._id === activeId);
+  const otherPerson = activeConvo?.participants.find((participant) => participant._id !== user._id);
 
   // 1. Connect socket once, on mount
   useEffect(() => {
@@ -84,12 +80,12 @@ export default function Messages() {
       // bump that conversation to the top of the inbox with the new preview
       setConversations((prev) =>
         prev
-          .map((c) =>
-            c._id === msg.conversation
-              ? { ...c, lastMessage: msg.text || (msg.fileName ? `📎 ${msg.fileName}` : "") }
-              : c
+          .map((conversation) =>
+            conversation._id === msg.conversation
+              ? { ...conversation, lastMessage: msg.text || (msg.fileName ? `📎 ${msg.fileName}` : "") }
+              : conversation
           )
-          .sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt))
+          .sort((convoA, convoB) => new Date(convoB.updatedAt) - new Date(convoA.updatedAt))
       );
     });
 
@@ -120,8 +116,8 @@ export default function Messages() {
 
   // Close the three-dot menu on outside click
   useEffect(() => {
-    const handleClickOutside = (e) => {
-      if (menuRef.current && !menuRef.current.contains(e.target)) {
+    const handleClickOutside = (event) => {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
         setMenuOpen(false);
       }
     };
@@ -133,7 +129,7 @@ export default function Messages() {
   useEffect(() => {
     const fetchConversations = async () => {
       try {
-        const { data } = await axios.get(`${API_BASE}/messages/conversations`);
+        const { data } = await api.get(`/messages/conversations`);
         setConversations(data);
         if (incomingConversationId) {
           setActiveId(incomingConversationId);
@@ -155,7 +151,7 @@ export default function Messages() {
     const fetchMessages = async () => {
       setLoadingMessages(true);
       try {
-        const { data } = await axios.get(`${API_BASE}/messages/${activeId}`);
+        const { data } = await api.get(`/messages/${activeId}`);
         setMessages(data);
       } catch (err) {
         console.error(err);
@@ -187,17 +183,17 @@ export default function Messages() {
     getSocket()?.emit("typing", { conversationId: activeId, toUserId: otherPerson._id });
   };
 
-  const handleKeyDown = (e) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
+  const handleKeyDown = (event) => {
+    if (event.key === "Enter" && !event.shiftKey) {
+      event.preventDefault();
       handleSend();
     }
   };
 
   // ── Attachments (image/file upload via multer) ──────────────────────
-  const handleFilePicked = async (e) => {
-    const file = e.target.files?.[0];
-    e.target.value = ""; // allow picking the same file again later
+  const handleFilePicked = async (event) => {
+    const file = event.target.files?.[0];
+    event.target.value = ""; // allow picking the same file again later
     if (!file || !activeConvo || !otherPerson) return;
 
     setAttachError("");
@@ -206,8 +202,8 @@ export default function Messages() {
       const formData = new FormData();
       formData.append("file", file);
 
-      const { data: message } = await axios.post(
-        `${API_BASE}/messages/${activeId}`,
+      const { data: message } = await api.post(
+        `/messages/${activeId}`,
         formData
       );
 
@@ -219,10 +215,10 @@ export default function Messages() {
 
       setConversations((prev) =>
         prev
-          .map((c) =>
-            c._id === activeId ? { ...c, lastMessage: `📎 ${message.fileName}` } : c
+          .map((conversation) =>
+            conversation._id === activeId ? { ...conversation, lastMessage: `📎 ${message.fileName}` } : conversation
           )
-          .sort((a, b) => new Date(b.updatedAt || 0) - new Date(a.updatedAt || 0))
+          .sort((convoA, convoB) => new Date(convoB.updatedAt || 0) - new Date(convoA.updatedAt || 0))
       );
     } catch (err) {
       setAttachError(err.response?.data?.message || "Upload failed. Try a smaller file.");
@@ -242,9 +238,9 @@ export default function Messages() {
     setMenuOpen(false);
     setDeleting(true);
     try {
-      await axios.delete(`${API_BASE}/messages/conversations/${activeId}`);
+      await api.delete(`/messages/conversations/${activeId}`);
       setConversations((prev) => {
-        const remaining = prev.filter((c) => c._id !== activeId);
+        const remaining = prev.filter((conversation) => conversation._id !== activeId);
         setActiveId(remaining.length > 0 ? remaining[0]._id : null);
         return remaining;
       });
@@ -288,14 +284,14 @@ export default function Messages() {
               No conversations yet. Message an alumni from the Directory to start one.
             </p>
           ) : (
-            conversations.map((c) => {
-              const other = c.participants.find((p) => p._id !== user._id);
+            conversations.map((conversation) => {
+              const other = conversation.participants.find((participant) => participant._id !== user._id);
               return (
                 <button
-                  key={c._id}
-                  onClick={() => setActiveId(c._id)}
+                  key={conversation._id}
+                  onClick={() => setActiveId(conversation._id)}
                   className={`w-full flex items-start gap-3 px-5 py-3.5 text-left transition-colors ${
-                    activeId === c._id ? "bg-blue-50 border-r-2 border-primary" : "hover:bg-gray-50"
+                    activeId === conversation._id ? "bg-blue-50 border-r-2 border-primary" : "hover:bg-gray-50"
                   }`}
                 >
                   <img
@@ -306,7 +302,7 @@ export default function Messages() {
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold text-dark truncate">{other?.fullName}</p>
                     <p className="text-sm text-gray-500 truncate mt-0.5">
-                      {c.lastMessage || "Say hello 👋"}
+                      {conversation.lastMessage || "Say hello 👋"}
                     </p>
                   </div>
                 </button>
@@ -334,7 +330,7 @@ export default function Messages() {
               </button>
               <div className="relative" ref={menuRef}>
                 <button
-                  onClick={() => setMenuOpen((v) => !v)}
+                  onClick={() => setMenuOpen((isOpen) => !isOpen)}
                   className="text-gray-400 hover:text-dark"
                 >
                   <MoreVertical size={18} />
@@ -361,23 +357,23 @@ export default function Messages() {
                 <Loader2 size={16} className="animate-spin" /> Loading messages...
               </div>
             ) : (
-              messages.map((m) => {
-                const isMe = m.sender === user._id;
+              messages.map((chatMessage) => {
+                const isMe = chatMessage.sender === user._id;
                 return (
-                  <div key={m._id} className={`flex mb-4 ${isMe ? "justify-end" : "justify-start"}`}>
+                  <div key={chatMessage._id} className={`flex mb-4 ${isMe ? "justify-end" : "justify-start"}`}>
                     <div className={`max-w-[70%] flex flex-col ${isMe ? "items-end" : "items-start"}`}>
-                      {m.fileUrl && m.fileType === "image" && (
-                        <a href={fileUrl(m.fileUrl)} target="_blank" rel="noopener noreferrer">
+                      {chatMessage.fileUrl && chatMessage.fileType === "image" && (
+                        <a href={fileUrl(chatMessage.fileUrl)} target="_blank" rel="noopener noreferrer">
                           <img
-                            src={fileUrl(m.fileUrl)}
-                            alt={m.fileName || "attachment"}
+                            src={fileUrl(chatMessage.fileUrl)}
+                            alt={chatMessage.fileName || "attachment"}
                             className="max-w-[220px] max-h-[220px] rounded-xl mb-1 object-cover border border-gray-100"
                           />
                         </a>
                       )}
-                      {m.fileUrl && m.fileType === "file" && (
+                      {chatMessage.fileUrl && chatMessage.fileType === "file" && (
                         <a
-                          href={fileUrl(m.fileUrl)}
+                          href={fileUrl(chatMessage.fileUrl)}
                           target="_blank"
                           rel="noopener noreferrer"
                           className={`flex items-center gap-2 px-3 py-2.5 rounded-xl mb-1 text-sm max-w-[240px] ${
@@ -385,10 +381,10 @@ export default function Messages() {
                           }`}
                         >
                           <FileText size={16} className="shrink-0" />
-                          <span className="truncate">{m.fileName}</span>
+                          <span className="truncate">{chatMessage.fileName}</span>
                         </a>
                       )}
-                      {m.text && (
+                      {chatMessage.text && (
                         <div
                           className={`px-4 py-2.5 rounded-2xl text-sm leading-relaxed ${
                             isMe
@@ -396,17 +392,17 @@ export default function Messages() {
                               : "bg-white text-dark rounded-bl-sm border border-gray-100"
                           }`}
                         >
-                          {m.text}
+                          {chatMessage.text}
                         </div>
                       )}
                       <div className="flex items-center gap-1 mt-1 px-1">
                         <span className="text-[11px] text-gray-400">
-                          {new Date(m.createdAt).toLocaleTimeString([], {
+                          {new Date(chatMessage.createdAt).toLocaleTimeString([], {
                             hour: "2-digit",
                             minute: "2-digit",
                           })}
                         </span>
-                        {isMe && (m.seen ? <CheckCheck size={12} className="text-primary" /> : <Check size={12} className="text-gray-400" />)}
+                        {isMe && (chatMessage.seen ? <CheckCheck size={12} className="text-primary" /> : <Check size={12} className="text-gray-400" />)}
                       </div>
                     </div>
                   </div>
@@ -469,8 +465,8 @@ export default function Messages() {
               </button>
               <input
                 value={draft}
-                onChange={(e) => {
-                  setDraft(e.target.value);
+                onChange={(event) => {
+                  setDraft(event.target.value);
                   handleTyping();
                 }}
                 onKeyDown={handleKeyDown}

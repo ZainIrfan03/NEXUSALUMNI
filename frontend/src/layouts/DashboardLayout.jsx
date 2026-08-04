@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Outlet, NavLink, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
-import axios from "axios";
+import api from "../api/axios";
 const SOCKET_URL = import.meta.env.VITE_SOCKET_URL
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
 
@@ -35,7 +35,7 @@ const fileUrl = (path) => {
   // They only work in the browser tab that created them, so treat as invalid.
   if (path.startsWith("blob:")) return "";
   if (path.startsWith("http")) return path;
-  return `API_BASE${path}`;
+  return `${API_BASE}${path}`;
 };
 
 /**
@@ -106,8 +106,8 @@ export default function DashboardLayout() {
     if (!endpoint) return;
 
     let cancelled = false;
-    axios
-      .get(`${API_BASE}${endpoint}`)
+    api
+      .get(endpoint)
       .then(({ data }) => {
         if (!cancelled) setAvatarUrl(data.avatarUrl || "");
       })
@@ -124,7 +124,7 @@ export default function DashboardLayout() {
     // Best-effort: clears the httpOnly cookie server-side. Local logout still
     // proceeds even if this fails (e.g. network hiccup) — the user shouldn't
     // get stuck unable to log out.
-    axios.post(`${API_BASE}/auth/logout`).catch(() => {});
+    api.post(`/auth/logout`).catch(() => {});
     disconnectSocket();
     dispatch(logout());
     navigate("/login");
@@ -137,8 +137,8 @@ export default function DashboardLayout() {
 
   // Close the account dropdown when clicking anywhere outside it
   useEffect(() => {
-    const handleClickOutside = (e) => {
-      if (menuRef.current && !menuRef.current.contains(e.target)) {
+    const handleClickOutside = (event) => {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
         setMenuOpen(false);
       }
     };

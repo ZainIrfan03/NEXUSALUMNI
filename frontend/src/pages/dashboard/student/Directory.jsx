@@ -1,10 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from "../../../api/axios";
 import { ChevronDown, LayoutGrid, List, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 const SOCKET_URL = import.meta.env.VITE_SOCKET_URL
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
-
 
 /**
  * Alumni Directory — file: src/pages/dashboard/student/Directory.jsx
@@ -19,7 +17,7 @@ const fileUrl = (path) => {
   if (!path) return "";
   if (path.startsWith("blob:")) return "";
   if (path.startsWith("http")) return path;
-  return `SOCKET_URL${path}`;
+  return `${SOCKET_URL}${path}`;
 };
 
 const departments = ["Engineering", "Marketing", "Product"];
@@ -67,7 +65,7 @@ export default function Directory() {
       setLoading(true);
       setError("");
       try {
-        const { data } = await axios.get(`${API_BASE_URL}/directory`, {
+        const { data } = await api.get(`/directory`, {
           params: {
             page: activePage,
             limit: 6,
@@ -82,13 +80,13 @@ export default function Directory() {
         // can navigate to /dashboard/student/directory/:id.
         // `img` resolves through fileUrl() so relative upload paths get the
         // correct host prefix; empty string means "no avatar" -> initials fallback.
-        const mapped = data.results.map((a) => ({
-          id: a._id,
-          name: a.user?.fullName || "Unknown",
-          title: [a.jobTitle, a.company].filter(Boolean).join(" @ "),
-          year: `Class of ${a.graduationYear}`,
+        const mapped = data.results.map((alumnus) => ({
+          id: alumnus._id,
+          name: alumnus.user?.fullName || "Unknown",
+          title: [alumnus.jobTitle, alumnus.company].filter(Boolean).join(" @ "),
+          year: `Class of ${alumnus.graduationYear}`,
           tag: null,
-          img: fileUrl(a.avatarUrl),
+          img: fileUrl(alumnus.avatarUrl),
         }));
 
         setAlumniData(mapped);
@@ -106,7 +104,7 @@ export default function Directory() {
 
   const toggleDept = (dept) => {
     setSelectedDepts((prev) =>
-      prev.includes(dept) ? prev.filter((d) => d !== dept) : [...prev, dept]
+      prev.includes(dept) ? prev.filter((selected) => selected !== dept) : [...prev, dept]
     );
   };
 
@@ -132,7 +130,7 @@ export default function Directory() {
           <div className="relative mb-5">
             <select
               value={filters.industry}
-              onChange={(e) => setFilters({ ...filters, industry: e.target.value })}
+              onChange={(event) => setFilters({ ...filters, industry: event.target.value })}
               className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none appearance-none focus:border-primary transition-colors"
             >
               <option>All Industries</option>
@@ -165,7 +163,7 @@ export default function Directory() {
               type="text"
               placeholder="From"
               value={filters.fromYear}
-              onChange={(e) => setFilters({ ...filters, fromYear: e.target.value })}
+              onChange={(event) => setFilters({ ...filters, fromYear: event.target.value })}
               className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-primary transition-colors"
             />
             <span className="text-sm text-gray-400 shrink-0">to</span>
@@ -173,7 +171,7 @@ export default function Directory() {
               type="text"
               placeholder="To"
               value={filters.toYear}
-              onChange={(e) => setFilters({ ...filters, toYear: e.target.value })}
+              onChange={(event) => setFilters({ ...filters, toYear: event.target.value })}
               className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-primary transition-colors"
             />
           </div>
@@ -183,7 +181,7 @@ export default function Directory() {
             type="text"
             placeholder="e.g. San Francisco, NY"
             value={filters.location}
-            onChange={(e) => setFilters({ ...filters, location: e.target.value })}
+            onChange={(event) => setFilters({ ...filters, location: event.target.value })}
             className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-primary transition-colors mb-5"
           />
 
@@ -263,30 +261,30 @@ export default function Directory() {
               : "flex flex-col gap-4"
           }
         >
-          {alumniData.map((a) => (
+          {alumniData.map((alumnus) => (
             <div
-              key={a.id}
+              key={alumnus.id}
               className={`bg-white rounded-2xl p-6 flex flex-col items-center text-center ${
                 viewMode === "list" ? "sm:flex-row sm:text-left sm:gap-5 sm:items-center" : ""
               }`}
             >
-              <AlumniAvatar name={a.name} img={a.img} />
+              <AlumniAvatar name={alumnus.name} img={alumnus.img} />
               <div className={viewMode === "list" ? "flex-1" : ""}>
-                <h3 className="font-semibold text-primary">{a.name}</h3>
-                <p className="text-sm text-gray-600 mt-1">{a.title}</p>
+                <h3 className="font-semibold text-primary">{alumnus.name}</h3>
+                <p className="text-sm text-gray-600 mt-1">{alumnus.title}</p>
                 <div className={`flex gap-2 mt-3 mb-4 ${viewMode === "list" ? "" : "justify-center"}`}>
                   <span className="text-xs font-medium text-primary bg-blue-50 rounded-full px-3 py-1">
-                    {a.year}
+                    {alumnus.year}
                   </span>
-                  {a.tag && (
+                  {alumnus.tag && (
                     <span className="text-xs font-medium text-gray-400 bg-gray-100 rounded-full px-3 py-1">
-                      {a.tag}
+                      {alumnus.tag}
                     </span>
                   )}
                 </div>
               </div>
               <button
-                onClick={() => handleViewProfile(a.id)}
+                onClick={() => handleViewProfile(alumnus.id)}
                 className="w-full sm:w-auto border border-primary text-primary text-sm font-semibold px-6 py-2.5 rounded-xl hover:bg-primary hover:text-white transition-colors shrink-0"
               >
                 View Profile
@@ -298,24 +296,24 @@ export default function Directory() {
         {/* Pagination */}
         <div className="flex items-center justify-center gap-2 mt-10">
           <button
-            onClick={() => setActivePage((p) => Math.max(1, p - 1))}
+            onClick={() => setActivePage((currentPage) => Math.max(1, currentPage - 1))}
             className="h-9 w-9 rounded-lg border border-gray-200 flex items-center justify-center text-gray-400 hover:text-primary"
           >
             <ChevronLeft size={15} />
           </button>
-          {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+          {Array.from({ length: totalPages }, (_, index) => index + 1).map((pageNumber) => (
             <button
-              key={p}
-              onClick={() => setActivePage(p)}
+              key={pageNumber}
+              onClick={() => setActivePage(pageNumber)}
               className={`h-9 w-9 rounded-lg text-sm font-medium transition-colors ${
-                activePage === p ? "bg-dark text-white" : "border border-gray-200 text-gray-600"
+                activePage === pageNumber ? "bg-dark text-white" : "border border-gray-200 text-gray-600"
               }`}
             >
-              {p}
+              {pageNumber}
             </button>
           ))}
           <button
-            onClick={() => setActivePage((p) => Math.min(totalPages, p + 1))}
+            onClick={() => setActivePage((currentPage) => Math.min(totalPages, currentPage + 1))}
             className="h-9 w-9 rounded-lg border border-gray-200 flex items-center justify-center text-gray-400 hover:text-primary"
           >
             <ChevronRight size={15} />

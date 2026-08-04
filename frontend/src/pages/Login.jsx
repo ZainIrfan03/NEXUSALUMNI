@@ -1,11 +1,9 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
-import axios from "axios";
+import api from "../api/axios";
 import { Mail, Lock, Eye, EyeOff, ArrowRight } from "lucide-react";
 import { setCredentials } from "../store/slice/authSlice";
-const SOCKET_URL = import.meta.env.VITE_SOCKET_URL
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
 
 
 export default function Login() {
@@ -17,17 +15,17 @@ export default function Login() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+  const handleChange = (event) => {
+    setForm({ ...form, [event.target.name]: event.target.value });
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleSubmit = async (event) => {
+    event.preventDefault();
     setError("");
     setLoading(true);
 
     try {
-      const { data } = await axios.post(`${API_BASE_URL}/auth/login`, form)
+      const { data } = await api.post(`/auth/login`, form)
 
       // Backend also sets the auth token as an httpOnly cookie (sent
       // automatically on future requests) — nothing to store manually here.
@@ -118,7 +116,7 @@ export default function Login() {
             <input
               type="checkbox"
               checked={keepSignedIn}
-              onChange={(e) => setKeepSignedIn(e.target.checked)}
+              onChange={(event) => setKeepSignedIn(event.target.checked)}
               className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
             />
             Keep me signed in for 30 days

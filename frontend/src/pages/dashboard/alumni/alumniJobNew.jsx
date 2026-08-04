@@ -1,12 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from "../../../api/axios";
 import { Briefcase, ArrowLeft, Loader2 } from "lucide-react";
-const SOCKET_URL = import.meta.env.VITE_SOCKET_URL
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
-
-
-const API_BASE = API_BASE_URL;
 
 const TYPE_OPTIONS = ["Full-time", "Part-time", "Internship", "Remote"];
 const DEPARTMENT_OPTIONS = ["Engineering", "Design", "Marketing", "Sales", "Operations", "Other"];
@@ -27,13 +22,13 @@ export default function AlumniJobNew() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
+  const handleChange = (event) => {
+    const { name, value } = event.target;
+    setForm((previousForm) => ({ ...previousForm, [name]: value }));
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleSubmit = async (event) => {
+    event.preventDefault();
     setError("");
 
     if (!form.title || !form.company || !form.location || !form.type) {
@@ -43,7 +38,7 @@ export default function AlumniJobNew() {
 
     setSaving(true);
     try {
-      await axios.post(`${API_BASE}/jobs`, form);
+      await api.post(`/jobs`, form);
       navigate("/dashboard/alumni/jobs");
     } catch (err) {
       setError(err.response?.data?.message || "Could not post this job. Please try again.");

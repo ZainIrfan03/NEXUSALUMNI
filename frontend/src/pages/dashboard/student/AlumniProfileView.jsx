@@ -1,12 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from "../../../api/axios";
 import { ArrowLeft, MapPin, Briefcase, GraduationCap, Loader2, Send } from "lucide-react";
 const SOCKET_URL = import.meta.env.VITE_SOCKET_URL
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
-
-
-const API_BASE = API_BASE_URL;
 
 // Files come back from the backend as relative paths (e.g. "/uploads/avatars/xyz.png"),
 // so build a full URL for <img src>. Stale blob: URLs (from old preview-only
@@ -15,7 +11,7 @@ const fileUrl = (path) => {
   if (!path) return "";
   if (path.startsWith("blob:")) return "";
   if (path.startsWith("http")) return path;
-  return `SOCKET_URL${path}`;
+  return `${SOCKET_URL}${path}`;
 };
 
 /**
@@ -34,15 +30,12 @@ export default function AlumniProfileView() {
   const [checkingRequest, setCheckingRequest] = useState(true); // true until the check below finishes
   const [requesting, setRequesting] = useState(false);
 
- const token = JSON.parse(localStorage.getItem("user"))?.token;
-  
-
   useEffect(() => {
     const fetchAlumni = async () => {
       setLoading(true);
       setError("");
       try {
-        const { data } = await axios.get(`${API_BASE}/directory/${id}`);
+        const { data } = await api.get(`/directory/${id}`);
         setAlumni(data);
       } catch (err) {
         setError(err.response?.data?.message || "Could not load this profile.");
@@ -63,8 +56,8 @@ export default function AlumniProfileView() {
         return;
       }
       try {
-        const { data } = await axios.get(`${API_BASE}/mentorship/my-requests`);
-        const existing = data.find((r) => r.alumni?._id?.toString() === alumniUserId.toString());
+        const { data } = await api.get(`/mentorship/my-requests`);
+        const existing = data.find((request) => request.alumni?._id?.toString() === alumniUserId.toString());
         setRequestStatus(existing?.status || null);
       } catch {
         // If this check fails, fall back to showing the button — worst case
@@ -79,8 +72,8 @@ export default function AlumniProfileView() {
   const handleRequestMentorship = async () => {
     setRequesting(true);
     try {
-      await axios.post(
-        `${API_BASE}/mentorship/request`,
+      await api.post(
+        `/mentorship/request`,
         { alumniId: alumni._id },
       );
       setRequestStatus("pending");
@@ -259,9 +252,9 @@ export default function AlumniProfileView() {
             <h2 className="text-lg font-semibold text-dark mb-3">Skills</h2>
             <div className="flex flex-wrap gap-2 mb-4">
               {skills.length ? (
-                skills.map((s) => (
-                  <span key={s} className="text-xs font-medium text-dark bg-gray-100 rounded-full px-3 py-1.5">
-                    {s}
+                skills.map((skill) => (
+                  <span key={skill} className="text-xs font-medium text-dark bg-gray-100 rounded-full px-3 py-1.5">
+                    {skill}
                   </span>
                 ))
               ) : (
@@ -272,9 +265,9 @@ export default function AlumniProfileView() {
             <h3 className="text-sm font-semibold text-dark mb-2">Willing to mentor in</h3>
             <div className="flex flex-wrap gap-2">
               {interests.length ? (
-                interests.map((s) => (
-                  <span key={s} className="text-xs font-medium text-dark bg-gray-100 rounded-full px-3 py-1.5">
-                    {s}
+                interests.map((interest) => (
+                  <span key={interest} className="text-xs font-medium text-dark bg-gray-100 rounded-full px-3 py-1.5">
+                    {interest}
                   </span>
                 ))
               ) : (

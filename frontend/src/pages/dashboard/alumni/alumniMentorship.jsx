@@ -1,12 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from "../../../api/axios";
 import { ClipboardList, Users, Loader2, Send } from "lucide-react";
 const SOCKET_URL = import.meta.env.VITE_SOCKET_URL
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
-
-
-const API_BASE = API_BASE_URL;
 
 // Files come back from the backend as relative paths (e.g. "/uploads/avatars/xyz.png"),
 // so build a full URL for <img src>. Stale blob: URLs (from old preview-only
@@ -15,7 +11,7 @@ const fileUrl = (path) => {
   if (!path) return "";
   if (path.startsWith("blob:")) return "";
   if (path.startsWith("http")) return path;
-  return ` SOCKET_URL${path}`;
+  return `${SOCKET_URL}${path}`;
 };
 
 function PersonAvatar({ name, img, className }) {
@@ -92,7 +88,7 @@ export default function AlumniMentorship() {
     setLoading(true);
     setError("");
     try {
-      const { data } = await axios.get(`${API_BASE}/alumni/mentorship`);
+      const { data } = await api.get(`/alumni/mentorship`);
       setData(data);
     } catch (err) {
       setError(err.response?.data?.message || "Could not load mentorship data.");
@@ -108,7 +104,7 @@ export default function AlumniMentorship() {
 
   const handleAccept = async (id) => {
     try {
-      await axios.post(`${API_BASE}/alumni/mentorship/requests/${id}/accept`, {});
+      await api.post(`/alumni/mentorship/requests/${id}/accept`, {});
       fetchMentorship();
     } catch (err) {
       setError(err.response?.data?.message || "Could not accept request.");
@@ -117,7 +113,7 @@ export default function AlumniMentorship() {
 
   const handleReject = async (id) => {
     try {
-      await axios.post(`${API_BASE}/alumni/mentorship/requests/${id}/reject`, {});
+      await api.post(`/alumni/mentorship/requests/${id}/reject`, {});
       fetchMentorship();
     } catch (err) {
       setError(err.response?.data?.message || "Could not reject request.");
@@ -129,8 +125,8 @@ export default function AlumniMentorship() {
   // — same pattern used on the student side's Mentorship page.
   const handleMessage = async (menteeUserId) => {
     try {
-      const { data: conversation } = await axios.post(
-        `${API_BASE}/messages/conversations`,
+      const { data: conversation } = await api.post(
+        `/messages/conversations`,
         { otherUserId: menteeUserId }
       );
       navigate("/dashboard/alumni/messages", {

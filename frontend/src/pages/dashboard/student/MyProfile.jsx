@@ -1,10 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useSelector } from "react-redux";
-const SOCKET_URL = import.meta.env.VITE_SOCKET_URL
-const API_BASE = import.meta.env.VITE_API_BASE_URL
-
-import axios from "axios";
+import api from "../../../api/axios";
 import {
   Pencil,
   MapPin,
@@ -17,7 +13,7 @@ import {
   X,
   FileText,
 } from "lucide-react";
-
+const SOCKET_URL = import.meta.env.VITE_SOCKET_URL
 
 // Files come back from the backend as relative paths (e.g. "/uploads/avatars/xyz.png"),
 // so build a full URL for <img src> when it doesn't already start with "http".
@@ -25,7 +21,7 @@ const fileUrl = (path) => {
   if (!path) return "";
   if (path.startsWith("blob:")) return "";
   if (path.startsWith("http")) return path;
-  return `SOCKET_URL${path}`;
+  return `${SOCKET_URL}${path}`;
 };
 
 /**
@@ -34,8 +30,6 @@ const fileUrl = (path) => {
  */
 export default function MyProfile() {
   const navigate = useNavigate();
-  const { token } = useSelector((state) => state.auth);
- 
 
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -62,7 +56,7 @@ export default function MyProfile() {
     setLoading(true);
     setError("");
     try {
-      const { data } = await axios.get(`${API_BASE}/student/profile`);
+      const { data } = await api.get(`/student/profile`);
       setProfile(data);
     } catch (err) {
       setError(err.response?.data?.message || "Could not load profile.");
@@ -76,14 +70,13 @@ export default function MyProfile() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const handleAddRole = async (e) => {
-    e.preventDefault();
+  const handleAddRole = async (event) => {
+    event.preventDefault();
     if (!roleForm.title || !roleForm.company) return;
     try {
-      const { data } = await axios.post(
-        `${API_BASE}/student/profile/experience`,
+      const { data } = await api.post(
+        `/student/profile/experience`,
         roleForm,
-      
       );
       setProfile(data);
       setRoleForm({ title: "", company: "", startDate: "", endDate: "", current: false, description: "" });
@@ -93,14 +86,13 @@ export default function MyProfile() {
     }
   };
 
-  const handleAddEducation = async (e) => {
-    e.preventDefault();
+  const handleAddEducation = async (event) => {
+    event.preventDefault();
     if (!eduForm.school || !eduForm.degree) return;
     try {
-      const { data } = await axios.post(
-        `${API_BASE}/student/profile/education`,
+      const { data } = await api.post(
+        `/student/profile/education`,
         eduForm,
-     
       );
       setProfile(data);
       setEduForm({ school: "", degree: "", year: "" });
@@ -112,9 +104,8 @@ export default function MyProfile() {
 
   const handleDeleteEducation = async (educationId) => {
     try {
-      const { data } = await axios.delete(
-        `${API_BASE}/student/profile/education/${educationId}`,
-        
+      const { data } = await api.delete(
+        `/student/profile/education/${educationId}`,
       );
       setProfile(data);
     } catch (err) {
@@ -256,7 +247,7 @@ export default function MyProfile() {
                     type="text"
                     placeholder="Job title"
                     value={roleForm.title}
-                    onChange={(e) => setRoleForm({ ...roleForm, title: e.target.value })}
+                    onChange={(event) => setRoleForm({ ...roleForm, title: event.target.value })}
                     className="border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-primary"
                     required
                   />
@@ -264,7 +255,7 @@ export default function MyProfile() {
                     type="text"
                     placeholder="Company"
                     value={roleForm.company}
-                    onChange={(e) => setRoleForm({ ...roleForm, company: e.target.value })}
+                    onChange={(event) => setRoleForm({ ...roleForm, company: event.target.value })}
                     className="border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-primary"
                     required
                   />
@@ -272,14 +263,14 @@ export default function MyProfile() {
                     type="text"
                     placeholder="Start (e.g. 2021)"
                     value={roleForm.startDate}
-                    onChange={(e) => setRoleForm({ ...roleForm, startDate: e.target.value })}
+                    onChange={(event) => setRoleForm({ ...roleForm, startDate: event.target.value })}
                     className="border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-primary"
                   />
                   <input
                     type="text"
                     placeholder="End (leave blank if current)"
                     value={roleForm.endDate}
-                    onChange={(e) => setRoleForm({ ...roleForm, endDate: e.target.value })}
+                    onChange={(event) => setRoleForm({ ...roleForm, endDate: event.target.value })}
                     disabled={roleForm.current}
                     className="border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-primary disabled:bg-gray-50"
                   />
@@ -288,7 +279,7 @@ export default function MyProfile() {
                   <input
                     type="checkbox"
                     checked={roleForm.current}
-                    onChange={(e) => setRoleForm({ ...roleForm, current: e.target.checked, endDate: "" })}
+                    onChange={(event) => setRoleForm({ ...roleForm, current: event.target.checked, endDate: "" })}
                   />
                   I currently work here
                 </label>
@@ -296,7 +287,7 @@ export default function MyProfile() {
                   placeholder="Description"
                   rows={2}
                   value={roleForm.description}
-                  onChange={(e) => setRoleForm({ ...roleForm, description: e.target.value })}
+                  onChange={(event) => setRoleForm({ ...roleForm, description: event.target.value })}
                   className="border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-primary resize-none"
                 />
                 <button
@@ -353,12 +344,12 @@ export default function MyProfile() {
             <h2 className="text-lg font-semibold text-dark mb-3">Skills</h2>
             <div className="flex flex-wrap gap-2 mb-4">
               {skills.length ? (
-                skills.map((s) => (
+                skills.map((skill) => (
                   <span
-                    key={s}
+                    key={skill}
                     className="text-xs font-medium text-dark bg-gray-100 rounded-full px-3 py-1.5"
                   >
-                    {s}
+                    {skill}
                   </span>
                 ))
               ) : (
@@ -369,12 +360,12 @@ export default function MyProfile() {
             <h3 className="text-sm font-semibold text-dark mb-2">Interests</h3>
             <div className="flex flex-wrap gap-2">
               {interests.length ? (
-                interests.map((s) => (
+                interests.map((interest) => (
                   <span
-                    key={s}
+                    key={interest}
                     className="text-xs font-medium text-dark bg-gray-100 rounded-full px-3 py-1.5"
                   >
-                    {s}
+                    {interest}
                   </span>
                 ))
               ) : (
@@ -410,7 +401,7 @@ export default function MyProfile() {
                   type="text"
                   placeholder="School / University"
                   value={eduForm.school}
-                  onChange={(e) => setEduForm({ ...eduForm, school: e.target.value })}
+                  onChange={(event) => setEduForm({ ...eduForm, school: event.target.value })}
                   className="border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-primary"
                   required
                 />
@@ -418,7 +409,7 @@ export default function MyProfile() {
                   type="text"
                   placeholder="Degree"
                   value={eduForm.degree}
-                  onChange={(e) => setEduForm({ ...eduForm, degree: e.target.value })}
+                  onChange={(event) => setEduForm({ ...eduForm, degree: event.target.value })}
                   className="border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-primary"
                   required
                 />
@@ -426,7 +417,7 @@ export default function MyProfile() {
                   type="text"
                   placeholder="Year (e.g. 2025)"
                   value={eduForm.year}
-                  onChange={(e) => setEduForm({ ...eduForm, year: e.target.value })}
+                  onChange={(event) => setEduForm({ ...eduForm, year: event.target.value })}
                   className="border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-primary"
                 />
                 <button

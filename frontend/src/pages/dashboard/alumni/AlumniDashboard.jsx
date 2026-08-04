@@ -1,12 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
-import axios from "axios";
+import api from "../../../api/axios";
 import { GraduationCap, Briefcase, Plus, FileEdit, Image, Link2, Loader2 } from "lucide-react";
-const SOCKET_URL = import.meta.env.VITE_SOCKET_URL
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
-
-
-const API_BASE = API_BASE_URL;
 
 function StatCard({ label, value, note, icon: Icon }) {
   return (
@@ -31,7 +26,7 @@ function MentorshipRequestCard({ request, onAccept, onDecline }) {
   const studentName = request.student?.fullName || "Unknown student";
   const initials = studentName
     .split(" ")
-    .map((w) => w[0])
+    .map((word) => word[0])
     .join("")
     .slice(0, 2)
     .toUpperCase();
@@ -78,7 +73,7 @@ export default function AlumniDashboard() {
     setLoading(true);
     setError("");
     try {
-      const { data } = await axios.get(`${API_BASE}/alumni/dashboard`);
+      const { data } = await api.get(`/alumni/dashboard`);
       setData(data);
     } catch (err) {
       setError(err.response?.data?.message || "Could not load dashboard data.");
@@ -94,7 +89,7 @@ export default function AlumniDashboard() {
 
   const handleAccept = async (id) => {
     try {
-      await axios.post(`${API_BASE}/alumni/mentorship/requests/${id}/accept`, {});
+      await api.post(`/alumni/mentorship/requests/${id}/accept`, {});
       fetchOverview();
     } catch (err) {
       setError(err.response?.data?.message || "Could not accept request.");
@@ -103,15 +98,15 @@ export default function AlumniDashboard() {
 
   const handleDecline = async (id) => {
     try {
-      await axios.post(`${API_BASE}/alumni/mentorship/requests/${id}/reject`, {});
+      await api.post(`/alumni/mentorship/requests/${id}/reject`, {});
       fetchOverview();
     } catch (err) {
       setError(err.response?.data?.message || "Could not decline request.");
     }
   };
 
-  const handlePostOpportunity = (e) => {
-    e.preventDefault();
+  const handlePostOpportunity = (event) => {
+    event.preventDefault();
     // TODO: gather form state and call POST /api/jobs
   };
 

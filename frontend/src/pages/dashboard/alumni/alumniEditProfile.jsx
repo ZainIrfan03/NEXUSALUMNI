@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from "../../../api/axios";
 const SOCKET_URL = import.meta.env.VITE_SOCKET_URL
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
 
 import {
   UserCog,
@@ -17,8 +16,6 @@ import {
   Loader2,
 } from "lucide-react";
 
-const API_BASE = API_BASE_URL;
-
 // Files come back from the backend as relative paths (e.g. "/uploads/avatars/xyz.png"),
 // so build a full URL for <img src> / <a href>. Stale blob: URLs (from old
 // preview-only code) can never be loaded after a refresh, so treat as invalid.
@@ -26,7 +23,7 @@ const fileUrl = (path) => {
   if (!path) return "";
   if (path.startsWith("blob:")) return "";
   if (path.startsWith("http")) return path;
-  return `SOCKET_URL${path}`;
+  return `${SOCKET_URL}${path}`;
 };
 
 /**
@@ -74,7 +71,7 @@ export default function AlumniEditProfile() {
     setLoading(true);
     setError("");
     try {
-      const { data } = await axios.get(`${API_BASE}/alumni/profile`);
+      const { data } = await api.get(`/alumni/profile`);
       setForm({
         fullName: data.user?.fullName || "",
         location: data.location || "",
@@ -98,23 +95,23 @@ export default function AlumniEditProfile() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
+  const handleChange = (event) => setForm({ ...form, [event.target.name]: event.target.value });
 
   // Generic "add chip on Enter" handler, reused for skills + interests
-  const addChip = (e, value, setValue, list, setList) => {
-    if (e.key === "Enter" && value.trim()) {
-      e.preventDefault();
+  const addChip = (event, value, setValue, list, setList) => {
+    if (event.key === "Enter" && value.trim()) {
+      event.preventDefault();
       setList([...list, value.trim()]);
       setValue("");
     }
   };
 
-  const removeChip = (list, setList, item) => setList(list.filter((i) => i !== item));
+  const removeChip = (list, setList, item) => setList(list.filter((entry) => entry !== item));
 
   // Selecting a file only shows a local preview + upload button.
   // Nothing is saved to the server until uploadAvatarNow() runs.
-  const handleAvatarSelect = (e) => {
-    const file = e.target.files?.[0];
+  const handleAvatarSelect = (event) => {
+    const file = event.target.files?.[0];
     if (!file) return;
     setAvatarFile(file);
     setAvatarPreview(URL.createObjectURL(file));
@@ -128,8 +125,8 @@ export default function AlumniEditProfile() {
     try {
       const formData = new FormData();
       formData.append("avatar", avatarFile); // field name must match uploadAvatar.single("avatar") on backend
-      const { data } = await axios.post(
-        `${API_BASE}/alumni/profile/avatar`,
+      const { data } = await api.post(
+        `/alumni/profile/avatar`,
         formData,
         { headers: { "Content-Type": "multipart/form-data" } }
       );
@@ -144,8 +141,8 @@ export default function AlumniEditProfile() {
     }
   };
 
-  const handleResumeSelect = (e) => {
-    const file = e.target.files?.[0];
+  const handleResumeSelect = (event) => {
+    const file = event.target.files?.[0];
     if (!file) return;
     setResumeFile(file);
   };
@@ -158,8 +155,8 @@ export default function AlumniEditProfile() {
     try {
       const formData = new FormData();
       formData.append("resume", resumeFile); // field name must match uploadResume.single("resume") on backend
-      const { data } = await axios.post(
-        `${API_BASE}/alumni/profile/resume`,
+      const { data } = await api.post(
+        `/alumni/profile/resume`,
         formData,
         { headers: { "Content-Type": "multipart/form-data" } }
       );
@@ -190,7 +187,7 @@ export default function AlumniEditProfile() {
         interests,
         isPublic,
       };
-      await axios.put(`${API_BASE}/alumni/profile`, payload);
+      await api.put(`/alumni/profile`, payload);
       setSuccessMsg("Profile saved successfully.");
       setTimeout(() => navigate("/dashboard/alumni/profile"), 800);
     } catch (err) {
@@ -455,13 +452,13 @@ export default function AlumniEditProfile() {
 
             <p className="text-sm font-medium text-dark mb-2">Expertise Tags</p>
             <div className="flex flex-wrap gap-2 mb-3">
-              {skills.map((s) => (
+              {skills.map((skill) => (
                 <span
-                  key={s}
+                  key={skill}
                   className="flex items-center gap-1 text-xs font-medium text-dark bg-gray-100 rounded-full px-3 py-1.5"
                 >
-                  {s}
-                  <button onClick={() => removeChip(skills, setSkills, s)}>
+                  {skill}
+                  <button onClick={() => removeChip(skills, setSkills, skill)}>
                     <X size={12} />
                   </button>
                 </span>
@@ -471,8 +468,8 @@ export default function AlumniEditProfile() {
               <input
                 type="text"
                 value={skillInput}
-                onChange={(e) => setSkillInput(e.target.value)}
-                onKeyDown={(e) => addChip(e, skillInput, setSkillInput, skills, setSkills)}
+                onChange={(event) => setSkillInput(event.target.value)}
+                onKeyDown={(event) => addChip(event, skillInput, setSkillInput, skills, setSkills)}
                 placeholder="Add a skill..."
                 className="w-full py-2.5 text-sm outline-none"
               />
@@ -491,13 +488,13 @@ export default function AlumniEditProfile() {
 
             <p className="text-sm font-medium text-dark mb-2">Areas of Interest</p>
             <div className="flex flex-wrap gap-2 mb-3">
-              {interests.map((s) => (
+              {interests.map((interest) => (
                 <span
-                  key={s}
+                  key={interest}
                   className="flex items-center gap-1 text-xs font-medium text-dark bg-gray-100 rounded-full px-3 py-1.5"
                 >
-                  {s}
-                  <button onClick={() => removeChip(interests, setInterests, s)}>
+                  {interest}
+                  <button onClick={() => removeChip(interests, setInterests, interest)}>
                     <X size={12} />
                   </button>
                 </span>
@@ -507,9 +504,9 @@ export default function AlumniEditProfile() {
               <input
                 type="text"
                 value={interestInput}
-                onChange={(e) => setInterestInput(e.target.value)}
-                onKeyDown={(e) =>
-                  addChip(e, interestInput, setInterestInput, interests, setInterests)
+                onChange={(event) => setInterestInput(event.target.value)}
+                onKeyDown={(event) =>
+                  addChip(event, interestInput, setInterestInput, interests, setInterests)
                 }
                 placeholder="Add an interest..."
                 className="w-full py-2.5 text-sm outline-none"

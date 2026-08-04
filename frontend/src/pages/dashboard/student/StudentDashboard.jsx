@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from "../../../api/axios";
 const SOCKET_URL = import.meta.env.VITE_SOCKET_URL
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
 
 import {
   Users,
@@ -17,9 +16,6 @@ import {
   ChevronRight,
   Loader2,
 } from "lucide-react";
-
-const getToken = () => JSON.parse(localStorage.getItem("user"))?.token;
-
 
 // Formats a date as "2h ago", "5d ago", etc. for the activity feed
 const timeAgo = (dateString) => {
@@ -55,10 +51,7 @@ export default function StudentDashboard() {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const { data } = await axios.get(
-          "API_BASE_URL/student/dashboard",
-         
-        );
+        const { data } = await api.get(`/student/dashboard`);
         setStatsData(data);
       } catch (err) {
         console.error(err);
@@ -69,16 +62,13 @@ export default function StudentDashboard() {
 
     const fetchMentors = async () => {
       try {
-        const { data } = await axios.get(
-          "API_BASE_URL/mentorship/recommended",
-         
-        );
+        const { data } = await api.get(`/mentorship/recommended`);
         setMentors(
-          data.slice(0, 2).map((a) => ({
-            name: a.user?.fullName || "Unknown",
-            role: [a.jobTitle, a.company].filter(Boolean).join(", "),
+          data.slice(0, 2).map((alumnus) => ({
+            name: alumnus.user?.fullName || "Unknown",
+            role: [alumnus.jobTitle, alumnus.company].filter(Boolean).join(", "),
             tags: [], // Alumni model has no tags/skills field yet
-            img: `https://i.pravatar.cc/150?u=${a._id}`,
+            img: `https://i.pravatar.cc/150?u=${alumnus._id}`,
           }))
         );
       } catch (err) {
@@ -90,10 +80,7 @@ export default function StudentDashboard() {
 
     const fetchActivity = async () => {
       try {
-        const { data } = await axios.get(
-          "API_BASE_URL/student/activity",
-         
-        );
+        const { data } = await api.get(`/student/activity`);
         setActivity(data);
       } catch (err) {
         console.error(err);
@@ -200,13 +187,13 @@ export default function StudentDashboard() {
             ) : activity.length === 0 ? (
               <p className="text-sm text-gray-400 py-4">No recent activity yet.</p>
             ) : (
-              activity.map((a, i) => {
-                const Icon = activityIcons[a.type] || Briefcase;
+              activity.map((activityItem, index) => {
+                const Icon = activityIcons[activityItem.type] || Briefcase;
                 return (
                   <div
-                    key={i}
+                    key={activityItem._id || index}
                     className={`flex gap-4 py-4 ${
-                      i !== activity.length - 1 ? "border-b border-gray-100" : ""
+                      index !== activity.length - 1 ? "border-b border-gray-100" : ""
                     }`}
                   >
                     <div className="h-10 w-10 rounded-full bg-gray-100 flex items-center justify-center shrink-0">
@@ -214,12 +201,12 @@ export default function StudentDashboard() {
                     </div>
                     <div className="flex-1">
                       <div className="flex items-start justify-between gap-3">
-                        <p className="text-sm font-medium text-dark leading-snug">{a.title}</p>
+                        <p className="text-sm font-medium text-dark leading-snug">{activityItem.title}</p>
                         <span className="text-xs text-gray-400 whitespace-nowrap">
-                          {timeAgo(a.date)}
+                          {timeAgo(activityItem.date)}
                         </span>
                       </div>
-                      <p className="text-sm text-gray-500 mt-1">{a.desc}</p>
+                      <p className="text-sm text-gray-500 mt-1">{activityItem.desc}</p>
                     </div>
                   </div>
                 );
@@ -252,13 +239,13 @@ export default function StudentDashboard() {
             ) : mentors.length === 0 ? (
               <p className="text-sm text-gray-400 py-4">No recommendations yet.</p>
             ) : (
-              mentors.map((m) => (
-                <div key={m.name} className="border border-gray-100 rounded-xl p-4">
+              mentors.map((mentor) => (
+                <div key={mentor.name} className="border border-gray-100 rounded-xl p-4">
                   <div className="flex items-center gap-3 mb-3">
-                    <img src={m.img} alt={m.name} className="h-11 w-11 rounded-full object-cover" />
+                    <img src={mentor.img} alt={mentor.name} className="h-11 w-11 rounded-full object-cover" />
                     <div>
-                      <p className="text-sm font-semibold text-dark">{m.name}</p>
-                      <p className="text-xs text-gray-500">{m.role}</p>
+                      <p className="text-sm font-semibold text-dark">{mentor.name}</p>
+                      <p className="text-xs text-gray-500">{mentor.role}</p>
                     </div>
                   </div>
                   <button

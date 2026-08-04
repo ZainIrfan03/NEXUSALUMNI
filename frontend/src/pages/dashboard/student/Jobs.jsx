@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
+import api from "../../../api/axios";
 const SOCKET_URL = import.meta.env.VITE_SOCKET_URL
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
 
 import {
   SlidersHorizontal,
@@ -37,7 +36,6 @@ import {
 
 const tabs = ["All Jobs", "Full-time", "Internship", "Part-time", "Remote"];
 
-const getToken = () => JSON.parse(localStorage.getItem("user"))?.token;
 const currentUserId = () => JSON.parse(localStorage.getItem("user"))?._id;
 
 export default function Jobs() {
@@ -54,9 +52,8 @@ export default function Jobs() {
       setLoadingJobs(true);
       setError("");
       try {
-        const { data } = await axios.get(API_BASE_URL , {
+        const { data } = await api.get(`/jobs`, {
           params: { type: activeTab },
-          
         });
         setJobs(data);
       } catch (err) {
@@ -71,9 +68,7 @@ export default function Jobs() {
 
   const fetchStats = async () => {
     try {
-      const { data } = await axios.get(
-        "API_BASE_URL/jobs/my-applications",
-      );
+      const { data } = await api.get(`/jobs/my-applications`);
       setTracking(data);
     } catch (err) {
       // non-blocking — sidebar just shows 0s if this fails
@@ -83,13 +78,13 @@ export default function Jobs() {
   const handleApply = async (jobId) => {
     setBusyJobId(jobId);
     try {
-      await axios.post(`API_BASE_URL/jobs/${jobId}/apply`, {});
-      setJobs((prev) => prev.map((j) => (j._id === jobId ? { ...j, hasApplied: true } : j)));
+      await api.post(`/jobs/${jobId}/apply`, {});
+      setJobs((prev) => prev.map((job) => (job._id === jobId ? { ...job, hasApplied: true } : job)));
       setSelectedJob((prev) => (prev && prev._id === jobId ? { ...prev, hasApplied: true } : prev));
       setTracking((prev) => ({ ...prev, applied: prev.applied + 1 }));
     } catch (err) {
       if (err.response?.status === 400) {
-        setJobs((prev) => prev.map((j) => (j._id === jobId ? { ...j, hasApplied: true } : j)));
+        setJobs((prev) => prev.map((job) => (job._id === jobId ? { ...job, hasApplied: true } : job)));
         setSelectedJob((prev) => (prev && prev._id === jobId ? { ...prev, hasApplied: true } : prev));
       } else {
         setError(err.response?.data?.message || "Could not apply");
@@ -102,20 +97,20 @@ export default function Jobs() {
   const handleToggleSave = async (jobId) => {
     setBusyJobId(jobId);
     try {
-      const { data } = await axios.post(
-        `API_BASE_URL/jobs/${jobId}/save`,
+      const { data } = await api.post(
+        `/jobs/${jobId}/save`,
         {},
       );
       setJobs((prev) =>
-        prev.map((j) =>
-          j._id === jobId
+        prev.map((job) =>
+          job._id === jobId
             ? {
-                ...j,
+                ...job,
                 savedBy: data.saved
-                  ? [...j.savedBy, currentUserId()]
-                  : j.savedBy.filter((id) => id !== currentUserId()),
+                  ? [...job.savedBy, currentUserId()]
+                  : job.savedBy.filter((id) => id !== currentUserId()),
               }
-            : j
+            : job
         )
       );
     } catch (err) {
@@ -144,17 +139,17 @@ export default function Jobs() {
         <div>
           <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
             <div className="flex flex-wrap gap-2">
-              {tabs.map((t) => (
+              {tabs.map((tab) => (
                 <button
-                  key={t}
-                  onClick={() => setActiveTab(t)}
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
                   className={`text-sm font-medium px-4 py-2 rounded-full transition-colors ${
-                    activeTab === t
+                    activeTab === tab
                       ? "bg-dark text-white"
                       : "bg-gray-100 text-gray-500 hover:bg-gray-200"
                   }`}
                 >
-                  {t}
+                  {tab}
                 </button>
               ))}
             </div>
@@ -282,7 +277,7 @@ export default function Jobs() {
         >
           <div
             className="bg-white rounded-2xl max-w-lg w-full max-h-[85vh] overflow-y-auto"
-            onClick={(e) => e.stopPropagation()}
+            onClick={(event) => event.stopPropagation()}
           >
             <div className="flex items-start justify-between px-6 pt-6">
               <div className="h-12 w-12 rounded-xl bg-blue-50 flex items-center justify-center">

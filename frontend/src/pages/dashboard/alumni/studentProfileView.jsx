@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from "../../../api/axios";
 import {
   ArrowLeft,
   MapPin,
@@ -11,10 +11,6 @@ import {
   Send,
 } from "lucide-react";
 const SOCKET_URL = import.meta.env.VITE_SOCKET_URL
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
-
-
-
 
 // Files come back from the backend as relative paths (e.g. "/uploads/avatars/xyz.png"),
 // so build a full URL for <img src>. Stale blob: URLs (from old preview-only
@@ -23,7 +19,7 @@ const fileUrl = (path) => {
   if (!path) return "";
   if (path.startsWith("blob:")) return "";
   if (path.startsWith("http")) return path;
-  return `SOCKET_URL${path}`;
+  return `${SOCKET_URL}${path}`;
 };
 
 const DEPARTMENT_LABELS = {
@@ -66,7 +62,7 @@ export default function StudentProfileView() {
       setLoading(true);
       setError("");
       try {
-        const { data } = await axios.get(`${API_BASE}/alumni/directory/${id}`);
+        const { data } = await api.get(`/alumni/directory/${id}`);
         setStudent(data);
       } catch (err) {
         setError(err.response?.data?.message || "Could not load this profile.");
@@ -84,8 +80,8 @@ export default function StudentProfileView() {
     if (!studentUserId) return;
     setMessaging(true);
     try {
-      const { data: conversation } = await axios.post(
-        `${API_BASE}/messages/conversations`,
+      const { data: conversation } = await api.post(
+        `/messages/conversations`,
         { otherUserId: studentUserId }
       );
       navigate("/dashboard/alumni/messages", {
@@ -278,9 +274,9 @@ export default function StudentProfileView() {
             <h2 className="text-lg font-semibold text-dark mb-3">Skills</h2>
             <div className="flex flex-wrap gap-2 mb-4">
               {skills.length ? (
-                skills.map((s) => (
-                  <span key={s} className="text-xs font-medium text-dark bg-gray-100 rounded-full px-3 py-1.5">
-                    {s}
+                skills.map((skill) => (
+                  <span key={skill} className="text-xs font-medium text-dark bg-gray-100 rounded-full px-3 py-1.5">
+                    {skill}
                   </span>
                 ))
               ) : (
@@ -291,9 +287,9 @@ export default function StudentProfileView() {
             <h3 className="text-sm font-semibold text-dark mb-2">Areas of Interest</h3>
             <div className="flex flex-wrap gap-2">
               {interests.length ? (
-                interests.map((s) => (
-                  <span key={s} className="text-xs font-medium text-dark bg-gray-100 rounded-full px-3 py-1.5">
-                    {s}
+                interests.map((interest) => (
+                  <span key={interest} className="text-xs font-medium text-dark bg-gray-100 rounded-full px-3 py-1.5">
+                    {interest}
                   </span>
                 ))
               ) : (

@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from "../../../api/axios";
 const SOCKET_URL = import.meta.env.VITE_SOCKET_URL
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
 
 import {
   Pencil,
@@ -17,8 +16,6 @@ import {
   FileText,
 } from "lucide-react";
 
-const API_BASE = API_BASE_URL;
-
 // Files come back from the backend as relative paths (e.g. "/uploads/avatars/xyz.png"),
 // so build a full URL for <img src> when it doesn't already start with "http".
 // Stale blob: URLs (from old preview-only code) can never load after a
@@ -27,7 +24,7 @@ const fileUrl = (path) => {
   if (!path) return "";
   if (path.startsWith("blob:")) return "";
   if (path.startsWith("http")) return path;
-  return `SOCKET_URL${path}`;
+  return `${SOCKET_URL}${path}`;
 };
 
 /**
@@ -55,7 +52,7 @@ export default function AlumniProfile() {
     setLoading(true);
     setError("");
     try {
-      const { data } = await axios.get(`${API_BASE}/alumni/profile`);
+      const { data } = await api.get(`/alumni/profile`);
       setProfile(data);
     } catch (err) {
       setError(err.response?.data?.message || "Could not load profile.");
@@ -69,12 +66,12 @@ export default function AlumniProfile() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const handleAddRole = async (e) => {
-    e.preventDefault();
+  const handleAddRole = async (event) => {
+    event.preventDefault();
     if (!roleForm.title || !roleForm.company) return;
     try {
-      const { data } = await axios.post(
-        `${API_BASE}/alumni/profile/experience`,
+      const { data } = await api.post(
+        `/alumni/profile/experience`,
         roleForm
       );
       setProfile(data);
@@ -219,7 +216,7 @@ export default function AlumniProfile() {
                     type="text"
                     placeholder="Job title"
                     value={roleForm.title}
-                    onChange={(e) => setRoleForm({ ...roleForm, title: e.target.value })}
+                    onChange={(event) => setRoleForm({ ...roleForm, title: event.target.value })}
                     className="border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-primary"
                     required
                   />
@@ -227,7 +224,7 @@ export default function AlumniProfile() {
                     type="text"
                     placeholder="Company"
                     value={roleForm.company}
-                    onChange={(e) => setRoleForm({ ...roleForm, company: e.target.value })}
+                    onChange={(event) => setRoleForm({ ...roleForm, company: event.target.value })}
                     className="border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-primary"
                     required
                   />
@@ -235,14 +232,14 @@ export default function AlumniProfile() {
                     type="text"
                     placeholder="Start (e.g. 2021)"
                     value={roleForm.startDate}
-                    onChange={(e) => setRoleForm({ ...roleForm, startDate: e.target.value })}
+                    onChange={(event) => setRoleForm({ ...roleForm, startDate: event.target.value })}
                     className="border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-primary"
                   />
                   <input
                     type="text"
                     placeholder="End (leave blank if current)"
                     value={roleForm.endDate}
-                    onChange={(e) => setRoleForm({ ...roleForm, endDate: e.target.value })}
+                    onChange={(event) => setRoleForm({ ...roleForm, endDate: event.target.value })}
                     disabled={roleForm.current}
                     className="border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-primary disabled:bg-gray-50"
                   />
@@ -251,7 +248,7 @@ export default function AlumniProfile() {
                   <input
                     type="checkbox"
                     checked={roleForm.current}
-                    onChange={(e) => setRoleForm({ ...roleForm, current: e.target.checked, endDate: "" })}
+                    onChange={(event) => setRoleForm({ ...roleForm, current: event.target.checked, endDate: "" })}
                   />
                   I currently work here
                 </label>
@@ -259,7 +256,7 @@ export default function AlumniProfile() {
                   placeholder="Description"
                   rows={2}
                   value={roleForm.description}
-                  onChange={(e) => setRoleForm({ ...roleForm, description: e.target.value })}
+                  onChange={(event) => setRoleForm({ ...roleForm, description: event.target.value })}
                   className="border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-primary resize-none"
                 />
                 <button
@@ -316,12 +313,12 @@ export default function AlumniProfile() {
             <h2 className="text-lg font-semibold text-dark mb-3">Skills</h2>
             <div className="flex flex-wrap gap-2 mb-4">
               {skills.length ? (
-                skills.map((s) => (
+                skills.map((skill) => (
                   <span
-                    key={s}
+                    key={skill}
                     className="text-xs font-medium text-dark bg-gray-100 rounded-full px-3 py-1.5"
                   >
-                    {s}
+                    {skill}
                   </span>
                 ))
               ) : (
@@ -332,12 +329,12 @@ export default function AlumniProfile() {
             <h3 className="text-sm font-semibold text-dark mb-2">Interests</h3>
             <div className="flex flex-wrap gap-2">
               {interests.length ? (
-                interests.map((s) => (
+                interests.map((interest) => (
                   <span
-                    key={s}
+                    key={interest}
                     className="text-xs font-medium text-dark bg-gray-100 rounded-full px-3 py-1.5"
                   >
-                    {s}
+                    {interest}
                   </span>
                 ))
               ) : (
