@@ -7,8 +7,6 @@ import SuccessStoriesPage from "./pages/SuccessStories";
 import Register from "./pages/Register";
 import Login from "./pages/Login";
 import DashboardLayout from "./layouts/DashboardLayout";
-import StudentDashboard from "./pages/dashboard/student/StudentDashboard";
-import ProtectedRoute from "./routes/protectedRoute";
 import studentRoutes from "./pages/dashboard/student/StudentRoutes";
 import alumniRoutes from "./pages/dashboard/alumni/AlumniRoutes";
 
@@ -28,14 +26,8 @@ function App() {
          <Route element={<DashboardLayout />}>
           {studentRoutes}
           {alumniRoutes}
-          {/* {facultyRoutes} */}
-          {/* {adminRoutes} */}
+          {/* TODO: facultyRoutes and adminRoutes — see backlog */}
         </Route>
-
-        {/* Logged-in pages: separate layout, no Navbar/Footer here */}
-        {/* <Route element={<DashboardLayout />}>
-          <Route path="/dashboard/student" element={<StudentDashboard />} />
-        </Route> */}
       </Routes>
     </BrowserRouter>
   );
