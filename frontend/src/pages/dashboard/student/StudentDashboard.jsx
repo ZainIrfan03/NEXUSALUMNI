@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import api from "../../../api/axios";
-const SOCKET_URL = import.meta.env.VITE_SOCKET_URL
+import { useGetDashboardStatsQuery, useGetRecentActivityQuery } from "../../../store/api/studentDashboardApi";
+import { useGetRecommendedMentorsQuery } from "../../../store/api/studentMentorshipApi";
 
 import {
   Users,
@@ -41,58 +41,19 @@ export default function StudentDashboard() {
   const hour = new Date().getHours();
   const greeting = hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
 
-  const [statsData, setStatsData] = useState(null);
-  const [loadingStats, setLoadingStats] = useState(true);
-  const [mentors, setMentors] = useState([]);
-  const [loadingMentors, setLoadingMentors] = useState(true);
-  const [activity, setActivity] = useState([]);
-  const [loadingActivity, setLoadingActivity] = useState(true);
+  const { data: statsData, isLoading: loadingStats } = useGetDashboardStatsQuery();
+  const { data: activity = [], isLoading: loadingActivity } = useGetRecentActivityQuery();
+  const { data: recommendedMentors, isLoading: loadingMentors } = useGetRecommendedMentorsQuery();
 
-  useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        const { data } = await api.get(`/student/dashboard`);
-        setStatsData(data);
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoadingStats(false);
-      }
-    };
-
-    const fetchMentors = async () => {
-      try {
-        const { data } = await api.get(`/mentorship/recommended`);
-        setMentors(
-          data.slice(0, 2).map((alumnus) => ({
-            name: alumnus.user?.fullName || "Unknown",
-            role: [alumnus.jobTitle, alumnus.company].filter(Boolean).join(", "),
-            tags: [], // Alumni model has no tags/skills field yet
-            img: `https://i.pravatar.cc/150?u=${alumnus._id}`,
-          }))
-        );
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoadingMentors(false);
-      }
-    };
-
-    const fetchActivity = async () => {
-      try {
-        const { data } = await api.get(`/student/activity`);
-        setActivity(data);
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoadingActivity(false);
-      }
-    };
-
-    fetchStats();
-    fetchMentors();
-    fetchActivity();
-  }, []);
+  // Dashboard only shows a top-2 preview; role+company combined the same
+  // way the old inline fetchMentors() mapper did (the shared hook's
+  // transformResponse keeps them as separate fields for Mentorship.jsx's
+  // own layout).
+  const mentors = (recommendedMentors ?? []).slice(0, 2).map((mentor) => ({
+    name: mentor.name,
+    role: [mentor.role, mentor.company].filter(Boolean).join(", "),
+    img: mentor.img || `https://i.pravatar.cc/150?u=${mentor.alumniDocId}`,
+  }));
 
   const stats = [
     { label: "Total Alumni", value: statsData?.totalAlumni ?? "—", icon: Users },

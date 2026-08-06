@@ -1,10 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import api from "../../../api/axios";
+import {
+  useGetMyAlumniProfileQuery,
+  useUpdateMyAlumniProfileMutation,
+  useUploadAlumniAvatarMutation,
+  useUploadAlumniResumeMutation,
+} from "../../../store/api/alumniProfileApi";
 import { getImageUrl as fileUrl } from "../../../utils/getImageUrl";
 import LoadingSpinner from "../LoadingSpinner";
-const SOCKET_URL = import.meta.env.VITE_SOCKET_URL
-
 import {
   UserCog,
   FileText,
@@ -32,6 +35,11 @@ import {
 export default function AlumniEditProfile() {
   const navigate = useNavigate();
 
+  const { data: profile, isLoading: loading, error: queryError } = useGetMyAlumniProfileQuery();
+  const [updateMyAlumniProfile, { isLoading: saving }] = useUpdateMyAlumniProfileMutation();
+  const [uploadAlumniAvatar, { isLoading: uploadingAvatar }] = useUploadAlumniAvatarMutation();
+  const [uploadAlumniResume, { isLoading: uploadingResume }] = useUploadAlumniResumeMutation();
+
   const [form, setForm] = useState({
     fullName: "",
     location: "",
@@ -52,43 +60,32 @@ export default function AlumniEditProfile() {
   // Real files picked by the user, uploaded immediately via multer endpoints
   const [avatarFile, setAvatarFile] = useState(null);
   const [avatarPreview, setAvatarPreview] = useState("");
-  const [uploadingAvatar, setUploadingAvatar] = useState(false);
 
   const [resumeFile, setResumeFile] = useState(null);
-  const [uploadingResume, setUploadingResume] = useState(false);
 
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
 
-  const fetchProfile = async () => {
-    setLoading(true);
-    setError("");
-    try {
-      const { data } = await api.get(`/alumni/profile`);
-      setForm({
-        fullName: data.user?.fullName || "",
-        location: data.location || "",
-        headline: data.headline || "",
-        bio: data.bio || "",
-      });
-      setSkills(data.skills || []);
-      setInterests(data.interests || []);
-      setResumeUrl(data.resumeUrl || "");
-      setAvatarUrl(data.avatarUrl || "");
-      setIsPublic(data.isPublic ?? true);
-    } catch (err) {
-      setError(err.response?.data?.message || "Could not load profile.");
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Seed the editable local state from the fetched profile once it
+  // arrives (and again any time it's refetched after a save elsewhere).
+  useEffect(() => {
+    if (!profile) return;
+    setForm({
+      fullName: profile.user?.fullName || "",
+      location: profile.location || "",
+      headline: profile.headline || "",
+      bio: profile.bio || "",
+    });
+    setSkills(profile.skills || []);
+    setInterests(profile.interests || []);
+    setResumeUrl(profile.resumeUrl || "");
+    setAvatarUrl(profile.avatarUrl || "");
+    setIsPublic(profile.isPublic ?? true);
+  }, [profile]);
 
   useEffect(() => {
-    fetchProfile();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    if (queryError) setError("Could not load profile.");
+  }, [queryError]);
 
   const handleChange = (event) => setForm({ ...form, [event.target.name]: event.target.value });
 
@@ -114,25 +111,18 @@ export default function AlumniEditProfile() {
 
   const uploadAvatarNow = async () => {
     if (!avatarFile) return;
-    setUploadingAvatar(true);
     setError("");
     setSuccessMsg("");
     try {
       const formData = new FormData();
       formData.append("avatar", avatarFile); // field name must match uploadAvatar.single("avatar") on backend
-      const { data } = await api.post(
-        `/alumni/profile/avatar`,
-        formData,
-        { headers: { "Content-Type": "multipart/form-data" } }
-      );
+      const data = await uploadAlumniAvatar(formData).unwrap();
       setAvatarUrl(data.avatarUrl); // backend returns the full alumni doc
       setAvatarFile(null);
       setAvatarPreview("");
       setSuccessMsg("Profile picture updated.");
     } catch (err) {
-      setError(err.response?.data?.message || "Could not upload profile picture.");
-    } finally {
-      setUploadingAvatar(false);
+      setError(err.data?.message || "Could not upload profile picture.");
     }
   };
 
@@ -144,24 +134,17 @@ export default function AlumniEditProfile() {
 
   const uploadResumeNow = async () => {
     if (!resumeFile) return;
-    setUploadingResume(true);
     setError("");
     setSuccessMsg("");
     try {
       const formData = new FormData();
       formData.append("resume", resumeFile); // field name must match uploadResume.single("resume") on backend
-      const { data } = await api.post(
-        `/alumni/profile/resume`,
-        formData,
-        { headers: { "Content-Type": "multipart/form-data" } }
-      );
+      const data = await uploadAlumniResume(formData).unwrap();
       setResumeUrl(data.resumeUrl);
       setResumeFile(null);
       setSuccessMsg("Resume uploaded.");
     } catch (err) {
-      setError(err.response?.data?.message || "Could not upload resume.");
-    } finally {
-      setUploadingResume(false);
+      setError(err.data?.message || "Could not upload resume.");
     }
   };
 
@@ -169,7 +152,6 @@ export default function AlumniEditProfile() {
   // they're already saved the moment they're uploaded, and sending stale
   // local state here would risk overwriting a real path with an old value.
   const handleSave = async () => {
-    setSaving(true);
     setError("");
     setSuccessMsg("");
     try {
@@ -182,13 +164,11 @@ export default function AlumniEditProfile() {
         interests,
         isPublic,
       };
-      await api.put(`/alumni/profile`, payload);
+      await updateMyAlumniProfile(payload).unwrap();
       setSuccessMsg("Profile saved successfully.");
       setTimeout(() => navigate("/dashboard/alumni/profile"), 800);
     } catch (err) {
-      setError(err.response?.data?.message || "Could not save profile.");
-    } finally {
-      setSaving(false);
+      setError(err.data?.message || "Could not save profile.");
     }
   };
 

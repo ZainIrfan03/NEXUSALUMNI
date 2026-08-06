@@ -1,9 +1,11 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import api from "../../../api/axios";
+import {
+  useGetMyAlumniProfileQuery,
+  useAddAlumniExperienceMutation,
+} from "../../../store/api/alumniProfileApi";
 import { getImageUrl as fileUrl } from "../../../utils/getImageUrl";
 import LoadingSpinner from "../LoadingSpinner";
-const SOCKET_URL = import.meta.env.VITE_SOCKET_URL
 
 import {
   Pencil,
@@ -29,9 +31,11 @@ import {
 export default function AlumniProfile() {
   const navigate = useNavigate();
 
-  const [profile, setProfile] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const { data: profile, isLoading: loading, error: queryError } = useGetMyAlumniProfileQuery();
+  const [addAlumniExperience] = useAddAlumniExperienceMutation();
+
+  const [actionError, setActionError] = useState("");
+  const error = actionError || (queryError && "Could not load profile.");
 
   const [showRoleForm, setShowRoleForm] = useState(false);
   const [roleForm, setRoleForm] = useState({
@@ -43,37 +47,16 @@ export default function AlumniProfile() {
     description: "",
   });
 
-  const fetchProfile = async () => {
-    setLoading(true);
-    setError("");
-    try {
-      const { data } = await api.get(`/alumni/profile`);
-      setProfile(data);
-    } catch (err) {
-      setError(err.response?.data?.message || "Could not load profile.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchProfile();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
   const handleAddRole = async (event) => {
     event.preventDefault();
     if (!roleForm.title || !roleForm.company) return;
+    setActionError("");
     try {
-      const { data } = await api.post(
-        `/alumni/profile/experience`,
-        roleForm
-      );
-      setProfile(data);
+      await addAlumniExperience(roleForm).unwrap();
       setRoleForm({ title: "", company: "", startDate: "", endDate: "", current: false, description: "" });
       setShowRoleForm(false);
     } catch (err) {
-      setError(err.response?.data?.message || "Could not add role.");
+      setActionError(err.data?.message || "Could not add role.");
     }
   };
 

@@ -1,10 +1,16 @@
 import React, { useState, useEffect, useRef } from "react";
-import api from "../../../api/axios";
+import { useDispatch, useSelector } from "react-redux";
+import { useLocation } from "react-router-dom";
 import { getImageUrl as fileUrl } from "../../../utils/getImageUrl";
 import LoadingSpinner from "../LoadingSpinner";
 import EmptyState from "../EmptyState";
-import { useSelector } from "react-redux";
-import { useLocation } from "react-router-dom";
+import {
+  messagesApi,
+  useGetConversationsQuery,
+  useGetMessagesQuery,
+  useSendFileMessageMutation,
+  useDeleteConversationMutation,
+} from "../../../store/api/messagesApi";
 const SOCKET_URL = import.meta.env.VITE_SOCKET_URL
 
 import {
@@ -27,7 +33,12 @@ import { connectSocket, getSocket } from "../../../utils/socket";
 
 /**
  * Messages page — file: src/pages/dashboard/student/Messages.jsx
- * Now real-time: REST loads history, Socket.io delivers live messages.
+ * Real-time: REST (via RTK Query) loads history, Socket.io delivers live
+ * messages. Inbox list + message history both live in the RTK Query
+ * cache now — socket events patch that cache directly with
+ * `messagesApi.util.updateQueryData` instead of local useState, so a
+ * message that arrives while the user is on this page and one loaded
+ * from a fresh page visit render through the exact same list.
  * Also supports image/file attachments (multer, via REST) and deleting
  * a whole conversation from the three-dot menu.
  */
@@ -44,19 +55,17 @@ const avatarSrc = (person) => {
 };
 
 export default function Messages() {
+  const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
   const location = useLocation();
   const incomingConversationId = location.state?.conversationId;
 
-  const [conversations, setConversations] = useState([]);
+  const { data: conversations = [], isLoading: loadingConvos } = useGetConversationsQuery();
+
   const [activeId, setActiveId] = useState(null);
-  const [messages, setMessages] = useState([]);
   const [draft, setDraft] = useState("");
-  const [loadingConvos, setLoadingConvos] = useState(true);
-  const [loadingMessages, setLoadingMessages] = useState(false);
   const [typing, setTyping] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [uploading, setUploading] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [attachError, setAttachError] = useState("");
   const bottomRef = useRef(null);
@@ -64,29 +73,56 @@ export default function Messages() {
   const fileInputRef = useRef(null);
   const imageInputRef = useRef(null);
 
+  const { data: messages = [], isLoading: loadingMessages } = useGetMessagesQuery(activeId, {
+    skip: !activeId,
+  });
+  const [sendFileMessage, { isLoading: uploading }] = useSendFileMessageMutation();
+  const [deleteConversationMutation] = useDeleteConversationMutation();
+
   const activeConvo = conversations.find((conversation) => conversation._id === activeId);
   const otherPerson = activeConvo?.participants.find((participant) => participant._id !== user._id);
+
+  // Once the conversation list loads, jump into whichever chat we were
+  // sent here for (e.g. "Message" button from Directory/Mentorship), or
+  // the first one in the inbox.
+  useEffect(() => {
+    if (activeId || conversations.length === 0) return;
+    setActiveId(incomingConversationId || conversations[0]._id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [conversations]);
 
   // 1. Connect socket once, on mount
   useEffect(() => {
     const socket = connectSocket();
 
     socket.on("receiveMessage", (msg) => {
-      setMessages((prev) => (msg.conversation === activeIdRef.current ? [...prev, msg] : prev));
+      // Patch the cached message history for that conversation, if we've
+      // fetched it before — if not, there's nothing to patch and the
+      // next visit to that chat fetches it fresh from the backend anyway.
+      dispatch(
+        messagesApi.util.updateQueryData("getMessages", msg.conversation, (draftMessages) => {
+          draftMessages.push(msg);
+        })
+      );
       // bump that conversation to the top of the inbox with the new preview
-      setConversations((prev) =>
-        prev
-          .map((conversation) =>
-            conversation._id === msg.conversation
-              ? { ...conversation, lastMessage: msg.text || (msg.fileName ? `📎 ${msg.fileName}` : "") }
-              : conversation
-          )
-          .sort((convoA, convoB) => new Date(convoB.updatedAt) - new Date(convoA.updatedAt))
+      dispatch(
+        messagesApi.util.updateQueryData("getConversations", undefined, (draftConvos) => {
+          const convo = draftConvos.find((c) => c._id === msg.conversation);
+          if (convo) {
+            convo.lastMessage = msg.text || (msg.fileName ? `📎 ${msg.fileName}` : "");
+            convo.updatedAt = new Date().toISOString();
+          }
+          draftConvos.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+        })
       );
     });
 
     socket.on("messageSent", (msg) => {
-      setMessages((prev) => [...prev, msg]);
+      dispatch(
+        messagesApi.util.updateQueryData("getMessages", msg.conversation, (draftMessages) => {
+          draftMessages.push(msg);
+        })
+      );
     });
 
     socket.on("typing", ({ conversationId }) => {
@@ -101,6 +137,7 @@ export default function Messages() {
       socket.off("messageSent");
       socket.off("typing");
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Keep a ref of activeId so the socket listeners above (set up once)
@@ -120,43 +157,6 @@ export default function Messages() {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
-
-  // 2. Load the conversation list on mount
-  useEffect(() => {
-    const fetchConversations = async () => {
-      try {
-        const { data } = await api.get(`/messages/conversations`);
-        setConversations(data);
-        if (incomingConversationId) {
-          setActiveId(incomingConversationId);
-        } else if (data.length > 0) {
-          setActiveId(data[0]._id);
-        }
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoadingConvos(false);
-      }
-    };
-    fetchConversations();
-  }, []);
-
-  // 3. Load message history whenever the active conversation changes
-  useEffect(() => {
-    if (!activeId) return;
-    const fetchMessages = async () => {
-      setLoadingMessages(true);
-      try {
-        const { data } = await api.get(`/messages/${activeId}`);
-        setMessages(data);
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoadingMessages(false);
-      }
-    };
-    fetchMessages();
-  }, [activeId]);
 
   // Auto-scroll to the latest message
   useEffect(() => {
@@ -193,33 +193,17 @@ export default function Messages() {
     if (!file || !activeConvo || !otherPerson) return;
 
     setAttachError("");
-    setUploading(true);
     try {
       const formData = new FormData();
       formData.append("file", file);
 
-      const { data: message } = await api.post(
-        `/messages/${activeId}`,
-        formData
-      );
+      const message = await sendFileMessage({ conversationId: activeId, formData }).unwrap();
 
-      // Reflect it in our own chat window immediately...
-      setMessages((prev) => [...prev, message]);
       // ...and relay it live to the other participant (attachments are
       // saved over REST, not the socket "sendMessage" event).
       getSocket()?.emit("fileMessageSent", { message, toUserId: otherPerson._id });
-
-      setConversations((prev) =>
-        prev
-          .map((conversation) =>
-            conversation._id === activeId ? { ...conversation, lastMessage: `📎 ${message.fileName}` } : conversation
-          )
-          .sort((convoA, convoB) => new Date(convoB.updatedAt || 0) - new Date(convoA.updatedAt || 0))
-      );
     } catch (err) {
-      setAttachError(err.response?.data?.message || "Upload failed. Try a smaller file.");
-    } finally {
-      setUploading(false);
+      setAttachError(err.data?.message || "Upload failed. Try a smaller file.");
     }
   };
 
@@ -234,16 +218,12 @@ export default function Messages() {
     setMenuOpen(false);
     setDeleting(true);
     try {
-      await api.delete(`/messages/conversations/${activeId}`);
-      setConversations((prev) => {
-        const remaining = prev.filter((conversation) => conversation._id !== activeId);
-        setActiveId(remaining.length > 0 ? remaining[0]._id : null);
-        return remaining;
-      });
-      setMessages([]);
+      await deleteConversationMutation(activeId).unwrap();
+      const remaining = conversations.filter((conversation) => conversation._id !== activeId);
+      setActiveId(remaining.length > 0 ? remaining[0]._id : null);
     } catch (err) {
       console.error(err);
-      alert(err.response?.data?.message || "Couldn't delete this conversation.");
+      alert(err.data?.message || "Couldn't delete this conversation.");
     } finally {
       setDeleting(false);
     }

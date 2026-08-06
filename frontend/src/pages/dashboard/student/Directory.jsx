@@ -1,10 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import api from "../../../api/axios";
-import { getImageUrl as fileUrl } from "../../../utils/getImageUrl";
+import { useGetAlumniDirectoryQuery } from "../../../store/api/studentDirectoryApi";
 import { ChevronDown, LayoutGrid, List, ChevronLeft, ChevronRight } from "lucide-react";
 import LoadingSpinner from "../LoadingSpinner";
-const SOCKET_URL = import.meta.env.VITE_SOCKET_URL
 
 /**
  * Alumni Directory — file: src/pages/dashboard/student/Directory.jsx
@@ -45,57 +43,19 @@ export default function Directory() {
   });
   const [activePage, setActivePage] = useState(1);
 
-  // Data that used to be hardcoded now lives in state, filled by the API call below.
-  const [alumniData, setAlumniData] = useState([]);
-  const [totalResults, setTotalResults] = useState(0);
-  const [totalPages, setTotalPages] = useState(1);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-
-  // Re-fetch whenever the page or the year filters change.
   // (industry/department/location filters need matching fields added to
   // the Alumni model + controller before they can be sent here too.)
-  useEffect(() => {
-    const fetchAlumni = async () => {
-      setLoading(true);
-      setError("");
-      try {
-        const { data } = await api.get(`/directory`, {
-          params: {
-            page: activePage,
-            limit: 6,
-            fromYear: filters.fromYear || undefined,
-            toYear: filters.toYear || undefined,
-          },
-        });
+  const { data, isLoading: loading, error: queryError } = useGetAlumniDirectoryQuery({
+    page: activePage,
+    limit: 6,
+    fromYear: filters.fromYear || undefined,
+    toYear: filters.toYear || undefined,
+  });
 
-        // Map backend shape { _id, user: { fullName }, graduationYear, company, jobTitle }
-        // into the { id, name, title, year, img } shape the cards below expect.
-        // NOTE: `id` (the Alumni document's own _id) is kept so "View Profile"
-        // can navigate to /dashboard/student/directory/:id.
-        // `img` resolves through fileUrl() so relative upload paths get the
-        // correct host prefix; empty string means "no avatar" -> initials fallback.
-        const mapped = data.results.map((alumnus) => ({
-          id: alumnus._id,
-          name: alumnus.user?.fullName || "Unknown",
-          title: [alumnus.jobTitle, alumnus.company].filter(Boolean).join(" @ "),
-          year: `Class of ${alumnus.graduationYear}`,
-          tag: null,
-          img: fileUrl(alumnus.avatarUrl),
-        }));
-
-        setAlumniData(mapped);
-        setTotalResults(data.total);
-        setTotalPages(data.totalPages);
-      } catch (err) {
-        setError(err.response?.data?.message || "Failed to load directory");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchAlumni();
-  }, [activePage, filters.fromYear, filters.toYear]);
+  const alumniData = data?.results || [];
+  const totalResults = data?.total || 0;
+  const totalPages = data?.totalPages || 1;
+  const error = queryError && "Failed to load directory";
 
   const toggleDept = (dept) => {
     setSelectedDepts((prev) =>

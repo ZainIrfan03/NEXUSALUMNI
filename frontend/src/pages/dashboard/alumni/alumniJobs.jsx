@@ -1,11 +1,15 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import api from "../../../api/axios";
+import {
+  useGetMyJobsQuery,
+  useGetJobApplicantsQuery,
+  useDeleteMyJobMutation,
+  useUpdateApplicationStatusMutation,
+} from "../../../store/api/alumniJobsApi";
 import { getImageUrl as fileUrl } from "../../../utils/getImageUrl";
 import LoadingSpinner from "../LoadingSpinner";
 import EmptyState from "../EmptyState";
 import StatusBadge from "../StatusBadge";
-const SOCKET_URL = import.meta.env.VITE_SOCKET_URL
 
 import {
   Plus,
@@ -84,89 +88,76 @@ const APPLICANT_STATUS_LABELS = {
 export default function AlumniJobs() {
   const navigate = useNavigate();
 
-  const [jobs, setJobs] = useState([]);
-  const [stats, setStats] = useState({
+  const [page, setPage] = useState(1);
+  const [actionError, setActionError] = useState("");
+
+  const {
+    data: jobsData,
+    isLoading: loading,
+    error: jobsQueryError,
+  } = useGetMyJobsQuery({ page, pageSize: PAGE_SIZE });
+
+  const jobs = jobsData?.jobs || [];
+  const totalCount = jobsData?.totalCount || 0;
+  const stats = jobsData?.stats || {
     totalPostings: 0,
     newThisWeek: 0,
     totalApplicants: 0,
     unreadApplicants: 0,
     fillRate: 0,
-  });
-  const [totalCount, setTotalCount] = useState(0);
-  const [page, setPage] = useState(1);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  };
 
-  // Applicants modal state
-  const [applicantsJob, setApplicantsJob] = useState(null); // { _id, title }
-  const [applicants, setApplicants] = useState([]);
-  const [loadingApplicants, setLoadingApplicants] = useState(false);
+  // Applicants modal — only the id lives in state, everything else (title,
+  // applicant list) is derived live from cache, so it always reflects
+  // whatever the backend most recently said.
+  const [applicantsJobId, setApplicantsJobId] = useState(null);
   const [updatingId, setUpdatingId] = useState(null);
 
-  const fetchJobs = async () => {
-    setLoading(true);
-    setError("");
-    try {
-      const { data } = await api.get(`/alumni/jobs`, {
-        params: { page, pageSize: PAGE_SIZE },
-      });
-      setJobs(data.jobs || []);
-      setTotalCount(data.totalCount || 0);
-      setStats(data.stats || stats);
-    } catch (err) {
-      setError(err.response?.data?.message || "Could not load your job postings.");
-    } finally {
-      setLoading(false);
-    }
+  const {
+    data: applicantsData,
+    isLoading: loadingApplicants,
+    error: applicantsQueryError,
+  } = useGetJobApplicantsQuery(applicantsJobId, { skip: !applicantsJobId });
+
+  const applicants = applicantsData?.applicants || [];
+  const applicantsJobTitle =
+    applicantsData?.job?.title ?? jobs.find((job) => job._id === applicantsJobId)?.title;
+
+  const [deleteMyJob] = useDeleteMyJobMutation();
+  const [updateApplicationStatus] = useUpdateApplicationStatusMutation();
+
+  const error =
+    actionError ||
+    (jobsQueryError && "Could not load your job postings.") ||
+    (applicantsQueryError && "Could not load applicants.");
+
+  const openApplicants = (job) => {
+    setActionError("");
+    setApplicantsJobId(job._id);
   };
 
-  useEffect(() => {
-    fetchJobs();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page]);
+  const closeApplicants = () => setApplicantsJobId(null);
 
   const handleDelete = async (jobId) => {
+    setActionError("");
     try {
-      await api.delete(`/alumni/jobs/${jobId}`);
-      fetchJobs();
+      await deleteMyJob(jobId).unwrap();
     } catch (err) {
-      setError(err.response?.data?.message || "Could not delete this posting.");
-    }
-  };
-
-  // Opens the applicants modal and loads everyone who has applied to this job.
-  const openApplicants = async (job) => {
-    setApplicantsJob({ _id: job._id, title: job.title });
-    setApplicants([]);
-    setLoadingApplicants(true);
-    try {
-      const { data } = await api.get(`/alumni/jobs/${job._id}/applicants`);
-      setApplicants(data.applicants || []);
-    } catch (err) {
-      setError(err.response?.data?.message || "Could not load applicants.");
-      setApplicantsJob(null);
-    } finally {
-      setLoadingApplicants(false);
+      setActionError(err.data?.message || "Could not delete this posting.");
     }
   };
 
   // Moves an applicant to a new pipeline stage (Move to Review / Schedule
-  // Interview / Accept / Reject) from the modal.
+  // Interview / Accept / Reject) from the modal. invalidatesTags on the
+  // mutation refreshes both the applicants list and the postings table's
+  // unread count — no manual local-state patching or refetch call needed.
   const handleStatusChange = async (applicationId, status) => {
+    setActionError("");
     setUpdatingId(applicationId);
     try {
-      await api.patch(
-        `/alumni/jobs/applications/${applicationId}/status`,
-        { status }
-      );
-      setApplicants((previousApplicants) =>
-        previousApplicants.map((applicant) =>
-          applicant.applicationId === applicationId ? { ...applicant, status } : applicant
-        )
-      );
-      fetchJobs(); // keep the postings table + unread count in sync
+      await updateApplicationStatus({ applicationId, status, jobId: applicantsJobId }).unwrap();
     } catch (err) {
-      setError(err.response?.data?.message || "Could not update this application.");
+      setActionError(err.data?.message || "Could not update this application.");
     } finally {
       setUpdatingId(null);
     }
@@ -382,10 +373,10 @@ export default function AlumniJobs() {
       </div>
 
       {/* Applicants modal — status dropdown moves someone through the pipeline */}
-      {applicantsJob && (
+      {applicantsJobId && (
         <div
           className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4"
-          onClick={() => setApplicantsJob(null)}
+          onClick={closeApplicants}
         >
           <div
             className="bg-white rounded-2xl max-w-2xl w-full max-h-[85vh] flex flex-col"
@@ -394,10 +385,10 @@ export default function AlumniJobs() {
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
               <div>
                 <h2 className="text-lg font-bold text-dark">Applicants</h2>
-                <p className="text-sm text-gray-500">{applicantsJob.title}</p>
+                <p className="text-sm text-gray-500">{applicantsJobTitle}</p>
               </div>
               <button
-                onClick={() => setApplicantsJob(null)}
+                onClick={closeApplicants}
                 className="text-gray-400 hover:text-dark"
               >
                 <X size={20} />

@@ -1,12 +1,15 @@
-import React, { useState, useEffect } from "react";
-import api from "../../../api/axios";
-import { getImageUrl as fileUrl } from "../../../utils/getImageUrl";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Compass, Clock3, GraduationCap, MessageCircle } from "lucide-react";
 import LoadingSpinner from "../LoadingSpinner";
 import EmptyState from "../EmptyState";
 import StatusBadge from "../StatusBadge";
-const SOCKET_URL = import.meta.env.VITE_SOCKET_URL
+import {
+  useGetRecommendedMentorsQuery,
+  useGetMyRequestsQuery,
+  useSendMentorshipRequestMutation,
+} from "../../../store/api/studentMentorshipApi";
+import { useStartConversationMutation } from "../../../store/api/messagesApi";
 
 /**
  * Mentorship Hub — file: src/pages/dashboard/student/Mentorship.jsx
@@ -15,9 +18,6 @@ const SOCKET_URL = import.meta.env.VITE_SOCKET_URL
  *   GET  /api/mentorship/my-requests
  *   POST /api/mentorship/request
  */
-
-// Files come back from the backend as relative paths (e.g. "/uploads/avatars/xyz.png"),
-// so build a full URL for <img src>. Stale blob: URLs (from old preview-only
 
 function MentorAvatar({ name, img }) {
   return img ? (
@@ -44,69 +44,41 @@ const REQUEST_PAGE_SIZE = 4; // how many "Request Status" rows to reveal per "Lo
 
 export default function Mentorship() {
   const navigate = useNavigate();
-  const [mentors, setMentors] = useState([]);
-  const [requests, setRequests] = useState([]);
-  const [loadingMentors, setLoadingMentors] = useState(true);
-  const [loadingRequests, setLoadingRequests] = useState(true);
-  const [error, setError] = useState("");
+  const [actionError, setActionError] = useState("");
   const [sendingId, setSendingId] = useState(null); // tracks which card's button is mid-request
   const [visibleRequestCount, setVisibleRequestCount] = useState(REQUEST_PAGE_SIZE);
 
-  // Load recommended mentors + my sent requests once on mount
-  useEffect(() => {
-    const fetchMentors = async () => {
-      try {
-        const { data } = await api.get(`/mentorship/recommended`);
-        // Map backend Alumni shape -> what the cards below render
-        // `img` resolves through fileUrl() so relative upload paths get the
-        // correct host prefix; empty string means "no avatar" -> initials fallback.
-        const mapped = data.map((alumnus) => ({
-          alumniUserId: alumnus.user?._id,     // needed when sending a request (must be the User id)
-          alumniDocId: alumnus._id,
-          name: alumnus.user?.fullName || "Unknown",
-          role: alumnus.jobTitle || "Alumni",
-          company: alumnus.company || "",
-          badges: alumnus.graduationYear ? [`Alumni '${String(alumnus.graduationYear).slice(-2)}`] : [],
-          desc: "", // no bio field on Alumni yet — add one later if needed
-          img: fileUrl(alumnus.avatarUrl),
-        }));
-        setMentors(mapped);
-      } catch (err) {
-        setError(err.response?.data?.message || "Failed to load mentors");
-      } finally {
-        setLoadingMentors(false);
-      }
-    };
+  const {
+    data: mentors = [],
+    isLoading: loadingMentors,
+    error: mentorsError,
+  } = useGetRecommendedMentorsQuery();
 
-    const fetchRequests = async () => {
-      try {
-        const { data } = await api.get(`/mentorship/my-requests`);
-        setRequests(data);
-      } catch (err) {
-        setError(err.response?.data?.message || "Failed to load requests");
-      } finally {
-        setLoadingRequests(false);
-      }
-    };
+  const {
+    data: requests = [],
+    isLoading: loadingRequests,
+    error: requestsError,
+  } = useGetMyRequestsQuery();
 
-    fetchMentors();
-    fetchRequests();
-  }, []);
+  const [sendMentorshipRequest] = useSendMentorshipRequestMutation();
+  const [startConversation] = useStartConversationMutation();
+
+  const error =
+    actionError ||
+    mentorsError?.data?.message ||
+    requestsError?.data?.message ||
+    (mentorsError ? "Failed to load mentors" : "") ||
+    (requestsError ? "Failed to load requests" : "");
 
   const handleSendRequest = async (mentor) => {
     setSendingId(mentor.alumniUserId);
+    setActionError("");
     try {
-      const { data: newRequest } = await api.post(
-        `/mentorship/request`,
-        { alumniId: mentor.alumniDocId }, // backend does Alumni.findById(alumniId)
-      );
-      // Prepend the new request so "Request Status" updates immediately
-      setRequests((prev) => [
-        { ...newRequest, alumni: { _id: mentor.alumniUserId, fullName: mentor.name } },
-        ...prev,
-      ]);
+      await sendMentorshipRequest({ alumniDocId: mentor.alumniDocId }).unwrap();
+      // "MentorshipRequests" tag invalidates above, so `requests` refetches
+      // with the new one already populated — no manual prepend needed.
     } catch (err) {
-      setError(err.response?.data?.message || "Could not send request");
+      setActionError(err?.data?.message || "Could not send request");
     } finally {
       setSendingId(null);
     }
@@ -122,16 +94,14 @@ export default function Mentorship() {
   // Creates (or finds an existing) conversation with this mentor, then
   // jumps to the Messages page with that conversation pre-selected.
   const handleStartChat = async (mentor) => {
+    setActionError("");
     try {
-      const { data: conversation } = await api.post(
-        `/messages/conversations`,
-        { otherUserId: mentor.alumniUserId },
-      );
+      const conversation = await startConversation(mentor.alumniUserId).unwrap();
       navigate("/dashboard/student/messages", {
         state: { conversationId: conversation._id },
       });
     } catch (err) {
-      setError(err.response?.data?.message || "Could not start chat");
+      setActionError(err?.data?.message || "Could not start chat");
     }
   };
 

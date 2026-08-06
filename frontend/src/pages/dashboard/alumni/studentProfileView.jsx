@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import api from "../../../api/axios";
+import { useGetStudentByIdQuery } from "../../../store/api/alumniDirectoryApi";
+import { useStartConversationMutation } from "../../../store/api/messagesApi";
 import { getImageUrl as fileUrl } from "../../../utils/getImageUrl";
 import LoadingSpinner from "../LoadingSpinner";
 import {
@@ -11,7 +12,6 @@ import {
   FileText,
   Send,
 } from "lucide-react";
-const SOCKET_URL = import.meta.env.VITE_SOCKET_URL
 
 // Files come back from the backend as relative paths (e.g. "/uploads/avatars/xyz.png"),
 // so build a full URL for <img src>. Stale blob: URLs (from old preview-only
@@ -47,45 +47,25 @@ export default function StudentProfileView() {
   const { id } = useParams();
   const navigate = useNavigate();
 
-  const [student, setStudent] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [messaging, setMessaging] = useState(false);
+  const { data: student, isLoading: loading, error: queryError } = useGetStudentByIdQuery(id);
+  const [startConversation, { isLoading: messaging }] = useStartConversationMutation();
+  const [actionError, setActionError] = useState("");
 
-  useEffect(() => {
-    const fetchStudent = async () => {
-      setLoading(true);
-      setError("");
-      try {
-        const { data } = await api.get(`/alumni/directory/${id}`);
-        setStudent(data);
-      } catch (err) {
-        setError(err.response?.data?.message || "Could not load this profile.");
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchStudent();
-  }, [id]);
+  const error = actionError || (queryError && "Could not load this profile.");
 
   // Creates (or finds an existing) conversation with this student, then
   // navigates to the alumni Messages page with that conversation pre-selected.
   const handleMessage = async () => {
     const studentUserId = student?.user?._id;
     if (!studentUserId) return;
-    setMessaging(true);
+    setActionError("");
     try {
-      const { data: conversation } = await api.post(
-        `/messages/conversations`,
-        { otherUserId: studentUserId }
-      );
+      const conversation = await startConversation(studentUserId).unwrap();
       navigate("/dashboard/alumni/messages", {
         state: { conversationId: conversation._id },
       });
     } catch (err) {
-      setError(err.response?.data?.message || "Could not start chat");
-    } finally {
-      setMessaging(false);
+      setActionError(err.data?.message || "Could not start chat");
     }
   };
 

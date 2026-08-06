@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import api from "../../../api/axios";
+import { useNavigate, useLocation } from "react-router-dom";
+import { useCreateJobMutation } from "../../../store/api/alumniJobsApi";
 import { Briefcase, ArrowLeft, Loader2 } from "lucide-react";
 
 const TYPE_OPTIONS = ["Full-time", "Part-time", "Internship", "Remote"];
@@ -8,7 +8,12 @@ const DEPARTMENT_OPTIONS = ["Engineering", "Design", "Marketing", "Sales", "Oper
 
 export default function AlumniJobNew() {
   const navigate = useNavigate();
+  const location = useLocation();
 
+  // The Dashboard's "Post Opportunity" quick-form collects title/location/
+  // type but not "company" (a required field on the backend), so it hands
+  // off here instead of submitting incomplete data — this fills in
+  // whatever the user already typed there.
   const [form, setForm] = useState({
     title: "",
     company: "",
@@ -17,10 +22,11 @@ export default function AlumniJobNew() {
     type: "Full-time",
     payRange: "",
     description: "",
+    ...location.state?.prefill,
   });
 
-  const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [createJob, { isLoading: saving }] = useCreateJobMutation();
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -36,14 +42,11 @@ export default function AlumniJobNew() {
       return;
     }
 
-    setSaving(true);
     try {
-      await api.post(`/jobs`, form);
+      await createJob(form).unwrap();
       navigate("/dashboard/alumni/jobs");
     } catch (err) {
-      setError(err.response?.data?.message || "Could not post this job. Please try again.");
-    } finally {
-      setSaving(false);
+      setError(err.data?.message || "Could not post this job. Please try again.");
     }
   };
 

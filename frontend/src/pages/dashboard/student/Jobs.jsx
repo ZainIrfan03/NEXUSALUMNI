@@ -1,8 +1,12 @@
-import React, { useState, useEffect } from "react";
-import api from "../../../api/axios";
+import React, { useState } from "react";
 import LoadingSpinner from "../LoadingSpinner";
 import EmptyState from "../EmptyState";
-const SOCKET_URL = import.meta.env.VITE_SOCKET_URL
+import {
+  useGetJobsQuery,
+  useGetMyApplicationStatsQuery,
+  useApplyToJobMutation,
+  useToggleSaveJobMutation,
+} from "../../../store/api/studentJobsApi";
 
 import {
   SlidersHorizontal,
@@ -15,7 +19,6 @@ import {
   UploadCloud,
   HelpCircle,
   ChevronDown,
-  Loader2,
   X,
   MapPin,
   CalendarDays,
@@ -42,54 +45,40 @@ const currentUserId = () => JSON.parse(localStorage.getItem("user"))?._id;
 
 export default function Jobs() {
   const [activeTab, setActiveTab] = useState("All Jobs");
-  const [jobs, setJobs] = useState([]);
-  const [tracking, setTracking] = useState({ applied: 0, in_review: 0, interview: 0 });
-  const [loadingJobs, setLoadingJobs] = useState(true);
-  const [error, setError] = useState("");
+  const [actionError, setActionError] = useState("");
   const [busyJobId, setBusyJobId] = useState(null);
-  const [selectedJob, setSelectedJob] = useState(null);
+  const [selectedJobId, setSelectedJobId] = useState(null);
 
-  useEffect(() => {
-    const fetchJobs = async () => {
-      setLoadingJobs(true);
-      setError("");
-      try {
-        const { data } = await api.get(`/jobs`, {
-          params: { type: activeTab },
-        });
-        setJobs(data);
-      } catch (err) {
-        setError(err.response?.data?.message || "Failed to load jobs");
-      } finally {
-        setLoadingJobs(false);
-      }
-    };
-    fetchJobs();
-    fetchStats();
-  }, [activeTab]);
+  const {
+    data: jobs = [],
+    isLoading: loadingJobs,
+    error: jobsError,
+  } = useGetJobsQuery(activeTab);
 
-  const fetchStats = async () => {
-    try {
-      const { data } = await api.get(`/jobs/my-applications`);
-      setTracking(data);
-    } catch (err) {
-      // non-blocking — sidebar just shows 0s if this fails
-    }
-  };
+  const { data: tracking = { applied: 0, in_review: 0, interview: 0 } } =
+    useGetMyApplicationStatsQuery();
+
+  const [applyToJob] = useApplyToJobMutation();
+  const [toggleSaveJob] = useToggleSaveJobMutation();
+
+  // Modal always shows the live job from the cache instead of a
+  // snapshot copy — once `applyToJob`/`toggleSaveJob` invalidate the
+  // "Jobs" tag and the list refetches, the open modal updates for free.
+  const selectedJob = jobs.find((job) => job._id === selectedJobId) || null;
+
+  const error = actionError || jobsError?.data?.message || (jobsError ? "Failed to load jobs" : "");
 
   const handleApply = async (jobId) => {
     setBusyJobId(jobId);
+    setActionError("");
     try {
-      await api.post(`/jobs/${jobId}/apply`, {});
-      setJobs((prev) => prev.map((job) => (job._id === jobId ? { ...job, hasApplied: true } : job)));
-      setSelectedJob((prev) => (prev && prev._id === jobId ? { ...prev, hasApplied: true } : prev));
-      setTracking((prev) => ({ ...prev, applied: prev.applied + 1 }));
+      await applyToJob(jobId).unwrap();
     } catch (err) {
-      if (err.response?.status === 400) {
-        setJobs((prev) => prev.map((job) => (job._id === jobId ? { ...job, hasApplied: true } : job)));
-        setSelectedJob((prev) => (prev && prev._id === jobId ? { ...prev, hasApplied: true } : prev));
-      } else {
-        setError(err.response?.data?.message || "Could not apply");
+      // A 400 here almost always means "already applied" — invalidatesTags
+      // still refetches and shows the correct state either way, so this
+      // is just for any other unexpected failure.
+      if (err?.status !== 400) {
+        setActionError(err?.data?.message || "Could not apply");
       }
     } finally {
       setBusyJobId(null);
@@ -98,25 +87,11 @@ export default function Jobs() {
 
   const handleToggleSave = async (jobId) => {
     setBusyJobId(jobId);
+    setActionError("");
     try {
-      const { data } = await api.post(
-        `/jobs/${jobId}/save`,
-        {},
-      );
-      setJobs((prev) =>
-        prev.map((job) =>
-          job._id === jobId
-            ? {
-                ...job,
-                savedBy: data.saved
-                  ? [...job.savedBy, currentUserId()]
-                  : job.savedBy.filter((id) => id !== currentUserId()),
-              }
-            : job
-        )
-      );
+      await toggleSaveJob(jobId).unwrap();
     } catch (err) {
-      setError(err.response?.data?.message || "Could not save job");
+      setActionError(err?.data?.message || "Could not save job");
     } finally {
       setBusyJobId(null);
     }
@@ -198,7 +173,7 @@ export default function Jobs() {
                       </div>
                     </div>
 
-                    <button onClick={() => setSelectedJob(job)} className="text-left">
+                    <button onClick={() => setSelectedJobId(job._id)} className="text-left">
                       <h3 className="font-bold text-dark text-lg leading-snug mb-1 hover:text-primary transition-colors">
                         {job.title}
                       </h3>
@@ -219,7 +194,7 @@ export default function Jobs() {
                     </div>
 
                     <button
-                      onClick={() => setSelectedJob(job)}
+                      onClick={() => setSelectedJobId(job._id)}
                       disabled={isBusy}
                       className={`w-full text-sm font-semibold py-2.5 rounded-xl transition-colors disabled:opacity-50 ${
                         job.hasApplied
@@ -271,7 +246,7 @@ export default function Jobs() {
       {selectedJob && (
         <div
           className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4"
-          onClick={() => setSelectedJob(null)}
+          onClick={() => setSelectedJobId(null)}
         >
           <div
             className="bg-white rounded-2xl max-w-lg w-full max-h-[85vh] overflow-y-auto"
@@ -281,7 +256,7 @@ export default function Jobs() {
               <div className="h-12 w-12 rounded-xl bg-blue-50 flex items-center justify-center">
                 <Briefcase size={20} className="text-primary" />
               </div>
-              <button onClick={() => setSelectedJob(null)} className="text-gray-400 hover:text-dark">
+              <button onClick={() => setSelectedJobId(null)} className="text-gray-400 hover:text-dark">
                 <X size={20} />
               </button>
             </div>

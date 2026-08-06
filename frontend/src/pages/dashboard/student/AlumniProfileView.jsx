@@ -1,10 +1,13 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import api from "../../../api/axios";
+import { useGetAlumniByIdQuery } from "../../../store/api/studentDirectoryApi";
+import {
+  useGetMyRequestsQuery,
+  useSendMentorshipRequestMutation,
+} from "../../../store/api/studentMentorshipApi";
 import { getImageUrl as fileUrl } from "../../../utils/getImageUrl";
 import LoadingSpinner from "../LoadingSpinner";
 import { ArrowLeft, MapPin, Briefcase, GraduationCap, Send } from "lucide-react";
-const SOCKET_URL = import.meta.env.VITE_SOCKET_URL
 
 // Files come back from the backend as relative paths (e.g. "/uploads/avatars/xyz.png"),
 // so build a full URL for <img src>. Stale blob: URLs (from old preview-only
@@ -18,64 +21,33 @@ export default function AlumniProfileView() {
   const { id } = useParams();
   const navigate = useNavigate();
 
-  const [alumni, setAlumni] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [requestStatus, setRequestStatus] = useState(null); // null | "pending" | "accepted" | "completed" | "declined"
-  const [checkingRequest, setCheckingRequest] = useState(true); // true until the check below finishes
-  const [requesting, setRequesting] = useState(false);
-
-  useEffect(() => {
-    const fetchAlumni = async () => {
-      setLoading(true);
-      setError("");
-      try {
-        const { data } = await api.get(`/directory/${id}`);
-        setAlumni(data);
-      } catch (err) {
-        setError(err.response?.data?.message || "Could not load this profile.");
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchAlumni();
-  }, [id]);
+  const { data: alumni, isLoading: loading, error: profileQueryError } = useGetAlumniByIdQuery(id);
 
   // Once the alumni's User id is known, check whether a mentorship request
   // already exists (any status) so the button can be hidden entirely.
-  useEffect(() => {
-    const checkExistingRequest = async () => {
-      const alumniUserId = alumni?.user?._id;
-      if (!alumniUserId) {
-        setCheckingRequest(false);
-        return;
-      }
-      try {
-        const { data } = await api.get(`/mentorship/my-requests`);
-        const existing = data.find((request) => request.alumni?._id?.toString() === alumniUserId.toString());
-        setRequestStatus(existing?.status || null);
-      } catch {
-        // If this check fails, fall back to showing the button — worst case
-        // the backend rejects a duplicate request with a clear error.
-      } finally {
-        setCheckingRequest(false);
-      }
-    };
-    checkExistingRequest();
-  }, [alumni]);
+  // Reuses the same cached query the student Mentorship page uses.
+  const alumniUserId = alumni?.user?._id;
+  const {
+    data: myRequests,
+    isLoading: checkingRequest,
+  } = useGetMyRequestsQuery(undefined, { skip: !alumniUserId });
+
+  const existingRequest = myRequests?.find(
+    (request) => request.alumni?._id?.toString() === alumniUserId?.toString()
+  );
+  const requestStatus = existingRequest?.status || null; // null | "pending" | "accepted" | "completed" | "declined"
+
+  const [sendMentorshipRequest, { isLoading: requesting }] = useSendMentorshipRequestMutation();
+  const [actionError, setActionError] = useState("");
+
+  const error = actionError || (profileQueryError && "Could not load this profile.");
 
   const handleRequestMentorship = async () => {
-    setRequesting(true);
+    setActionError("");
     try {
-      await api.post(
-        `/mentorship/request`,
-        { alumniId: alumni._id },
-      );
-      setRequestStatus("pending");
+      await sendMentorshipRequest({ alumniDocId: alumni._id }).unwrap();
     } catch (err) {
-      setError(err.response?.data?.message || "Could not send mentorship request.");
-    } finally {
-      setRequesting(false);
+      setActionError(err.data?.message || "Could not send mentorship request.");
     }
   };
 

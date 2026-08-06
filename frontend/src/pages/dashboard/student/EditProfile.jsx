@@ -1,6 +1,11 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import api from "../../../api/axios";
+import {
+  useGetMyProfileQuery,
+  useUpdateMyProfileMutation,
+  useUploadAvatarMutation,
+  useUploadResumeMutation,
+} from "../../../store/api/studentProfileApi";
 import { getImageUrl as fileUrl } from "../../../utils/getImageUrl";
 import LoadingSpinner from "../LoadingSpinner";
 import {
@@ -14,7 +19,6 @@ import {
   X,
   MapPin,
 } from "lucide-react";
-const SOCKET_URL = import.meta.env.VITE_SOCKET_URL
 
 
 /**
@@ -24,6 +28,12 @@ const SOCKET_URL = import.meta.env.VITE_SOCKET_URL
  */
 export default function EditProfile() {
   const navigate = useNavigate();
+
+  const { data: profile, isLoading: loading, error: queryError } = useGetMyProfileQuery();
+  const [updateMyProfile, { isLoading: saving }] = useUpdateMyProfileMutation();
+  const [uploadAvatar, { isLoading: uploadingAvatar }] = useUploadAvatarMutation();
+  const [uploadResume, { isLoading: uploadingResume }] = useUploadResumeMutation();
+
   const [form, setForm] = useState({
     fullName: "",
     location: "",
@@ -44,43 +54,33 @@ export default function EditProfile() {
   // Real files picked by the user, uploaded immediately via multer endpoints
   const [avatarFile, setAvatarFile] = useState(null);
   const [avatarPreview, setAvatarPreview] = useState("");
-  const [uploadingAvatar, setUploadingAvatar] = useState(false);
 
   const [resumeFile, setResumeFile] = useState(null);
-  const [uploadingResume, setUploadingResume] = useState(false);
 
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState("");
+  const [actionError, setActionError] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
+  const error = actionError || (queryError && "Could not load profile.");
 
-  const fetchProfile = async () => {
-    setLoading(true);
-    setError("");
-    try {
-      const { data } = await api.get(`/student/profile`);
-      setForm({
-        fullName: data.user?.fullName || "",
-        location: data.location || "",
-        headline: data.headline || "",
-        bio: data.bio || "",
-      });
-      setSkills(data.skills || []);
-      setInterests(data.interests || []);
-      setResumeUrl(data.resumeUrl || "");
-      setAvatarUrl(data.avatarUrl || "");
-      setIsPublic(data.isPublic ?? true);
-    } catch (err) {
-      setError(err.response?.data?.message || "Could not load profile.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
+  // Seed the editable form once from the fetched profile — guarded so a
+  // later refetch (e.g. triggered by the avatar/resume upload mutations
+  // below, which share the "StudentProfile" cache tag) doesn't stomp
+  // whatever the user is mid-typing in the form.
+  const [hasSeeded, setHasSeeded] = useState(false);
   useEffect(() => {
-    fetchProfile();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    if (!profile || hasSeeded) return;
+    setForm({
+      fullName: profile.user?.fullName || "",
+      location: profile.location || "",
+      headline: profile.headline || "",
+      bio: profile.bio || "",
+    });
+    setSkills(profile.skills || []);
+    setInterests(profile.interests || []);
+    setResumeUrl(profile.resumeUrl || "");
+    setAvatarUrl(profile.avatarUrl || "");
+    setIsPublic(profile.isPublic ?? true);
+    setHasSeeded(true);
+  }, [profile, hasSeeded]);
 
   const handleChange = (event) => setForm({ ...form, [event.target.name]: event.target.value });
 
@@ -106,26 +106,17 @@ export default function EditProfile() {
 
   const uploadAvatarNow = async () => {
     if (!avatarFile) return;
-    setUploadingAvatar(true);
-    setError("");
+    setActionError("");
     try {
       const formData = new FormData();
       formData.append("avatar", avatarFile); // field name must match upload.single("avatar") on backend
-      const { data } = await api.post(
-        `/student/profile/avatar`,
-        formData,
-        {
-          headers: {  "Content-Type": "multipart/form-data" },
-        }
-      );
+      const data = await uploadAvatar(formData).unwrap();
       setAvatarUrl(data.avatarUrl);
       setAvatarFile(null);
       setAvatarPreview("");
       setSuccessMsg("Profile picture updated.");
     } catch (err) {
-      setError(err.response?.data?.message || "Could not upload profile picture.");
-    } finally {
-      setUploadingAvatar(false);
+      setActionError(err.data?.message || "Could not upload profile picture.");
     }
   };
 
@@ -137,31 +128,21 @@ export default function EditProfile() {
 
   const uploadResumeNow = async () => {
     if (!resumeFile) return;
-    setUploadingResume(true);
-    setError("");
+    setActionError("");
     try {
       const formData = new FormData();
       formData.append("resume", resumeFile); // field name must match upload.single("resume") on backend
-      const { data } = await api.post(
-        `/student/profile/resume`,
-        formData,
-        {
-          headers: {  "Content-Type": "multipart/form-data" },
-        }
-      );
+      const data = await uploadResume(formData).unwrap();
       setResumeUrl(data.resumeUrl);
       setResumeFile(null);
       setSuccessMsg("Resume uploaded.");
     } catch (err) {
-      setError(err.response?.data?.message || "Could not upload resume.");
-    } finally {
-      setUploadingResume(false);
+      setActionError(err.data?.message || "Could not upload resume.");
     }
   };
 
   const handleSave = async () => {
-    setSaving(true);
-    setError("");
+    setActionError("");
     setSuccessMsg("");
     try {
       const payload = {
@@ -175,14 +156,12 @@ export default function EditProfile() {
         resumeUrl,
         avatarUrl,
       };
-      await api.put(`/student/profile`, payload);
+      await updateMyProfile(payload).unwrap();
       setSuccessMsg("Profile saved successfully.");
       // Give the user a moment to see the success message, then go back to View Mode
       setTimeout(() => navigate("/dashboard/student/profile"), 800);
     } catch (err) {
-      setError(err.response?.data?.message || "Could not save profile.");
-    } finally {
-      setSaving(false);
+      setActionError(err.data?.message || "Could not save profile.");
     }
   };
 

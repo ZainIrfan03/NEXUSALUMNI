@@ -1,6 +1,11 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import api from "../../../api/axios";
+import {
+  useGetMyProfileQuery,
+  useAddExperienceMutation,
+  useAddEducationMutation,
+  useDeleteEducationMutation,
+} from "../../../store/api/studentProfileApi";
 import { getImageUrl as fileUrl } from "../../../utils/getImageUrl";
 import LoadingSpinner from "../LoadingSpinner";
 import {
@@ -14,7 +19,6 @@ import {
   X,
   FileText,
 } from "lucide-react";
-const SOCKET_URL = import.meta.env.VITE_SOCKET_URL
 
 // Files come back from the backend as relative paths (e.g. "/uploads/avatars/xyz.png"),
 
@@ -25,9 +29,13 @@ const SOCKET_URL = import.meta.env.VITE_SOCKET_URL
 export default function MyProfile() {
   const navigate = useNavigate();
 
-  const [profile, setProfile] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const { data: profile, isLoading: loading, error: queryError } = useGetMyProfileQuery();
+  const [addExperience] = useAddExperienceMutation();
+  const [addEducation] = useAddEducationMutation();
+  const [deleteEducation] = useDeleteEducationMutation();
+
+  const [actionError, setActionError] = useState("");
+  const error = actionError || (queryError && "Could not load profile.");
 
   const [showRoleForm, setShowRoleForm] = useState(false);
   const [roleForm, setRoleForm] = useState({
@@ -46,64 +54,38 @@ export default function MyProfile() {
     year: "",
   });
 
-  const fetchProfile = async () => {
-    setLoading(true);
-    setError("");
-    try {
-      const { data } = await api.get(`/student/profile`);
-      setProfile(data);
-    } catch (err) {
-      setError(err.response?.data?.message || "Could not load profile.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchProfile();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
   const handleAddRole = async (event) => {
     event.preventDefault();
     if (!roleForm.title || !roleForm.company) return;
+    setActionError("");
     try {
-      const { data } = await api.post(
-        `/student/profile/experience`,
-        roleForm,
-      );
-      setProfile(data);
+      await addExperience(roleForm).unwrap();
       setRoleForm({ title: "", company: "", startDate: "", endDate: "", current: false, description: "" });
       setShowRoleForm(false);
     } catch (err) {
-      setError(err.response?.data?.message || "Could not add role.");
+      setActionError(err.data?.message || "Could not add role.");
     }
   };
 
   const handleAddEducation = async (event) => {
     event.preventDefault();
     if (!eduForm.school || !eduForm.degree) return;
+    setActionError("");
     try {
-      const { data } = await api.post(
-        `/student/profile/education`,
-        eduForm,
-      );
-      setProfile(data);
+      await addEducation(eduForm).unwrap();
       setEduForm({ school: "", degree: "", year: "" });
       setShowEduForm(false);
     } catch (err) {
-      setError(err.response?.data?.message || "Could not add education.");
+      setActionError(err.data?.message || "Could not add education.");
     }
   };
 
   const handleDeleteEducation = async (educationId) => {
+    setActionError("");
     try {
-      const { data } = await api.delete(
-        `/student/profile/education/${educationId}`,
-      );
-      setProfile(data);
+      await deleteEducation(educationId).unwrap();
     } catch (err) {
-      setError(err.response?.data?.message || "Could not remove education.");
+      setActionError(err.data?.message || "Could not remove education.");
     }
   };
 

@@ -1,10 +1,14 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import api from "../../../api/axios";
+import {
+  useGetMentorshipOverviewQuery,
+  useAcceptMentorshipRequestMutation,
+  useRejectMentorshipRequestMutation,
+} from "../../../store/api/alumniMentorshipApi";
+import { useStartConversationMutation } from "../../../store/api/messagesApi";
 import { getImageUrl as fileUrl } from "../../../utils/getImageUrl";
 import LoadingSpinner from "../LoadingSpinner";
 import { ClipboardList, Users, Send } from "lucide-react";
-const SOCKET_URL = import.meta.env.VITE_SOCKET_URL
 
 // Files come back from the backend as relative paths (e.g. "/uploads/avatars/xyz.png"),
 // so build a full URL for <img src>. Stale blob: URLs (from old preview-only
@@ -76,43 +80,29 @@ function RequestCard({ request, onAccept, onReject }) {
 export default function AlumniMentorship() {
   const navigate = useNavigate();
 
-  const [data, setData] = useState({ activeMenteesCount: 0, requests: [], mentees: [] });
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const { data, isLoading: loading, error: queryError } = useGetMentorshipOverviewQuery();
+  const [acceptMentorshipRequest] = useAcceptMentorshipRequestMutation();
+  const [rejectMentorshipRequest] = useRejectMentorshipRequestMutation();
+  const [startConversation] = useStartConversationMutation();
 
-  const fetchMentorship = async () => {
-    setLoading(true);
-    setError("");
-    try {
-      const { data } = await api.get(`/alumni/mentorship`);
-      setData(data);
-    } catch (err) {
-      setError(err.response?.data?.message || "Could not load mentorship data.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchMentorship();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const [actionError, setActionError] = useState("");
+  const error = actionError || (queryError && "Could not load mentorship data.");
 
   const handleAccept = async (id) => {
+    setActionError("");
     try {
-      await api.post(`/alumni/mentorship/requests/${id}/accept`, {});
-      fetchMentorship();
+      await acceptMentorshipRequest(id).unwrap();
     } catch (err) {
-      setError(err.response?.data?.message || "Could not accept request.");
+      setActionError(err.data?.message || "Could not accept request.");
     }
   };
 
   const handleReject = async (id) => {
+    setActionError("");
     try {
-      await api.post(`/alumni/mentorship/requests/${id}/reject`, {});
-      fetchMentorship();
+      await rejectMentorshipRequest(id).unwrap();
     } catch (err) {
-      setError(err.response?.data?.message || "Could not reject request.");
+      setActionError(err.data?.message || "Could not reject request.");
     }
   };
 
@@ -120,16 +110,14 @@ export default function AlumniMentorship() {
   // navigates to the alumni Messages page with that conversation pre-selected
   // — same pattern used on the student side's Mentorship page.
   const handleMessage = async (menteeUserId) => {
+    setActionError("");
     try {
-      const { data: conversation } = await api.post(
-        `/messages/conversations`,
-        { otherUserId: menteeUserId }
-      );
+      const conversation = await startConversation(menteeUserId).unwrap();
       navigate("/dashboard/alumni/messages", {
         state: { conversationId: conversation._id },
       });
     } catch (err) {
-      setError(err.response?.data?.message || "Could not start chat");
+      setActionError(err.data?.message || "Could not start chat");
     }
   };
 
@@ -139,7 +127,7 @@ export default function AlumniMentorship() {
     );
   }
 
-  const { activeMenteesCount, requests = [], mentees = [] } = data;
+  const { activeMenteesCount = 0, requests = [], mentees = [] } = data || {};
 
   return (
     <div>

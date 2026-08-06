@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import api from "../../../api/axios";
+import { useGetStudentDirectoryQuery } from "../../../store/api/alumniDirectoryApi";
+import { useStartConversationMutation } from "../../../store/api/messagesApi";
 import { Filter, UserPlus, Loader2, ChevronLeft, ChevronRight, Send } from "lucide-react";
 import { getImageUrl } from "../../../utils/getImageUrl";
 
@@ -89,38 +90,32 @@ function InviteMoreCard() {
 export default function StudentDirectory() {
   const navigate = useNavigate();
 
-  const [students, setStudents] = useState([]);
-  const [totalCount, setTotalCount] = useState(0);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [messagingId, setMessagingId] = useState(null);
-
   const [department, setDepartment] = useState("all");
   const [skills, setSkills] = useState([]);
   const [years, setYears] = useState([]);
   const [sortBy, setSortBy] = useState("recent");
   const [page, setPage] = useState(1);
 
-  const fetchStudents = async () => {
-    setLoading(true);
-    setError("");
-    try {
-      const { data } = await api.get(`/alumni/directory`, {
-        params: { department, skills: skills.join(","), years: years.join(","), sortBy, page },
-      });
-      setStudents(data.students || []);
-      setTotalCount(data.totalCount || 0);
-    } catch (err) {
-      setError(err.response?.data?.message || "Could not load the directory.");
-    } finally {
-      setLoading(false);
-    }
-  };
+  const {
+    data,
+    isLoading: loading,
+    error: queryError,
+  } = useGetStudentDirectoryQuery({
+    department,
+    skills: skills.join(","),
+    years: years.join(","),
+    sortBy,
+    page,
+  });
 
-  useEffect(() => {
-    fetchStudents();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [department, skills, years, sortBy, page]);
+  const students = data?.students || [];
+  const totalCount = data?.totalCount || 0;
+
+  const [startConversation] = useStartConversationMutation();
+  const [messagingId, setMessagingId] = useState(null);
+  const [actionError, setActionError] = useState("");
+
+  const error = actionError || (queryError && "Could not load the directory.");
 
   const toggleSkill = (skill) => {
     setPage(1);
@@ -147,15 +142,13 @@ export default function StudentDirectory() {
   // even if isMentee were spoofed client-side.
   const handleMessage = async (student) => {
     if (!student.userId) return;
+    setActionError("");
     setMessagingId(student._id);
     try {
-      const { data: conversation } = await api.post(
-        `/messages/conversations`,
-        { otherUserId: student.userId }
-      );
+      const conversation = await startConversation(student.userId).unwrap();
       navigate("/dashboard/alumni/messages", { state: { conversationId: conversation._id } });
     } catch (err) {
-      setError(err.response?.data?.message || "Could not start chat.");
+      setActionError(err.data?.message || "Could not start chat.");
     } finally {
       setMessagingId(null);
     }

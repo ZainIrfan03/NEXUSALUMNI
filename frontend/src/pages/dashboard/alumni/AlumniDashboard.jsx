@@ -1,6 +1,11 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { useSelector } from "react-redux";
-import api from "../../../api/axios";
+import { useNavigate } from "react-router-dom";
+import { useGetAlumniOverviewQuery } from "../../../store/api/alumniDashboardApi";
+import {
+  useAcceptMentorshipRequestMutation,
+  useRejectMentorshipRequestMutation,
+} from "../../../store/api/alumniMentorshipApi";
 import { GraduationCap, Briefcase, Plus, FileEdit, Image, Link2, Loader2 } from "lucide-react";
 
 function StatCard({ label, value, note, icon: Icon }) {
@@ -64,52 +69,47 @@ function MentorshipRequestCard({ request, onAccept, onDecline }) {
 
 export default function AlumniDashboard() {
   const { user } = useSelector((state) => state.auth);
+  const navigate = useNavigate();
 
-  const [data, setData] = useState({ studentsMentored: 0, jobsPosted: 0, incomingRequests: [] });
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [actionError, setActionError] = useState("");
+  const [quickPost, setQuickPost] = useState({ type: "Full-time", title: "", location: "" });
 
-  const fetchOverview = async () => {
-    setLoading(true);
-    setError("");
-    try {
-      const { data } = await api.get(`/alumni/dashboard`);
-      setData(data);
-    } catch (err) {
-      setError(err.response?.data?.message || "Could not load dashboard data.");
-    } finally {
-      setLoading(false);
-    }
-  };
+  const {
+    data = { studentsMentored: 0, jobsPosted: 0, incomingRequests: [] },
+    isLoading: loading,
+    error: overviewError,
+  } = useGetAlumniOverviewQuery();
 
-  useEffect(() => {
-    fetchOverview();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const [acceptMentorshipRequest] = useAcceptMentorshipRequestMutation();
+  const [rejectMentorshipRequest] = useRejectMentorshipRequestMutation();
 
   const handleAccept = async (id) => {
     try {
-      await api.post(`/alumni/mentorship/requests/${id}/accept`, {});
-      fetchOverview();
+      await acceptMentorshipRequest(id).unwrap();
+      setActionError("");
     } catch (err) {
-      setError(err.response?.data?.message || "Could not accept request.");
+      setActionError(err.data?.message || "Could not accept request.");
     }
   };
 
   const handleDecline = async (id) => {
     try {
-      await api.post(`/alumni/mentorship/requests/${id}/reject`, {});
-      fetchOverview();
+      await rejectMentorshipRequest(id).unwrap();
+      setActionError("");
     } catch (err) {
-      setError(err.response?.data?.message || "Could not decline request.");
+      setActionError(err.data?.message || "Could not decline request.");
     }
   };
 
   const handlePostOpportunity = (event) => {
     event.preventDefault();
-    // TODO: gather form state and call POST /api/jobs
+    // This quick-form doesn't collect "company", which the backend
+    // requires — so it hands off to the full Post a Job page with
+    // whatever's filled in here already, instead of failing on submit.
+    navigate("/dashboard/alumni/jobs/new", { state: { prefill: quickPost } });
   };
 
+  const error = actionError || (overviewError && (overviewError.data?.message || "Could not load dashboard data."));
   const { studentsMentored, jobsPosted, incomingRequests } = data;
 
   return (
@@ -187,7 +187,11 @@ export default function AlumniDashboard() {
             <label className="text-sm font-medium text-gray-700">
               Opportunity Type
             </label>
-            <select className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm">
+            <select
+              value={quickPost.type}
+              onChange={(event) => setQuickPost({ ...quickPost, type: event.target.value })}
+              className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm"
+            >
               <option>Full-time</option>
               <option>Internship</option>
               <option>Part-time</option>
@@ -199,6 +203,8 @@ export default function AlumniDashboard() {
             <label className="text-sm font-medium text-gray-700">Job Title</label>
             <input
               type="text"
+              value={quickPost.title}
+              onChange={(event) => setQuickPost({ ...quickPost, title: event.target.value })}
               placeholder="e.g. Senior Data Analyst"
               className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm"
             />
@@ -209,6 +215,8 @@ export default function AlumniDashboard() {
               <label className="text-sm font-medium text-gray-700">Location</label>
               <input
                 type="text"
+                value={quickPost.location}
+                onChange={(event) => setQuickPost({ ...quickPost, location: event.target.value })}
                 placeholder="City or Remote"
                 className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm"
               />
@@ -218,6 +226,7 @@ export default function AlumniDashboard() {
               <input
                 type="date"
                 className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm"
+                title="Not saved yet — the job posting model doesn't have a deadline field"
               />
             </div>
           </div>
