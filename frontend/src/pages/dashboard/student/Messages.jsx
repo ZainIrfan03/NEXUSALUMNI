@@ -1,5 +1,8 @@
 import React, { useState, useEffect, useRef } from "react";
 import api from "../../../api/axios";
+import { getImageUrl as fileUrl } from "../../../utils/getImageUrl";
+import LoadingSpinner from "../LoadingSpinner";
+import EmptyState from "../EmptyState";
 import { useSelector } from "react-redux";
 import { useLocation } from "react-router-dom";
 const SOCKET_URL = import.meta.env.VITE_SOCKET_URL
@@ -29,13 +32,6 @@ import { connectSocket, getSocket } from "../../../utils/socket";
  * a whole conversation from the three-dot menu.
  */
 
-// Files come back from the backend as relative paths (e.g. "/uploads/chat/xyz.png"),
-// so build a full URL for <img src> / <a href>.
-const fileUrl = (path) => {
-  if (!path) return "";
-  if (path.startsWith("blob:") || path.startsWith("http")) return path;
-  return `${SOCKET_URL}${path}`;
-};
 
 // Real uploaded avatar when the person has one; otherwise a clean
 // initials-based avatar instead of a fake stock photo.
@@ -276,13 +272,9 @@ export default function Messages() {
 
         <div className="flex-1 overflow-y-auto">
           {loadingConvos ? (
-            <div className="flex items-center justify-center py-10 text-gray-400 gap-2">
-              <Loader2 size={16} className="animate-spin" /> Loading...
-            </div>
+            <LoadingSpinner label="Loading..." className="py-10" />
           ) : conversations.length === 0 ? (
-            <p className="text-sm text-gray-400 text-center py-10 px-4">
-              No conversations yet. Message an alumni from the Directory to start one.
-            </p>
+            <EmptyState message="No conversations yet. Message an alumni from the Directory to start one." className="px-4" />
           ) : (
             conversations.map((conversation) => {
               const other = conversation.participants.find((participant) => participant._id !== user._id);
@@ -353,9 +345,7 @@ export default function Messages() {
 
           <div className="flex-1 overflow-y-auto px-6 py-6 bg-background">
             {loadingMessages ? (
-              <div className="flex items-center justify-center py-10 text-gray-400 gap-2">
-                <Loader2 size={16} className="animate-spin" /> Loading messages...
-              </div>
+              <LoadingSpinner label="Loading messages..." className="py-10" />
             ) : (
               messages.map((chatMessage) => {
                 const isMe = chatMessage.sender === user._id;

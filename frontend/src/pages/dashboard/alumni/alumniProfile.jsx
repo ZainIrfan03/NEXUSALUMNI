@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../../../api/axios";
+import { getImageUrl as fileUrl } from "../../../utils/getImageUrl";
+import LoadingSpinner from "../LoadingSpinner";
 const SOCKET_URL = import.meta.env.VITE_SOCKET_URL
 
 import {
@@ -11,7 +13,6 @@ import {
   Plus,
   MessageSquare,
   Link2,
-  Loader2,
   X,
   FileText,
 } from "lucide-react";
@@ -20,12 +21,6 @@ import {
 // so build a full URL for <img src> when it doesn't already start with "http".
 // Stale blob: URLs (from old preview-only code) can never load after a
 // refresh, so they're treated as invalid and fall back to initials.
-const fileUrl = (path) => {
-  if (!path) return "";
-  if (path.startsWith("blob:")) return "";
-  if (path.startsWith("http")) return path;
-  return `${SOCKET_URL}${path}`;
-};
 
 /**
  * Alumni Profile — read-only View Mode. File: src/pages/dashboard/alumni/AlumniProfile.jsx
@@ -84,10 +79,7 @@ export default function AlumniProfile() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-20 text-gray-400 gap-2">
-        <Loader2 size={18} className="animate-spin" />
-        Loading profile...
-      </div>
+      <LoadingSpinner label="Loading profile..." className="py-20" />
     );
   }
 

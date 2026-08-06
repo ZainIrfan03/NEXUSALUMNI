@@ -4,6 +4,7 @@ import { Provider } from 'react-redux'
 import axios from 'axios'
 import './index.css'
 import App from './App.jsx'
+import ErrorBoundary from './components/ErrorBoundary.jsx'
 import { store } from './store/store.js'
 
 // Global default: every axios call in the app (raw `axios.get(...)` or the
@@ -14,8 +15,10 @@ axios.defaults.withCredentials = true
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <Provider store={store}>
-      <App />
-    </Provider>
+    <ErrorBoundary>
+      <Provider store={store}>
+        <App />
+      </Provider>
+    </ErrorBoundary>
   </StrictMode>,
 )

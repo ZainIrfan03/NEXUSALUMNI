@@ -1,7 +1,11 @@
 import React, { useState, useEffect } from "react";
 import api from "../../../api/axios";
+import { getImageUrl as fileUrl } from "../../../utils/getImageUrl";
 import { useNavigate } from "react-router-dom";
-import { Compass, Clock3, GraduationCap, Loader2, MessageCircle } from "lucide-react";
+import { Compass, Clock3, GraduationCap, MessageCircle } from "lucide-react";
+import LoadingSpinner from "../LoadingSpinner";
+import EmptyState from "../EmptyState";
+import StatusBadge from "../StatusBadge";
 const SOCKET_URL = import.meta.env.VITE_SOCKET_URL
 
 /**
@@ -14,13 +18,6 @@ const SOCKET_URL = import.meta.env.VITE_SOCKET_URL
 
 // Files come back from the backend as relative paths (e.g. "/uploads/avatars/xyz.png"),
 // so build a full URL for <img src>. Stale blob: URLs (from old preview-only
-// code) can never load after a refresh, so they're treated as invalid.
-const fileUrl = (path) => {
-  if (!path) return "";
-  if (path.startsWith("blob:")) return "";
-  if (path.startsWith("http")) return path;
-  return `${SOCKET_URL}${path}`;
-};
 
 function MentorAvatar({ name, img }) {
   return img ? (
@@ -36,11 +33,11 @@ function MentorAvatar({ name, img }) {
   );
 }
 
-const statusStyles = {
-  pending: "bg-amber-100 text-amber-700",
-  accepted: "bg-green-100 text-green-700",
-  completed: "bg-blue-100 text-blue-700",
-  declined: "bg-red-100 text-red-700",
+const statusTones = {
+  pending: "warning",
+  accepted: "success",
+  completed: "info",
+  declined: "danger",
 };
 
 const REQUEST_PAGE_SIZE = 4; // how many "Request Status" rows to reveal per "Load More" click
@@ -166,9 +163,7 @@ export default function Mentorship() {
           </div>
 
           {loadingMentors ? (
-            <div className="flex items-center justify-center py-16 text-gray-400 gap-2">
-              <Loader2 size={18} className="animate-spin" /> Loading mentors...
-            </div>
+            <LoadingSpinner label="Loading mentors..." />
           ) : (
             <div className="grid sm:grid-cols-2 gap-5">
               {mentors.map((mentor) => {
@@ -257,11 +252,9 @@ export default function Mentorship() {
             </div>
 
             {loadingRequests ? (
-              <div className="flex items-center justify-center py-8 text-gray-400 gap-2 text-sm">
-                <Loader2 size={15} className="animate-spin" /> Loading...
-              </div>
+              <LoadingSpinner label="Loading..." size={15} className="py-8 text-sm" />
             ) : requests.length === 0 ? (
-              <p className="text-sm text-gray-400 py-4">No requests sent yet.</p>
+              <EmptyState message="No requests sent yet." className="py-4" />
             ) : (
               <>
                 {/* Scrollable list — caps at ~4 rows tall (each row ~68px),
@@ -288,11 +281,11 @@ export default function Mentorship() {
                           })}
                         </p>
                       </div>
-                      <span
-                        className={`text-[10px] font-semibold rounded-full px-2 py-1 whitespace-nowrap ${statusStyles[request.status]}`}
-                      >
-                        {request.status.toUpperCase()}
-                      </span>
+                      <StatusBadge
+                        label={request.status.toUpperCase()}
+                        tone={statusTones[request.status] || "neutral"}
+                        className="text-[10px] px-2 py-1 whitespace-nowrap"
+                      />
                     </div>
                   ))}
                 </div>

@@ -2,8 +2,8 @@ import React, { useState, useEffect, useRef } from "react";
 import { Outlet, NavLink, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import api from "../api/axios";
+import { getImageUrl as fileUrl } from "../utils/getImageUrl";
 const SOCKET_URL = import.meta.env.VITE_SOCKET_URL
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
 
 import {
   LayoutDashboard,
@@ -24,19 +24,6 @@ import {
 } from "lucide-react";
 import { logout } from "../store/slice/authSlice";
 import { disconnectSocket } from "../utils/socket";
-
-const API_BASE = API_BASE_URL;
-
-// Files come back from the backend as relative paths (e.g. "/uploads/avatars/xyz.png"),
-// so build a full URL for <img src> when it doesn't already start with "http".
-const fileUrl = (path) => {
-  if (!path) return "";
-  // Stale blob: URLs from old preview-only code can end up saved in the DB.
-  // They only work in the browser tab that created them, so treat as invalid.
-  if (path.startsWith("blob:")) return "";
-  if (path.startsWith("http")) return path;
-  return `${API_BASE}${path}`;
-};
 
 /**
  * DashboardLayout — dark sidebar + light topbar (search, notifications, avatar).

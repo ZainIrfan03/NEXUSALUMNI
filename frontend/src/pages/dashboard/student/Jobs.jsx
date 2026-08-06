@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
 import api from "../../../api/axios";
+import LoadingSpinner from "../LoadingSpinner";
+import EmptyState from "../EmptyState";
 const SOCKET_URL = import.meta.env.VITE_SOCKET_URL
 
 import {
@@ -159,13 +161,9 @@ export default function Jobs() {
           </div>
 
           {loadingJobs ? (
-            <div className="flex items-center justify-center py-16 text-gray-400 gap-2">
-              <Loader2 size={18} className="animate-spin" /> Loading jobs...
-            </div>
+            <LoadingSpinner label="Loading jobs..." />
           ) : jobs.length === 0 ? (
-            <p className="text-sm text-gray-400 py-10 text-center">
-              No jobs posted yet in this category.
-            </p>
+            <EmptyState message="No jobs posted yet in this category." />
           ) : (
             <div className="grid sm:grid-cols-2 gap-5">
               {jobs.map((job) => {

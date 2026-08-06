@@ -21,16 +21,137 @@ export default function Register() {
     company: "",
     jobTitle: "",
   });
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState({});
   const [loading, setLoading] = useState(false);
 
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const FULL_NAME_MAX_LENGTH = 15;
+
+  // Fires on every keystroke so the user sees feedback immediately,
+  // instead of only finding out about problems after hitting submit.
   const handleChange = (event) => {
-    setForm({ ...form, [event.target.name]: event.target.value });
+    const { name, value } = event.target;
+    setForm((prev) => ({ ...prev, [name]: value }));
+
+    setFieldErrors((prev) => {
+      const next = { ...prev };
+
+      if (name === "fullName") {
+        if (value.length > FULL_NAME_MAX_LENGTH) {
+          next.fullName = `Full name must not exceed ${FULL_NAME_MAX_LENGTH} characters.`;
+        } else {
+          delete next.fullName;
+        }
+      }
+
+      if (name === "email") {
+        if (value && !emailRegex.test(value)) {
+          next.email = "Enter a valid email address.";
+        } else {
+          delete next.email;
+        }
+      }
+
+      if (name === "password") {
+        if (value && value.length < 8) {
+          next.password = "Password must be at least 8 characters.";
+        } else if (value && (!/[A-Za-z]/.test(value) || !/[0-9]/.test(value))) {
+          next.password = "Password must include both letters and numbers.";
+        } else {
+          delete next.password;
+        }
+
+        // Keep the confirm-password check in sync as the password changes.
+        if (confirmPassword) {
+          next.confirmPassword =
+            confirmPassword === value ? undefined : "Passwords do not match.";
+          if (!next.confirmPassword) delete next.confirmPassword;
+        }
+      }
+
+      return next;
+    });
+  };
+
+  // Live match-check against whatever is currently in the password field.
+  const handleConfirmPasswordChange = (event) => {
+    const value = event.target.value;
+    setConfirmPassword(value);
+
+    setFieldErrors((prev) => {
+      const next = { ...prev };
+      if (value && value !== form.password) {
+        next.confirmPassword = "Passwords do not match.";
+      } else {
+        delete next.confirmPassword;
+      }
+      return next;
+    });
+  };
+
+  // Client-side validation — runs before the API call so bad input
+  // never has to make a round trip to the server to get rejected.
+  const validate = () => {
+    const errors = {};
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (!form.fullName.trim()) {
+      errors.fullName = "Full name is required.";
+    } else if (form.fullName.length > FULL_NAME_MAX_LENGTH) {
+      errors.fullName = `Full name must not exceed ${FULL_NAME_MAX_LENGTH} characters.`;
+    }
+
+    if (!form.email.trim()) {
+      errors.email = "Email is required.";
+    } else if (!emailRegex.test(form.email.trim())) {
+      errors.email = "Enter a valid email address.";
+    }
+
+    if (!form.password) {
+      errors.password = "Password is required.";
+    } else if (form.password.length < 8) {
+      errors.password = "Password must be at least 8 characters.";
+    } else if (!/[A-Za-z]/.test(form.password) || !/[0-9]/.test(form.password)) {
+      errors.password = "Password must include both letters and numbers.";
+    }
+
+    if (!confirmPassword) {
+      errors.confirmPassword = "Please confirm your password.";
+    } else if (form.password !== confirmPassword) {
+      errors.confirmPassword = "Passwords do not match.";
+    }
+
+    if (role === "student") {
+      if (!form.department) errors.department = "Select a department.";
+      if (!form.session.trim()) errors.session = "Session is required.";
+      if (!form.rollNumber.trim()) errors.rollNumber = "Roll number is required.";
+    }
+
+    if (role === "alumni") {
+      if (!form.graduationYear.trim()) {
+        errors.graduationYear = "Graduation year is required.";
+      } else if (!/^\d{4}$/.test(form.graduationYear.trim())) {
+        errors.graduationYear = "Enter a valid 4-digit year.";
+      }
+      if (!form.jobTitle.trim()) errors.jobTitle = "Job title is required.";
+      if (!form.company.trim()) errors.company = "Company is required.";
+    }
+
+    setFieldErrors(errors);
+    return Object.keys(errors).length === 0;
   };
 
   const handleSubmit = async (event) => {
     event.preventDefault();
     setError("");
+
+    if (!validate()) {
+      setError("Please fix the highlighted fields below.");
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -99,8 +220,12 @@ export default function Register() {
               onChange={handleChange}
               placeholder="Enter your full name"
               className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-primary transition-colors"
+              maxLength={FULL_NAME_MAX_LENGTH}
               required
             />
+            {fieldErrors.fullName && (
+              <p className="text-red-500 text-xs mt-1">{fieldErrors.fullName}</p>
+            )}
           </div>
 
           <div>
@@ -116,6 +241,9 @@ export default function Register() {
               className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-primary transition-colors"
               required
             />
+            {fieldErrors.email && (
+              <p className="text-red-500 text-xs mt-1">{fieldErrors.email}</p>
+            )}
           </div>
 
           <div>
@@ -125,10 +253,29 @@ export default function Register() {
               name="password"
               value={form.password}
               onChange={handleChange}
-              placeholder="Create a password"
+              placeholder="Create a password (min. 8 characters, letters + numbers)"
               className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-primary transition-colors"
               required
             />
+            {fieldErrors.password && (
+              <p className="text-red-500 text-xs mt-1">{fieldErrors.password}</p>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-dark mb-1.5">Confirm Password</label>
+            <input
+              type="password"
+              name="confirmPassword"
+              value={confirmPassword}
+              onChange={handleConfirmPasswordChange}
+              placeholder="Re-enter your password"
+              className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-primary transition-colors"
+              required
+            />
+            {fieldErrors.confirmPassword && (
+              <p className="text-red-500 text-xs mt-1">{fieldErrors.confirmPassword}</p>
+            )}
           </div>
 
           {role === "student" && (
@@ -149,6 +296,9 @@ export default function Register() {
                     <option value="engineering">Engineering</option>
                     <option value="design">Design</option>
                   </select>
+                  {fieldErrors.department && (
+                    <p className="text-red-500 text-xs mt-1">{fieldErrors.department}</p>
+                  )}
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-dark mb-1.5">Session</label>
@@ -161,6 +311,9 @@ export default function Register() {
                     className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-primary transition-colors"
                     required
                   />
+                  {fieldErrors.session && (
+                    <p className="text-red-500 text-xs mt-1">{fieldErrors.session}</p>
+                  )}
                 </div>
               </div>
 
@@ -175,6 +328,9 @@ export default function Register() {
                   className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-primary transition-colors"
                   required
                 />
+                {fieldErrors.rollNumber && (
+                  <p className="text-red-500 text-xs mt-1">{fieldErrors.rollNumber}</p>
+                )}
               </div>
             </>
           )}
@@ -193,6 +349,9 @@ export default function Register() {
                     className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-primary transition-colors"
                     required
                   />
+                  {fieldErrors.graduationYear && (
+                    <p className="text-red-500 text-xs mt-1">{fieldErrors.graduationYear}</p>
+                  )}
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-dark mb-1.5">Job Title</label>
@@ -205,6 +364,9 @@ export default function Register() {
                     className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-primary transition-colors"
                     required
                   />
+                  {fieldErrors.jobTitle && (
+                    <p className="text-red-500 text-xs mt-1">{fieldErrors.jobTitle}</p>
+                  )}
                 </div>
               </div>
 
@@ -219,6 +381,9 @@ export default function Register() {
                   className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-primary transition-colors"
                   required
                 />
+                {fieldErrors.company && (
+                  <p className="text-red-500 text-xs mt-1">{fieldErrors.company}</p>
+                )}
               </div>
             </>
           )}

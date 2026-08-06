@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../../../api/axios";
+import { getImageUrl as fileUrl } from "../../../utils/getImageUrl";
+import LoadingSpinner from "../LoadingSpinner";
 import {
   UserCog,
   FileText,
@@ -11,17 +13,9 @@ import {
   Plus,
   X,
   MapPin,
-  Loader2,
 } from "lucide-react";
 const SOCKET_URL = import.meta.env.VITE_SOCKET_URL
 
-// Files come back from the backend as relative paths (e.g. "/uploads/avatars/xyz.png"),
-// so build a full URL for <img src> / <a href> when they don't already start with "blob:" or "http".
-const fileUrl = (path) => {
-  if (!path) return "";
-  if (path.startsWith("blob:") || path.startsWith("http")) return path;
-  return `${SOCKET_URL}${path}`;
-};
 
 /**
  * Edit Profile page — file: src/pages/dashboard/student/EditProfile.jsx
@@ -198,10 +192,7 @@ export default function EditProfile() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-20 text-gray-400 gap-2">
-        <Loader2 size={18} className="animate-spin" />
-        Loading profile...
-      </div>
+      <LoadingSpinner label="Loading profile..." className="py-20" />
     );
   }
 

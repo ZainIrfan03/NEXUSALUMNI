@@ -1,6 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../../../api/axios";
+import { getImageUrl as fileUrl } from "../../../utils/getImageUrl";
+import LoadingSpinner from "../LoadingSpinner";
+import EmptyState from "../EmptyState";
+import StatusBadge from "../StatusBadge";
 const SOCKET_URL = import.meta.env.VITE_SOCKET_URL
 
 import {
@@ -9,7 +13,6 @@ import {
   Users,
   TrendingUp,
   Trash2,
-  Loader2,
   Lightbulb,
   Sparkles,
   X,
@@ -18,13 +21,6 @@ import {
 
 const PAGE_SIZE = 4;
 
-// Attachments/avatars come back from the backend as relative paths
-// (e.g. "/uploads/avatars/xyz.png") — build a full URL for <img>.
-const fileUrl = (path) => {
-  if (!path) return "";
-  if (path.startsWith("http")) return path;
-  return `${SOCKET_URL}${path}`;
-};
 
 function StatCard({ icon: Icon, note, value, label }) {
   return (
@@ -63,19 +59,19 @@ function AvatarStack({ applicants = [], count }) {
   );
 }
 
-const STATUS_STYLES = {
-  Active: "bg-blue-50 text-primary",
-  Closed: "bg-gray-100 text-gray-500",
-  Draft: "bg-amber-50 text-amber-600",
+const JOB_STATUS_TONES = {
+  Active: "info",
+  Closed: "neutral",
+  Draft: "warning",
 };
 
 // Applicant pipeline stages — same order the alumni moves someone through.
-const APPLICANT_STATUS_STYLES = {
-  applied: "bg-gray-100 text-gray-600",
-  in_review: "bg-amber-50 text-amber-600",
-  interview: "bg-blue-50 text-primary",
-  accepted: "bg-green-50 text-green-600",
-  rejected: "bg-red-50 text-red-500",
+const APPLICANT_STATUS_TONES = {
+  applied: "neutral",
+  in_review: "warning",
+  interview: "info",
+  accepted: "success",
+  rejected: "danger",
 };
 const APPLICANT_STATUS_LABELS = {
   applied: "Applied",
@@ -237,14 +233,13 @@ export default function AlumniJobs() {
             {loading ? (
               <tr>
                 <td colSpan={5} className="px-5 py-10 text-center text-gray-400">
-                  <Loader2 size={18} className="animate-spin inline mr-2" />
-                  Loading postings...
+                  <LoadingSpinner label="Loading postings..." className="py-0" />
                 </td>
               </tr>
             ) : jobs.length === 0 ? (
               <tr>
-                <td colSpan={5} className="px-5 py-10 text-center text-sm text-gray-400">
-                  No job postings yet.
+                <td colSpan={5}>
+                  <EmptyState message="No job postings yet." />
                 </td>
               </tr>
             ) : (
@@ -290,13 +285,10 @@ export default function AlumniJobs() {
                       </button>
                     </td>
                     <td className="px-5 py-4">
-                      <span
-                        className={`text-xs font-medium rounded-full px-3 py-1.5 ${
-                          STATUS_STYLES[job.status] || "bg-gray-100 text-gray-500"
-                        }`}
-                      >
-                        {job.status}
-                      </span>
+                      <StatusBadge
+                        label={job.status}
+                        tone={JOB_STATUS_TONES[job.status] || "neutral"}
+                      />
                     </td>
                     <td className="px-5 py-4">
                       <div className="flex justify-end gap-3 text-gray-400">
@@ -414,13 +406,9 @@ export default function AlumniJobs() {
 
             <div className="flex-1 overflow-y-auto px-6 py-4">
               {loadingApplicants ? (
-                <div className="flex items-center justify-center py-10 text-gray-400 gap-2">
-                  <Loader2 size={18} className="animate-spin" /> Loading applicants...
-                </div>
+                <LoadingSpinner label="Loading applicants..." className="py-10" />
               ) : applicants.length === 0 ? (
-                <p className="text-sm text-gray-400 text-center py-10">
-                  No one has applied to this job yet.
-                </p>
+                <EmptyState message="No one has applied to this job yet." />
               ) : (
                 <div className="flex flex-col gap-3">
                   {applicants.map((applicant) => (
@@ -449,13 +437,10 @@ export default function AlumniJobs() {
                       </div>
 
                       <div className="flex items-center gap-2 shrink-0">
-                        <span
-                          className={`text-xs font-medium rounded-full px-3 py-1.5 ${
-                            APPLICANT_STATUS_STYLES[applicant.status] || "bg-gray-100 text-gray-500"
-                          }`}
-                        >
-                          {APPLICANT_STATUS_LABELS[applicant.status] || applicant.status}
-                        </span>
+                        <StatusBadge
+                          label={APPLICANT_STATUS_LABELS[applicant.status] || applicant.status}
+                          tone={APPLICANT_STATUS_TONES[applicant.status] || "neutral"}
+                        />
                         <select
                           value={applicant.status}
                           disabled={updatingId === applicant.applicationId}

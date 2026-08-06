@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../../../api/axios";
-import { ChevronDown, LayoutGrid, List, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
+import { getImageUrl as fileUrl } from "../../../utils/getImageUrl";
+import { ChevronDown, LayoutGrid, List, ChevronLeft, ChevronRight } from "lucide-react";
+import LoadingSpinner from "../LoadingSpinner";
 const SOCKET_URL = import.meta.env.VITE_SOCKET_URL
 
 /**
@@ -12,13 +14,6 @@ const SOCKET_URL = import.meta.env.VITE_SOCKET_URL
 
 // Files come back from the backend as relative paths (e.g. "/uploads/avatars/xyz.png"),
 // so build a full URL for <img src>. Stale blob: URLs (from old preview-only
-// code) can never load after a refresh, so they're treated as invalid.
-const fileUrl = (path) => {
-  if (!path) return "";
-  if (path.startsWith("blob:")) return "";
-  if (path.startsWith("http")) return path;
-  return `${SOCKET_URL}${path}`;
-};
 
 const departments = ["Engineering", "Marketing", "Product"];
 
@@ -250,9 +245,7 @@ export default function Directory() {
         )}
 
         {loading ? (
-          <div className="flex items-center justify-center py-20 text-gray-400 gap-2">
-            <Loader2 size={18} className="animate-spin" /> Loading alumni...
-          </div>
+          <LoadingSpinner label="Loading alumni..." className="py-20" />
         ) : (
         <div
           className={
