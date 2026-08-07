@@ -11,7 +11,7 @@ import {
   useSendFileMessageMutation,
   useDeleteConversationMutation,
 } from "../../../store/api/messagesApi";
-const SOCKET_URL = import.meta.env.VITE_SOCKET_URL
+ import { SOCKET_URL, UI_AVATARS_BASE_URL } from "../../../consts/const"; 
 
 import {
   Search,
@@ -49,9 +49,8 @@ import { connectSocket, getSocket } from "../../../utils/socket";
 const avatarSrc = (person) => {
   if (!person) return "";
   if (person.avatarUrl) return fileUrl(person.avatarUrl);
-  return `https://ui-avatars.com/api/?name=${encodeURIComponent(
-    person.fullName || "User"
-  )}&background=1E3A8A&color=fff&bold=true`;
+  return `${UI_AVATARS_BASE_URL}/?name=${encodeURIComponent( person.fullName || "User" )}
+  &background=1E3A8A&color=fff&bold=true`;
 };
 
 export default function Messages() {

@@ -6,6 +6,7 @@ import {
   useDeleteMyJobMutation,
   useUpdateApplicationStatusMutation,
 } from "../../../store/api/alumniJobsApi";
+ import { PRAVATAR_BASE_URL } from "../../../consts/const";
 import { getImageUrl as fileUrl } from "../../../utils/getImageUrl";
 import LoadingSpinner from "../LoadingSpinner";
 import EmptyState from "../EmptyState";
@@ -49,7 +50,7 @@ function AvatarStack({ applicants = [], count }) {
       {shown.map((applicant, index) => (
         <img
           key={applicant._id || index}
-          src={fileUrl(applicant.avatarUrl) || `https://i.pravatar.cc/150?u=${applicant._id || index}`}
+          src={fileUrl(applicant.avatarUrl) ||  `${PRAVATAR_BASE_URL}?u=${applicant._id || index}`}
           alt=""
           className="h-8 w-8 rounded-full object-cover border-2 border-white"
         />
@@ -408,7 +409,7 @@ export default function AlumniJobs() {
                       className="flex items-center gap-4 border border-gray-100 rounded-xl px-4 py-3"
                     >
                       <img
-                        src={fileUrl(applicant.avatarUrl) || `https://i.pravatar.cc/150?u=${applicant.studentId}`}
+                        src={fileUrl(applicant.avatarUrl) ||  `${PRAVATAR_BASE_URL}?u=${applicant.studentId}`}
                         alt={applicant.fullName}
                         className="h-11 w-11 rounded-full object-cover shrink-0"
                       />

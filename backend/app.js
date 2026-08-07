@@ -24,12 +24,11 @@ const messageRoutes = require("./routes/messageRoutes");
 const Message = require("./models/Message");
 const Conversation = require("./models/Conversation");
 const activityRoutes = require("./routes/activityRoutes");
+const FRONTEND_URL = process.env.FRONTEND_URL;
 
 connectDB(); // connect to MongoDB before anything else
 
 const app = express();
-
-const FRONTEND_URL = "http://localhost:5173"; // apna frontend URL
 
 // credentials: true is required so the browser is allowed to send/receive
 // the httpOnly auth cookie across origins (frontend on :5173, backend on :5000)

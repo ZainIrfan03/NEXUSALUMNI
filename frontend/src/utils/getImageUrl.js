@@ -10,7 +10,7 @@
  * - Relative path from our own backend (e.g. "/uploads/avatar123.png")
  *   -> prefixed with the API base URL from .env
  */
-const SOCKET_URL = import.meta.env.VITE_SOCKET_URL;
+import { SOCKET_URL } from "../consts/const";
 
 export function getImageUrl(path) {
   if (!path) return "";

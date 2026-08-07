@@ -3,7 +3,7 @@ import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { useGetDashboardStatsQuery, useGetRecentActivityQuery } from "../../../store/api/studentDashboardApi";
 import { useGetRecommendedMentorsQuery } from "../../../store/api/studentMentorshipApi";
-
+ import { PRAVATAR_BASE_URL } from "../../../consts/const";
 import {
   Users,
   Users2,
@@ -52,7 +52,7 @@ export default function StudentDashboard() {
   const mentors = (recommendedMentors ?? []).slice(0, 2).map((mentor) => ({
     name: mentor.name,
     role: [mentor.role, mentor.company].filter(Boolean).join(", "),
-    img: mentor.img || `https://i.pravatar.cc/150?u=${mentor.alumniDocId}`,
+    img: mentor.img || `${PRAVATAR_BASE_URL}?u=${mentor.alumniDocId}`,
   }));
 
   const stats = [

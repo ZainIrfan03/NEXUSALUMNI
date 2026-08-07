@@ -3,7 +3,7 @@ import { Outlet, NavLink, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import api from "../api/axios";
 import { getImageUrl as fileUrl } from "../utils/getImageUrl";
-const SOCKET_URL = import.meta.env.VITE_SOCKET_URL
+import {SOCKET_URL} from "../consts/const";
 
 import {
   LayoutDashboard,

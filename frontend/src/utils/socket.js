@@ -1,7 +1,6 @@
 import { io } from "socket.io-client";
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ;
-const SOCKET_URL = import.meta.env.VITE_SOCKET_URL ;
-
+import { SOCKET_URL } from "../consts/const";
+import { API_BASE_URL } from "../consts/const";
 /**
  * Single shared socket instance for the whole app.
  * Call connectSocket() once after login; call disconnectSocket() on logout.
