@@ -1,5 +1,6 @@
 const Alumni = require("../models/Alumni");
 const MentorshipRequest = require("../models/MentorshipRequest");
+const { HTTP_STATUS } = require("../utils/constants");
 
 // @route  GET /api/mentorship/recommended
 // Returns alumni who are public and open to mentoring, for the student-side
@@ -12,7 +13,7 @@ const getRecommendedMentors = async (req, res) => {
 
     res.json(mentors);
   } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
+    res.status(HTTP_STATUS.SERVER_ERROR).json({ message: "Server error", error: error.message });
   }
 };
 
@@ -25,12 +26,12 @@ const sendMentorshipRequest = async (req, res) => {
     const studentUserId = req.user.id;
 
     if (!alumniId) {
-      return res.status(400).json({ message: "alumniId is required" });
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({ message: "alumniId is required" });
     }
 
     const alumni = await Alumni.findById(alumniId);
     if (!alumni) {
-      return res.status(404).json({ message: "Alumni not found" });
+      return res.status(HTTP_STATUS.NOT_FOUND).json({ message: "Alumni not found" });
     }
 
     // Don't let a student spam the same alumni while a request is still pending.
@@ -40,7 +41,7 @@ const sendMentorshipRequest = async (req, res) => {
       status: "pending",
     });
     if (existingPending) {
-      return res.status(400).json({ message: "You already have a pending request with this mentor" });
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({ message: "You already have a pending request with this mentor" });
     }
 
     const request = await MentorshipRequest.create({
@@ -49,9 +50,9 @@ const sendMentorshipRequest = async (req, res) => {
       message,
     });
 
-    res.status(201).json(request);
+    res.status(HTTP_STATUS.CREATED).json(request);
   } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
+    res.status(HTTP_STATUS.SERVER_ERROR).json({ message: "Server error", error: error.message });
   }
 };
 
@@ -66,7 +67,7 @@ const getMyRequests = async (req, res) => {
 
     res.json(requests);
   } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
+    res.status(HTTP_STATUS.SERVER_ERROR).json({ message: "Server error", error: error.message });
   }
 };
 

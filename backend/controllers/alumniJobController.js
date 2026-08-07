@@ -1,189 +1,135 @@
-const Job = require("../models/Job");
-const Application = require("../models/Application");
 const Student = require("../models/Student");
+const MentorshipRequest = require("../models/MentorshipRequest");
+const { HTTP_STATUS } = require("../utils/constants");
 
-// Builds the { applicants: [{avatarUrl}], applicantCount } shown as the
-// avatar-stack + count in the postings table.
-const attachApplicantInfo = async (job) => {
-  const applications = await Application.find({ job: job._id })
-    .populate("student", "fullName")
-    .limit(3);
-
-  const applicants = await Promise.all(
-    applications.map(async (app) => {
-      const studentProfile = await Student.findOne({ user: app.student._id });
-      return { _id: app.student._id, avatarUrl: studentProfile?.avatarUrl };
-    })
-  );
-
-  const applicantCount = await Application.countDocuments({ job: job._id });
-
-  return {
-    _id: job._id,
-    title: job.title,
-    department: job.department,
-    location: job.location,
-    status: job.status,
-    datePosted: new Date(job.createdAt).toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-    }),
-    applicants,
-    applicantCount,
-  };
+const DEPARTMENT_LABELS = {
+  cs: "Computer Science",
+  business: "Business",
+  engineering: "Engineering",
+  design: "Design",
 };
 
-// @route  GET /api/alumni/jobs?page=&pageSize=
-// Returns this alumni's own postings (paginated) plus summary stats.
-const getMyJobs = async (req, res) => {
+// Session is stored as a string like "2021-2025" — the graduation year
+// is the second half of that range.
+const getGraduationYear = (session) => {
+  if (!session) return null;
+  const parts = session.split("-");
+  return parts[parts.length - 1].trim();
+};
+
+// @route  GET /api/alumni/directory
+// @query  ?department=&skills=&years=&sortBy=&page=
+// Returns a paginated, filterable list of students for alumni to browse.
+// `skills` and `years` arrive as comma-separated strings from the frontend.
+// Each student includes `isMentee: boolean` — true only if THIS alumni has
+// an accepted MentorshipRequest with them, so the frontend can show a
+// "Message" icon on the card only for accepted mentees.
+const getStudentDirectory = async (req, res) => {
   try {
-    const alumniUserId = req.user.id;
-    const page = Number(req.query.page) || 1;
-    const pageSize = Number(req.query.pageSize) || 4;
-    const skip = (page - 1) * pageSize;
+    const {
+      department = "all",
+      skills = "",
+      years = "",
+      sortBy = "recent",
+      page = 1,
+    } = req.query;
 
-    const [jobDocs, totalCount, allMyJobs] = await Promise.all([
-      Job.find({ postedBy: alumniUserId })
-        .sort({ createdAt: -1 })
-        .skip(skip)
-        .limit(pageSize),
-      Job.countDocuments({ postedBy: alumniUserId }),
-      Job.find({ postedBy: alumniUserId }, "_id status createdAt"),
-    ]);
+    const pageSize = 6;
+    const skillList = skills ? skills.split(",").filter(Boolean) : [];
+    const yearList = years ? years.split(",").filter(Boolean) : [];
 
-    const jobs = await Promise.all(jobDocs.map(attachApplicantInfo));
+    const filter = {};
+    if (department && department !== "all") {
+      filter.department = department;
+    }
+    if (skillList.length) {
+      filter.skills = { $in: skillList };
+    }
+    if (yearList.length) {
+      // session is a "2021-2025" style string — match any of the
+      // selected years appearing anywhere in that range.
+      filter.session = { $regex: yearList.join("|"), $options: "i" };
+    }
 
-    const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-    const newThisWeek = allMyJobs.filter((j) => j.createdAt >= oneWeekAgo).length;
+    let students = await Student.find(filter).populate("user", "fullName email");
 
-    const jobIds = allMyJobs.map((j) => j._id);
-    const [totalApplicants, unreadApplicants] = await Promise.all([
-      Application.countDocuments({ job: { $in: jobIds } }),
-      Application.countDocuments({ job: { $in: jobIds }, status: "applied" }),
-    ]);
+    if (sortBy === "name") {
+      students.sort((a, b) =>
+        (a.user?.fullName || "").localeCompare(b.user?.fullName || "")
+      );
+    } else if (sortBy === "year") {
+      students.sort((a, b) =>
+        (getGraduationYear(b.session) || "").localeCompare(getGraduationYear(a.session) || "")
+      );
+    } else {
+      // "recent" — newest profiles first
+      students.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    }
 
-    const closedCount = allMyJobs.filter((j) => j.status === "Closed").length;
-    const fillRate = allMyJobs.length
-      ? Math.round((closedCount / allMyJobs.length) * 100)
-      : 0;
+    const totalCount = students.length;
+    const start = (Number(page) - 1) * pageSize;
+    const pageStudents = students.slice(start, start + pageSize);
 
-    res.json({
-      jobs,
-      totalCount,
-      stats: {
-        totalPostings: totalCount,
-        newThisWeek,
-        totalApplicants,
-        unreadApplicants,
-        fillRate,
-      },
+    // One query for all accepted requests this alumni has with the students
+    // on this page, instead of N queries in the map below.
+    const acceptedRequests = await MentorshipRequest.find({
+      alumni: req.user.id,
+      status: "accepted",
+      student: { $in: pageStudents.map((s) => s.user?._id).filter(Boolean) },
     });
+    const menteeUserIds = new Set(acceptedRequests.map((r) => r.student.toString()));
+
+    const formatted = pageStudents.map((s) => ({
+      _id: s._id,
+      fullName: s.user?.fullName,
+      avatarUrl: s.avatarUrl,
+      department: s.department,
+      degree: DEPARTMENT_LABELS[s.department] || s.department,
+      graduationYear: getGraduationYear(s.session),
+      skills: s.skills || [],
+      userId: s.user?._id, // needed by the frontend to start a conversation
+      isMentee: menteeUserIds.has(s.user?._id?.toString()),
+    }));
+
+    res.json({ students: formatted, totalCount });
   } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
+    res.status(HTTP_STATUS.SERVER_ERROR).json({ message: "Server error", error: error.message });
   }
 };
 
-// @route  DELETE /api/alumni/jobs/:id
-// Only the alumni who posted the job can delete it.
-const deleteMyJob = async (req, res) => {
+// @route  GET /api/alumni/directory/:id
+// Returns one student's full public profile — used by the "View Profile"
+// button on the alumni-side Student Directory page.
+// :id is the Student document's own _id (same id used in the directory list).
+//
+// Also includes `isMentee: boolean` — true only if THIS alumni has an
+// accepted MentorshipRequest with this student. The frontend uses this to
+// decide whether to show the "Message" button (alumni can only chat with
+// their accepted mentees, not any student in the directory).
+const getStudentById = async (req, res) => {
   try {
-    const job = await Job.findOneAndDelete({
-      _id: req.params.id,
-      postedBy: req.user.id,
-    });
-
-    if (!job) {
-      return res.status(404).json({ message: "Job not found" });
-    }
-
-    // Clean up related applications so they don't dangle
-    await Application.deleteMany({ job: req.params.id });
-
-    res.json({ message: "Job deleted" });
-  } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
-  }
-};
-
-// @route  GET /api/alumni/jobs/:id/applicants
-// Only the alumni who posted the job can see its applicants.
-// Powers the "View Applicants" modal on the postings table.
-const getJobApplicants = async (req, res) => {
-  try {
-    const job = await Job.findOne({ _id: req.params.id, postedBy: req.user.id });
-    if (!job) {
-      return res.status(404).json({ message: "Job not found" });
-    }
-
-    const applications = await Application.find({ job: job._id })
-      .populate("student", "fullName email")
-      .sort({ createdAt: -1 });
-
-    const studentIds = applications.map((a) => a.student._id);
-    const profiles = await Student.find(
-      { user: { $in: studentIds } },
-      "user avatarUrl department session"
+    const student = await Student.findById(req.params.id).populate(
+      "user",
+      "fullName email"
     );
-    const profileMap = new Map(profiles.map((p) => [String(p.user), p]));
 
-    const applicants = applications.map((a) => {
-      const profile = profileMap.get(String(a.student._id));
-      return {
-        applicationId: a._id,
-        studentId: a.student._id,
-        fullName: a.student.fullName,
-        email: a.student.email,
-        avatarUrl: profile?.avatarUrl || null,
-        department: profile?.department,
-        session: profile?.session,
-        status: a.status,
-        appliedAt: a.createdAt,
-      };
+    if (!student) {
+      return res.status(HTTP_STATUS.NOT_FOUND).json({ message: "Student not found" });
+    }
+
+    const acceptedRequest = await MentorshipRequest.findOne({
+      student: student.user._id,
+      alumni: req.user.id,
+      status: "accepted",
     });
-
-    res.json({ job: { _id: job._id, title: job.title }, applicants });
-  } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
-  }
-};
-
-// @route  PATCH /api/alumni/jobs/applications/:applicationId/status
-// @body   { status } — one of applied / in_review / interview / rejected / accepted
-// Moves an applicant through the pipeline (e.g. "Move to Review",
-// "Schedule Interview") from the applicants modal. Only the alumni who
-// posted the underlying job can update it.
-const updateApplicationStatus = async (req, res) => {
-  try {
-    const { status } = req.body;
-    const allowedStatuses = ["applied", "in_review", "interview", "rejected", "accepted"];
-    if (!allowedStatuses.includes(status)) {
-      return res.status(400).json({ message: "Invalid status" });
-    }
-
-    const application = await Application.findById(req.params.applicationId).populate("job");
-    if (!application) {
-      return res.status(404).json({ message: "Application not found" });
-    }
-    if (String(application.job.postedBy) !== req.user.id) {
-      return res.status(403).json({ message: "Not authorized to update this application" });
-    }
-
-    application.status = status;
-    await application.save();
 
     res.json({
-      applicationId: application._id,
-      status: application.status,
+      ...student.toObject(),
+      isMentee: !!acceptedRequest,
     });
   } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
+    res.status(HTTP_STATUS.SERVER_ERROR).json({ message: "Server error", error: error.message });
   }
 };
 
-module.exports = {
-  getMyJobs,
-  deleteMyJob,
-  getJobApplicants,
-  updateApplicationStatus,
-};
+module.exports = { getStudentDirectory, getStudentById };

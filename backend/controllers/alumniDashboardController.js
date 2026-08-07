@@ -1,5 +1,6 @@
 const MentorshipRequest = require("../models/MentorshipRequest");
 const Job = require("../models/Job");
+const { HTTP_STATUS } = require("../utils/constants");
 
 // @route  GET /api/alumni/dashboard
 // Powers the stat cards + "Incoming Mentorship Requests" preview on the
@@ -27,7 +28,7 @@ const getAlumniOverview = async (req, res) => {
       incomingRequests: pendingRequests,
     });
   } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
+    res.status(HTTP_STATUS.SERVER_ERROR).json({ message: "Server error", error: error.message });
   }
 };
 

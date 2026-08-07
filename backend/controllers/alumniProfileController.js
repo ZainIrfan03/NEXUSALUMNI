@@ -1,5 +1,6 @@
 const Alumni = require("../models/Alumni");
 const User = require("../models/User");
+const { HTTP_STATUS } = require("../utils/constants");
 
 // @route  GET /api/alumni/profile
 // Returns the logged-in alumni's full profile (User + Alumni joined).
@@ -11,12 +12,12 @@ const getMyProfile = async (req, res) => {
     );
 
     if (!alumni) {
-      return res.status(404).json({ message: "Alumni profile not found" });
+      return res.status(HTTP_STATUS.NOT_FOUND).json({ message: "Alumni profile not found" });
     }
 
     res.json(alumni);
   } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
+    res.status(HTTP_STATUS.SERVER_ERROR).json({ message: "Server error", error: error.message });
   }
 };
 
@@ -63,12 +64,12 @@ const updateMyProfile = async (req, res) => {
     ).populate("user", "fullName email");
 
     if (!alumni) {
-      return res.status(404).json({ message: "Alumni profile not found" });
+      return res.status(HTTP_STATUS.NOT_FOUND).json({ message: "Alumni profile not found" });
     }
 
     res.json(alumni);
   } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
+    res.status(HTTP_STATUS.SERVER_ERROR).json({ message: "Server error", error: error.message });
   }
 };
 
@@ -80,7 +81,7 @@ const addExperience = async (req, res) => {
     const { title, company, startDate, endDate, current, description } = req.body;
 
     if (!title || !company) {
-      return res.status(400).json({ message: "title and company are required" });
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({ message: "title and company are required" });
     }
 
     const alumni = await Alumni.findOneAndUpdate(
@@ -90,12 +91,12 @@ const addExperience = async (req, res) => {
     ).populate("user", "fullName email");
 
     if (!alumni) {
-      return res.status(404).json({ message: "Alumni profile not found" });
+      return res.status(HTTP_STATUS.NOT_FOUND).json({ message: "Alumni profile not found" });
     }
 
-    res.status(201).json(alumni);
+    res.status(HTTP_STATUS.CREATED).json(alumni);
   } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
+    res.status(HTTP_STATUS.SERVER_ERROR).json({ message: "Server error", error: error.message });
   }
 };
 
@@ -109,12 +110,12 @@ const deleteExperience = async (req, res) => {
     ).populate("user", "fullName email");
 
     if (!alumni) {
-      return res.status(404).json({ message: "Alumni profile not found" });
+      return res.status(HTTP_STATUS.NOT_FOUND).json({ message: "Alumni profile not found" });
     }
 
     res.json(alumni);
   } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
+    res.status(HTTP_STATUS.SERVER_ERROR).json({ message: "Server error", error: error.message });
   }
 };
 
@@ -125,7 +126,7 @@ const addEducation = async (req, res) => {
     const { school, degree, year } = req.body;
 
     if (!school || !degree) {
-      return res.status(400).json({ message: "school and degree are required" });
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({ message: "school and degree are required" });
     }
 
     const alumni = await Alumni.findOneAndUpdate(
@@ -135,12 +136,12 @@ const addEducation = async (req, res) => {
     ).populate("user", "fullName email");
 
     if (!alumni) {
-      return res.status(404).json({ message: "Alumni profile not found" });
+      return res.status(HTTP_STATUS.NOT_FOUND).json({ message: "Alumni profile not found" });
     }
 
-    res.status(201).json(alumni);
+    res.status(HTTP_STATUS.CREATED).json(alumni);
   } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
+    res.status(HTTP_STATUS.SERVER_ERROR).json({ message: "Server error", error: error.message });
   }
 };
 
@@ -154,12 +155,12 @@ const deleteEducation = async (req, res) => {
     ).populate("user", "fullName email");
 
     if (!alumni) {
-      return res.status(404).json({ message: "Alumni profile not found" });
+      return res.status(HTTP_STATUS.NOT_FOUND).json({ message: "Alumni profile not found" });
     }
 
     res.json(alumni);
   } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
+    res.status(HTTP_STATUS.SERVER_ERROR).json({ message: "Server error", error: error.message });
   }
 };
 
@@ -170,7 +171,7 @@ const deleteEducation = async (req, res) => {
 const uploadAvatarImage = async (req, res) => {
   try {
     if (!req.file) {
-      return res.status(400).json({ message: "No file uploaded" });
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({ message: "No file uploaded" });
     }
 
     // Publicly reachable path — app.js serves /uploads as a static folder.
@@ -183,12 +184,12 @@ const uploadAvatarImage = async (req, res) => {
     ).populate("user", "fullName email");
 
     if (!alumni) {
-      return res.status(404).json({ message: "Alumni profile not found" });
+      return res.status(HTTP_STATUS.NOT_FOUND).json({ message: "Alumni profile not found" });
     }
 
     res.json(alumni);
   } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
+    res.status(HTTP_STATUS.SERVER_ERROR).json({ message: "Server error", error: error.message });
   }
 };
 
@@ -198,7 +199,7 @@ const uploadAvatarImage = async (req, res) => {
 const uploadResumeFile = async (req, res) => {
   try {
     if (!req.file) {
-      return res.status(400).json({ message: "No file uploaded" });
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({ message: "No file uploaded" });
     }
 
     const resumeUrl = `/uploads/resumes/${req.file.filename}`;
@@ -210,12 +211,12 @@ const uploadResumeFile = async (req, res) => {
     ).populate("user", "fullName email");
 
     if (!alumni) {
-      return res.status(404).json({ message: "Alumni profile not found" });
+      return res.status(HTTP_STATUS.NOT_FOUND).json({ message: "Alumni profile not found" });
     }
 
     res.json(alumni);
   } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
+    res.status(HTTP_STATUS.SERVER_ERROR).json({ message: "Server error", error: error.message });
   }
 };
 

@@ -1,4 +1,5 @@
 const Alumni = require("../models/Alumni");
+const { HTTP_STATUS } = require("../utils/constants");
 
 // @route  GET /api/directory
 // @query  ?industry=&department=&fromYear=&toYear=&location=&page=&limit=
@@ -34,7 +35,7 @@ const getAlumniDirectory = async (req, res) => {
       totalPages: Math.ceil(total / Number(limit)),
     });
   } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
+    res.status(HTTP_STATUS.SERVER_ERROR).json({ message: "Server error", error: error.message });
   }
 };
 
@@ -50,12 +51,12 @@ const getAlumniById = async (req, res) => {
     );
 
     if (!alumni) {
-      return res.status(404).json({ message: "Alumni not found" });
+      return res.status(HTTP_STATUS.NOT_FOUND).json({ message: "Alumni not found" });
     }
 
     res.json(alumni);
   } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
+    res.status(HTTP_STATUS.SERVER_ERROR).json({ message: "Server error", error: error.message });
   }
 };
 

@@ -1,5 +1,6 @@
 const MentorshipRequest = require("../models/MentorshipRequest");
 const Student = require("../models/Student");
+const { HTTP_STATUS } = require("../utils/constants");
 
 // Maps a MentorshipRequest doc (with populated student.user) into the
 // shape the alumni-side frontend expects for a "request card".
@@ -59,7 +60,7 @@ const getMentorshipOverview = async (req, res) => {
       mentees,
     });
   } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
+    res.status(HTTP_STATUS.SERVER_ERROR).json({ message: "Server error", error: error.message });
   }
 };
 
@@ -73,12 +74,12 @@ const acceptRequest = async (req, res) => {
     );
 
     if (!request) {
-      return res.status(404).json({ message: "Request not found" });
+      return res.status(HTTP_STATUS.NOT_FOUND).json({ message: "Request not found" });
     }
 
     res.json(request);
   } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
+    res.status(HTTP_STATUS.SERVER_ERROR).json({ message: "Server error", error: error.message });
   }
 };
 
@@ -92,12 +93,12 @@ const rejectRequest = async (req, res) => {
     );
 
     if (!request) {
-      return res.status(404).json({ message: "Request not found" });
+      return res.status(HTTP_STATUS.NOT_FOUND).json({ message: "Request not found" });
     }
 
     res.json(request);
   } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
+    res.status(HTTP_STATUS.SERVER_ERROR).json({ message: "Server error", error: error.message });
   }
 };
 

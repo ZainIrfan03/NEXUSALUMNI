@@ -1,5 +1,6 @@
 const MentorshipRequest = require("../models/MentorshipRequest");
 const Job = require("../models/Job");
+const { HTTP_STATUS } = require("../utils/constants");
 
 // @route  GET /api/student/activity
 // Builds a merged, time-sorted "Recent Activity" feed for the Dashboard
@@ -39,7 +40,7 @@ const getStudentActivity = async (req, res) => {
 
     res.json(feed);
   } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
+    res.status(HTTP_STATUS.SERVER_ERROR).json({ message: "Server error", error: error.message });
   }
 };
 

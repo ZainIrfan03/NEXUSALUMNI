@@ -2,6 +2,7 @@ const Student = require("../models/Student");
 const User = require("../models/User");
 const fs = require("fs");
 const path = require("path");
+const { HTTP_STATUS } = require("../utils/constants");
 
 // @route  GET /api/student/profile
 // Returns the logged-in student's full profile (User + Student joined).
@@ -13,12 +14,12 @@ const getMyProfile = async (req, res) => {
     );
 
     if (!student) {
-      return res.status(404).json({ message: "Student profile not found" });
+      return res.status(HTTP_STATUS.NOT_FOUND).json({ message: "Student profile not found" });
     }
 
     res.json(student);
   } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
+    res.status(HTTP_STATUS.SERVER_ERROR).json({ message: "Server error", error: error.message });
   }
 };
 
@@ -52,12 +53,12 @@ const updateMyProfile = async (req, res) => {
     ).populate("user", "fullName email");
 
     if (!student) {
-      return res.status(404).json({ message: "Student profile not found" });
+      return res.status(HTTP_STATUS.NOT_FOUND).json({ message: "Student profile not found" });
     }
 
     res.json(student);
   } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
+    res.status(HTTP_STATUS.SERVER_ERROR).json({ message: "Server error", error: error.message });
   }
 };
 
@@ -67,14 +68,14 @@ const updateMyProfile = async (req, res) => {
 const uploadAvatarImage = async (req, res) => {
   try {
     if (!req.file) {
-      return res.status(400).json({ message: "No image file uploaded." });
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({ message: "No image file uploaded." });
     }
 
     const avatarUrl = `/uploads/avatars/${req.file.filename}`;
 
     const existing = await Student.findOne({ user: req.user.id });
     if (!existing) {
-      return res.status(404).json({ message: "Student profile not found" });
+      return res.status(HTTP_STATUS.NOT_FOUND).json({ message: "Student profile not found" });
     }
 
     // Clean up the previous avatar file, if any, so uploads/ doesn't fill up
@@ -91,7 +92,7 @@ const uploadAvatarImage = async (req, res) => {
 
     res.json({ avatarUrl: student.avatarUrl });
   } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
+    res.status(HTTP_STATUS.SERVER_ERROR).json({ message: "Server error", error: error.message });
   }
 };
 
@@ -100,14 +101,14 @@ const uploadAvatarImage = async (req, res) => {
 const uploadResumeFile = async (req, res) => {
   try {
     if (!req.file) {
-      return res.status(400).json({ message: "No PDF file uploaded." });
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({ message: "No PDF file uploaded." });
     }
 
     const resumeUrl = `/uploads/resumes/${req.file.filename}`;
 
     const existing = await Student.findOne({ user: req.user.id });
     if (!existing) {
-      return res.status(404).json({ message: "Student profile not found" });
+      return res.status(HTTP_STATUS.NOT_FOUND).json({ message: "Student profile not found" });
     }
 
     if (existing.resumeUrl) {
@@ -123,7 +124,7 @@ const uploadResumeFile = async (req, res) => {
 
     res.json({ resumeUrl: student.resumeUrl });
   } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
+    res.status(HTTP_STATUS.SERVER_ERROR).json({ message: "Server error", error: error.message });
   }
 };
 
@@ -135,7 +136,7 @@ const addExperience = async (req, res) => {
     const { title, company, startDate, endDate, current, description } = req.body;
 
     if (!title || !company) {
-      return res.status(400).json({ message: "title and company are required" });
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({ message: "title and company are required" });
     }
 
     const student = await Student.findOneAndUpdate(
@@ -145,12 +146,12 @@ const addExperience = async (req, res) => {
     ).populate("user", "fullName email");
 
     if (!student) {
-      return res.status(404).json({ message: "Student profile not found" });
+      return res.status(HTTP_STATUS.NOT_FOUND).json({ message: "Student profile not found" });
     }
 
-    res.status(201).json(student);
+    res.status(HTTP_STATUS.CREATED).json(student);
   } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
+    res.status(HTTP_STATUS.SERVER_ERROR).json({ message: "Server error", error: error.message });
   }
 };
 
@@ -164,12 +165,12 @@ const deleteExperience = async (req, res) => {
     ).populate("user", "fullName email");
 
     if (!student) {
-      return res.status(404).json({ message: "Student profile not found" });
+      return res.status(HTTP_STATUS.NOT_FOUND).json({ message: "Student profile not found" });
     }
 
     res.json(student);
   } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
+    res.status(HTTP_STATUS.SERVER_ERROR).json({ message: "Server error", error: error.message });
   }
 };
 
@@ -180,7 +181,7 @@ const addEducation = async (req, res) => {
     const { school, degree, year } = req.body;
 
     if (!school || !degree) {
-      return res.status(400).json({ message: "school and degree are required" });
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({ message: "school and degree are required" });
     }
 
     const student = await Student.findOneAndUpdate(
@@ -190,12 +191,12 @@ const addEducation = async (req, res) => {
     ).populate("user", "fullName email");
 
     if (!student) {
-      return res.status(404).json({ message: "Student profile not found" });
+      return res.status(HTTP_STATUS.NOT_FOUND).json({ message: "Student profile not found" });
     }
 
-    res.status(201).json(student);
+    res.status(HTTP_STATUS.CREATED).json(student);
   } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
+    res.status(HTTP_STATUS.SERVER_ERROR).json({ message: "Server error", error: error.message });
   }
 };
 
@@ -209,12 +210,12 @@ const deleteEducation = async (req, res) => {
     ).populate("user", "fullName email");
 
     if (!student) {
-      return res.status(404).json({ message: "Student profile not found" });
+      return res.status(HTTP_STATUS.NOT_FOUND).json({ message: "Student profile not found" });
     }
 
     res.json(student);
   } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
+    res.status(HTTP_STATUS.SERVER_ERROR).json({ message: "Server error", error: error.message });
   }
 };
 

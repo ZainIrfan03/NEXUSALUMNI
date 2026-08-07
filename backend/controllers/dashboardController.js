@@ -1,6 +1,7 @@
 const Alumni = require("../models/Alumni");
 const MentorshipRequest = require("../models/MentorshipRequest");
 const Job = require("../models/Job");
+const { HTTP_STATUS } = require("../utils/constants");
 
 // @route  GET /api/student/dashboard
 // Powers the 4 stat cards on the Student Overview page.
@@ -22,7 +23,7 @@ const getStudentOverview = async (req, res) => {
       upcomingEvents: 0,
     });
   } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
+    res.status(HTTP_STATUS.SERVER_ERROR).json({ message: "Server error", error: error.message });
   }
 };
 

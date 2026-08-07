@@ -1,5 +1,6 @@
 const Job = require("../models/Job");
 const Application = require("../models/Application");
+const { HTTP_STATUS } = require("../utils/constants");
 
 // @route  GET /api/jobs?type=Full-time
 // Any logged-in user can browse jobs; `type` filters by tab
@@ -28,7 +29,7 @@ const getJobs = async (req, res) => {
 
     res.json(result);
   } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
+    res.status(HTTP_STATUS.SERVER_ERROR).json({ message: "Server error", error: error.message });
   }
 };
 
@@ -39,7 +40,7 @@ const createJob = async (req, res) => {
     const { title, company, location, department, type, status, payRange, description } = req.body;
 
     if (!title || !company || !location || !type) {
-      return res.status(400).json({ message: "Missing required fields" });
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({ message: "Missing required fields" });
     }
 
     const job = await Job.create({
@@ -54,9 +55,9 @@ const createJob = async (req, res) => {
       postedBy: req.user.id,
     });
 
-    res.status(201).json(job);
+    res.status(HTTP_STATUS.CREATED).json(job);
   } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
+    res.status(HTTP_STATUS.SERVER_ERROR).json({ message: "Server error", error: error.message });
   }
 };
 
@@ -68,12 +69,12 @@ const applyToJob = async (req, res) => {
       job: req.params.id,
       student: req.user.id,
     });
-    res.status(201).json(application);
+    res.status(HTTP_STATUS.CREATED).json(application);
   } catch (error) {
     if (error.code === 11000) {
-      return res.status(400).json({ message: "You already applied to this job" });
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({ message: "You already applied to this job" });
     }
-    res.status(500).json({ message: "Server error", error: error.message });
+    res.status(HTTP_STATUS.SERVER_ERROR).json({ message: "Server error", error: error.message });
   }
 };
 
@@ -82,7 +83,7 @@ const applyToJob = async (req, res) => {
 const toggleSaveJob = async (req, res) => {
   try {
     const job = await Job.findById(req.params.id);
-    if (!job) return res.status(404).json({ message: "Job not found" });
+    if (!job) return res.status(HTTP_STATUS.NOT_FOUND).json({ message: "Job not found" });
 
     const studentId = req.user.id;
     const alreadySaved = job.savedBy.some((id) => id.toString() === studentId);
@@ -96,7 +97,7 @@ const toggleSaveJob = async (req, res) => {
     await job.save();
     res.json({ saved: !alreadySaved });
   } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
+    res.status(HTTP_STATUS.SERVER_ERROR).json({ message: "Server error", error: error.message });
   }
 };
 
@@ -114,7 +115,7 @@ const getMyApplicationStats = async (req, res) => {
 
     res.json(stats);
   } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
+    res.status(HTTP_STATUS.SERVER_ERROR).json({ message: "Server error", error: error.message });
   }
 };
 

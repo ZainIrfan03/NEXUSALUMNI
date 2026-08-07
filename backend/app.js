@@ -8,6 +8,8 @@ const cookieParser = require("cookie-parser");
 const cookie = require("cookie");
 const connectDB = require("./config/db");
 const path = require("path");
+const { SOCKET_EVENTS } = require("./utils/constants");
+const FRONTEND_URL = process.env.FRONTEND_URL;
 
 const directoryRoutes = require("./routes/directoryRoutes");
 const mentorshipRoutes = require("./routes/mentorshipRoutes");
@@ -24,11 +26,11 @@ const messageRoutes = require("./routes/messageRoutes");
 const Message = require("./models/Message");
 const Conversation = require("./models/Conversation");
 const activityRoutes = require("./routes/activityRoutes");
-const FRONTEND_URL = process.env.FRONTEND_URL;
 
 connectDB(); // connect to MongoDB before anything else
 
 const app = express();
+
 
 // credentials: true is required so the browser is allowed to send/receive
 // the httpOnly auth cookie across origins (frontend on :5173, backend on :5000)
@@ -91,15 +93,15 @@ io.on("connection", (socket) => {
   console.log(`User connected: ${socket.userId}`);
 
   // Client emits this while the other person is typing
-  socket.on("typing", ({ conversationId, toUserId }) => {
+  socket.on(SOCKET_EVENTS.TYPING, ({ conversationId, toUserId }) => {
     const targetSocketId = onlineUsers.get(toUserId);
     if (targetSocketId) {
-      io.to(targetSocketId).emit("typing", { conversationId, fromUserId: socket.userId });
+      io.to(targetSocketId).emit(SOCKET_EVENTS.TYPING, { conversationId, fromUserId: socket.userId });
     }
   });
 
   // Client emits this to send a message
-  socket.on("sendMessage", async ({ conversationId, text, toUserId }) => {
+  socket.on(SOCKET_EVENTS.SEND_MESSAGE, async ({ conversationId, text, toUserId }) => {
     try {
       const message = await Message.create({
         conversation: conversationId,
@@ -115,14 +117,14 @@ io.on("connection", (socket) => {
       // Deliver instantly if the recipient is online right now
       const targetSocketId = onlineUsers.get(toUserId);
       if (targetSocketId) {
-        io.to(targetSocketId).emit("receiveMessage", message);
+        io.to(targetSocketId).emit(SOCKET_EVENTS.RECEIVE_MESSAGE, message);
       }
 
       // Echo back to the sender so their UI updates from the same
       // saved document instead of a separate optimistic message
-      socket.emit("messageSent", message);
+      socket.emit(SOCKET_EVENTS.MESSAGE_SENT, message);
     } catch (error) {
-      socket.emit("messageError", { message: "Failed to send message" });
+      socket.emit(SOCKET_EVENTS.MESSAGE_ERROR, { message: "Failed to send message" });
     }
   });
 
@@ -130,10 +132,10 @@ io.on("connection", (socket) => {
   // regular HTTP request), not the "sendMessage" socket event above — so
   // once the frontend gets the saved message back from that REST call, it
   // emits this event just to relay it live to the other participant.
-  socket.on("fileMessageSent", ({ message, toUserId }) => {
+  socket.on(SOCKET_EVENTS.FILE_MESSAGE_SENT, ({ message, toUserId }) => {
     const targetSocketId = onlineUsers.get(toUserId);
     if (targetSocketId) {
-      io.to(targetSocketId).emit("receiveMessage", message);
+      io.to(targetSocketId).emit(SOCKET_EVENTS.RECEIVE_MESSAGE, message);
     }
   });
 

@@ -1,6 +1,7 @@
 const Conversation = require("../models/Conversation");
 const Message = require("../models/Message");
 const MentorshipRequest = require("../models/MentorshipRequest");
+const { HTTP_STATUS } = require("../utils/constants");
 
 // @route  GET /api/messages/conversations
 // List of the logged-in user's conversations (for the Inbox list).
@@ -12,7 +13,7 @@ const getMyConversations = async (req, res) => {
 
     res.json(conversations);
   } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
+    res.status(HTTP_STATUS.SERVER_ERROR).json({ message: "Server error", error: error.message });
   }
 };
 
@@ -42,7 +43,7 @@ const startConversation = async (req, res) => {
     });
 
     if (!acceptedRequest) {
-      return res.status(403).json({
+      return res.status(HTTP_STATUS.FORBIDDEN).json({
         message: "You can only message an accepted mentor/mentee.",
       });
     }
@@ -57,7 +58,7 @@ const startConversation = async (req, res) => {
 
     res.json(conversation);
   } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
+    res.status(HTTP_STATUS.SERVER_ERROR).json({ message: "Server error", error: error.message });
   }
 };
 
@@ -70,14 +71,14 @@ const deleteConversation = async (req, res) => {
 
     const conversation = await Conversation.findById(conversationId);
     if (!conversation) {
-      return res.status(404).json({ message: "Conversation not found" });
+      return res.status(HTTP_STATUS.NOT_FOUND).json({ message: "Conversation not found" });
     }
 
     const isParticipant = conversation.participants.some(
       (p) => p.toString() === req.user.id
     );
     if (!isParticipant) {
-      return res.status(403).json({ message: "Not authorized to delete this chat" });
+      return res.status(HTTP_STATUS.FORBIDDEN).json({ message: "Not authorized to delete this chat" });
     }
 
     await Message.deleteMany({ conversation: conversationId });
@@ -85,7 +86,7 @@ const deleteConversation = async (req, res) => {
 
     res.json({ message: "Conversation deleted" });
   } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
+    res.status(HTTP_STATUS.SERVER_ERROR).json({ message: "Server error", error: error.message });
   }
 };
 
@@ -98,7 +99,7 @@ const getMessages = async (req, res) => {
     });
     res.json(messages);
   } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
+    res.status(HTTP_STATUS.SERVER_ERROR).json({ message: "Server error", error: error.message });
   }
 };
 
@@ -123,7 +124,7 @@ const sendMessage = async (req, res) => {
     }
 
     if (!text && !fileUrl) {
-      return res.status(400).json({ message: "Message text or file is required" });
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({ message: "Message text or file is required" });
     }
 
     const message = await Message.create({
@@ -143,9 +144,9 @@ const sendMessage = async (req, res) => {
       lastMessageAt: new Date(),
     });
 
-    res.status(201).json(message);
+    res.status(HTTP_STATUS.CREATED).json(message);
   } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
+    res.status(HTTP_STATUS.SERVER_ERROR).json({ message: "Server error", error: error.message });
   }
 };
 

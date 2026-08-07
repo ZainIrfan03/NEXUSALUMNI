@@ -1,5 +1,6 @@
 const Student = require("../models/Student");
 const MentorshipRequest = require("../models/MentorshipRequest");
+const { HTTP_STATUS } = require("../utils/constants");
 
 const DEPARTMENT_LABELS = {
   cs: "Computer Science",
@@ -92,7 +93,7 @@ const getStudentDirectory = async (req, res) => {
 
     res.json({ students: formatted, totalCount });
   } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
+    res.status(HTTP_STATUS.SERVER_ERROR).json({ message: "Server error", error: error.message });
   }
 };
 
@@ -113,7 +114,7 @@ const getStudentById = async (req, res) => {
     );
 
     if (!student) {
-      return res.status(404).json({ message: "Student not found" });
+      return res.status(HTTP_STATUS.NOT_FOUND).json({ message: "Student not found" });
     }
 
     const acceptedRequest = await MentorshipRequest.findOne({
@@ -127,7 +128,7 @@ const getStudentById = async (req, res) => {
       isMentee: !!acceptedRequest,
     });
   } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
+    res.status(HTTP_STATUS.SERVER_ERROR).json({ message: "Server error", error: error.message });
   }
 };
 

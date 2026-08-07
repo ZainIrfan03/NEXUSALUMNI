@@ -3,6 +3,7 @@ const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 const Student = require("../models/Student");
 const Alumni = require("../models/Alumni");
+const { HTTP_STATUS } = require("../utils/constants");
 const generateToken = (id, role) => {
   return jwt.sign({ id, role }, process.env.JWT_SECRET, { expiresIn: "30d" });
 };
@@ -41,20 +42,20 @@ const registerUser = async (req, res) => {
     } = req.body;
 
     if (!fullName || !email || !password || !role) {
-      return res.status(400).json({ message: "Missing required fields" });
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({ message: "Missing required fields" });
     }
 
     // Admin/Faculty are never created through this open endpoint.
     const allowedPublicRoles = ["student", "alumni"];
     if (!allowedPublicRoles.includes(role)) {
-      return res.status(403).json({
+      return res.status(HTTP_STATUS.FORBIDDEN).json({
         message: "This role cannot be self-registered. Contact an administrator.",
       });
     }
 
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      return res.status(400).json({ message: "Email already registered" });
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({ message: "Email already registered" });
     }
 
     const salt = await bcrypt.genSalt(10);
@@ -71,12 +72,12 @@ const registerUser = async (req, res) => {
     // 2. Create the role-specific profile, linked via `user: user._id`
     if (role === "student") {
       if (!department || !session || !rollNumber) {
-        return res.status(400).json({ message: "Missing student fields" });
+        return res.status(HTTP_STATUS.BAD_REQUEST).json({ message: "Missing student fields" });
       }
       await Student.create({ user: user._id, department, session, rollNumber });
     } else if (role === "alumni") {
       if (!graduationYear) {
-        return res.status(400).json({ message: "Missing alumni fields" });
+        return res.status(HTTP_STATUS.BAD_REQUEST).json({ message: "Missing alumni fields" });
       }
       await Alumni.create({ user: user._id, graduationYear, company, jobTitle });
     }
@@ -84,14 +85,14 @@ const registerUser = async (req, res) => {
     const token = generateToken(user._id, user.role);
     setTokenCookie(res, token);
 
-    res.status(201).json({
+    res.status(HTTP_STATUS.CREATED).json({
       _id: user._id,
       fullName: user.fullName,
       email: user.email,
       role: user.role,
     });
   } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
+    res.status(HTTP_STATUS.SERVER_ERROR).json({ message: "Server error", error: error.message });
   }
 };
 
@@ -103,12 +104,12 @@ const loginUser = async (req, res) => {
 
     const user = await User.findOne({ email });
     if (!user) {
-      return res.status(401).json({ message: "Invalid email or password" });
+      return res.status(HTTP_STATUS.UNAUTHORIZED).json({ message: "Invalid email or password" });
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      return res.status(401).json({ message: "Invalid email or password" });
+      return res.status(HTTP_STATUS.UNAUTHORIZED).json({ message: "Invalid email or password" });
     }
 
     const token = generateToken(user._id, user.role);
@@ -121,7 +122,7 @@ const loginUser = async (req, res) => {
       role: user.role,
     });
   } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
+    res.status(HTTP_STATUS.SERVER_ERROR).json({ message: "Server error", error: error.message });
   }
 };
 
