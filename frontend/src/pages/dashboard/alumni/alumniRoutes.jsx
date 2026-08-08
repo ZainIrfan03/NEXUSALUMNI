@@ -3,7 +3,6 @@ import { Route } from "react-router-dom";
 import ProtectedRoute from "../../../routes/protectedRoute";
 import AlumniDashboard from "./AlumniDashboard";
 import StudentDirectory from "./StudentDirectory";
-// import Jobs from "./Jobs";
 import AlumniMentorship from "./AlumniMentorship";
 import AlumniMessages from "./AlumniMessages";
 import AlumniProfile from "./AlumniProfile";
