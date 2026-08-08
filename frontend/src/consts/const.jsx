@@ -13,3 +13,11 @@ export const SOCKET_EVENTS = {
   MESSAGE_ERROR: "messageError",
   FILE_MESSAGE_SENT: "fileMessageSent",
 };
+
+// Must exactly match BACKEND/models/User.js -> role enum
+export const ROLES = {
+  STUDENT: "student",
+  ALUMNI: "alumni",
+  ADMIN: "admin",
+};
+ 

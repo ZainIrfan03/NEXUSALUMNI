@@ -9,6 +9,8 @@ import Directory from "./Directory";
 import Jobs from "./Jobs";
 import Mentorship from "./Mentorship";
 import AlumniProfileView from "./AlumniProfileView";
+import { ROLES } from "../../../consts/const";
+
 
 /**
  * studentRoutes — every route that belongs to the Student role, in one place.
@@ -20,52 +22,52 @@ const studentRoutes = (
         <Route
             path="/dashboard/student"
             element={
-                // <ProtectedRoute allowedRoles={["student"]}>
+                <ProtectedRoute allowedRoles={[ROLES.STUDENT]}>
                 <StudentDashboard />
-                // </ProtectedRoute>
+                 </ProtectedRoute>
             }
         />
         <Route
             path="/dashboard/student/profile"
             element={
-                // <ProtectedRoute allowedRoles={["student"]}>
+                <ProtectedRoute allowedRoles={[ROLES.STUDENT]}>
                 <MyProfile />
-                // </ProtectedRoute>
+                 </ProtectedRoute>
             }
         />
         <Route
             path="/dashboard/student/profile/edit"
             element={
-                // <ProtectedRoute allowedRoles={["student"]}>
+                 <ProtectedRoute allowedRoles={[ROLES.STUDENT]}>
                 <EditProfile />
-                // </ProtectedRoute>
+                 </ProtectedRoute>
             }
         />
         <Route path="/dashboard/student/messages" element={
-            //   <ProtectedRoute allowedRoles={["student"]}>
+               <ProtectedRoute allowedRoles={[ROLES.STUDENT]}>
             <Messages />
-            // </ProtectedRoute>
+             </ProtectedRoute>
         } />
         <Route path="/dashboard/student/directory" element={
-            //   <ProtectedRoute allowedRoles={["student"]}>
+               <ProtectedRoute allowedRoles={[ROLES.STUDENT]}>
             <Directory />
-            // </ProtectedRoute>
+             </ProtectedRoute>
         } />
 
         <Route path="/dashboard/student/directory/:id" element={
-            //   <ProtectedRoute allowedRoles={["student"]}>
+               <ProtectedRoute allowedRoles={[ROLES.STUDENT]}>
             <AlumniProfileView />
-            // </ProtectedRoute>
+             </ProtectedRoute>
         } />
         <Route path="/dashboard/student/jobs" element={
-            //   <ProtectedRoute allowedRoles={["student"]}>
+               <ProtectedRoute allowedRoles={[ROLES.STUDENT]}>
             <Jobs />
-            //     </ProtectedRoute>
+             </ProtectedRoute>
         } />
         <Route path="/dashboard/student/mentorship" element={
-            //   <ProtectedRoute allowedRoles={["student"]}>
+              <ProtectedRoute allowedRoles={[ROLES.STUDENT]}>
             <Mentorship />
-            // </ProtectedRoute>
+             </ProtectedRoute>
         } />
         {/* Add as pages get built:
     <Route path="/dashboard/student/events" element={...} />

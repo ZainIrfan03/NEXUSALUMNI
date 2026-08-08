@@ -2,6 +2,7 @@ import React from "react";
 import { useSelector } from "react-redux";
 import { Navigate } from "react-router-dom";
 
+
 /**
  * Wrap any dashboard route with this.
  * - Not logged in           -> redirect to /login
@@ -9,7 +10,7 @@ import { Navigate } from "react-router-dom";
  * - Logged in, correct role -> render the page
  *
  * Usage:
- *   <ProtectedRoute allowedRoles={["student"]}>
+ *   <ProtectedRoute allowedRoles={[ROLES.STUDENT]}>
  *     <StudentDashboard />
  *   </ProtectedRoute>
  */

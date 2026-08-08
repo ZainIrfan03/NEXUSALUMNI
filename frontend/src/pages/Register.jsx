@@ -3,13 +3,14 @@ import { Link, useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import api from "../api/axios";
 import { setCredentials } from "../store/slice/authSlice";
+import { ROLES } from "../consts/const";
 
 
 export default function Register() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
-  const [role, setRole] = useState("student");
+  const [role, setRole] = useState(ROLES.STUDENT);
   const [form, setForm] = useState({
     fullName: "",
     email: "",
@@ -123,13 +124,13 @@ export default function Register() {
       errors.confirmPassword = "Passwords do not match.";
     }
 
-    if (role === "student") {
+    if (role === ROLES.STUDENT) {
       if (!form.department) errors.department = "Select a department.";
       if (!form.session.trim()) errors.session = "Session is required.";
       if (!form.rollNumber.trim()) errors.rollNumber = "Roll number is required.";
     }
 
-    if (role === "alumni") {
+    if (role === ROLES.ALUMNI) {
       if (!form.graduationYear.trim()) {
         errors.graduationYear = "Graduation year is required.";
       } else if (!/^\d{4}$/.test(form.graduationYear.trim())) {
@@ -191,18 +192,18 @@ export default function Register() {
         <div className="flex bg-gray-100 rounded-xl p-1 mb-6">
           <button
             type="button"
-            onClick={() => setRole("student")}
+            onClick={() => setRole(ROLES.STUDENT)}
             className={`flex-1 text-sm font-medium py-2 rounded-lg transition-colors ${
-              role === "student" ? "bg-white text-primary shadow-sm" : "text-gray-500"
+              role === ROLES.STUDENT ? "bg-white text-primary shadow-sm" : "text-gray-500"
             }`}
           >
             Student
           </button>
           <button
             type="button"
-            onClick={() => setRole("alumni")}
+            onClick={() => setRole(ROLES.ALUMNI)}
             className={`flex-1 text-sm font-medium py-2 rounded-lg transition-colors ${
-              role === "alumni" ? "bg-white text-primary shadow-sm" : "text-gray-500"
+              role === ROLES.ALUMNI ? "bg-white text-primary shadow-sm" : "text-gray-500"
             }`}
           >
             Alumni
@@ -230,14 +231,14 @@ export default function Register() {
 
           <div>
             <label className="block text-sm font-medium text-dark mb-1.5">
-              {role === "student" ? "University Email" : "Email Address"}
+              {role === ROLES.STUDENT ? "University Email" : "Email Address"}
             </label>
             <input
               type="email"
               name="email"
               value={form.email}
               onChange={handleChange}
-              placeholder={role === "student" ? "student@university.edu" : "you@email.com"}
+              placeholder={role === ROLES.STUDENT ? "student@university.edu" : "you@email.com"}
               className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-primary transition-colors"
               required
             />
@@ -278,7 +279,7 @@ export default function Register() {
             )}
           </div>
 
-          {role === "student" && (
+          {role === ROLES.STUDENT && (
             <>
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -335,7 +336,7 @@ export default function Register() {
             </>
           )}
 
-          {role === "alumni" && (
+          {role === ROLES.ALUMNI && (
             <>
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -400,7 +401,7 @@ export default function Register() {
             disabled={loading}
             className="w-full bg-primary text-white text-sm font-semibold py-3 rounded-xl hover:opacity-90 transition-opacity disabled:opacity-60"
           >
-            {loading ? "Registering..." : `Register as ${role === "student" ? "Student" : "Alumni"}`}
+            {loading ? "Registering..." : `Register as ${role === ROLES.STUDENT ? "Student" : "Alumni"}`}
           </button>
         </form>
       </div>

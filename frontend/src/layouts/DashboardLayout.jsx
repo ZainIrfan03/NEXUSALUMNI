@@ -3,7 +3,8 @@ import { Outlet, NavLink, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import api from "../api/axios";
 import { getImageUrl as fileUrl } from "../utils/getImageUrl";
-import {SOCKET_URL} from "../consts/const";
+import {SOCKET_URL, ROLES} from "../consts/const";
+
 
 import {
   LayoutDashboard,
@@ -31,7 +32,7 @@ import { disconnectSocket } from "../utils/socket";
  */
 
 const linksByRole = {
-  student: [
+  [ROLES.STUDENT]: [
     { label: "Dashboard", icon: LayoutDashboard, path: "/dashboard/student" },
     { label: "Profile", icon: User, path: "/dashboard/student/profile" },
     { label: "Directory", icon: Users, path: "/dashboard/student/directory" },
@@ -39,7 +40,7 @@ const linksByRole = {
     { label: "Jobs", icon: Briefcase, path: "/dashboard/student/jobs" },
     { label: "Messages", icon: Mail, path: "/dashboard/student/messages" },
   ],
-  alumni: [
+  [ROLES.ALUMNI]: [
     { label: "Dashboard", icon: LayoutDashboard, path: "/dashboard/alumni" },
     { label: "Profile", icon: User, path: "/dashboard/alumni/profile" },
     { label: "Directory", icon: Users, path: "/dashboard/alumni/directory" },
@@ -47,13 +48,13 @@ const linksByRole = {
     { label: "Post a Job", icon: Briefcase, path: "/dashboard/alumni/jobs" },
     { label: "Messages", icon: Mail, path: "/dashboard/alumni/messages" },
   ],
-  faculty: [
+  [ROLES.FACULTY]: [
     { label: "Dashboard", icon: LayoutDashboard, path: "/dashboard/faculty" },
     { label: "Engagement", icon: BarChart3, path: "/dashboard/faculty/engagement" },
     { label: "Events", icon: CalendarDays, path: "/dashboard/faculty/events" },
     { label: "Announcements", icon: Megaphone, path: "/dashboard/faculty/announcements" },
   ],
-  admin: [
+  [ROLES.ADMIN]: [
     { label: "Dashboard", icon: LayoutDashboard, path: "/dashboard/admin" },
     { label: "Users", icon: Users, path: "/dashboard/admin/users" },
     { label: "Jobs", icon: Briefcase, path: "/dashboard/admin/jobs" },
@@ -63,14 +64,14 @@ const linksByRole = {
 };
 
 // Roles that currently have a working Settings page.
-// Add "alumni" here once /dashboard/alumni/settings actually exists.
-const rolesWithSettings = ["admin"];
+// Add ROLES.ALUMNI here once /dashboard/alumni/settings actually exists.
+const rolesWithSettings = [ROLES.ADMIN];
 
 // Only student/alumni currently have an avatarUrl on their profile model.
 // Faculty/admin fall back to the initials avatar.
 const profileEndpointByRole = {
-  student: "/student/profile",
-  alumni: "/alumni/profile",
+  [ROLES.STUDENT]: "/student/profile",
+  [ROLES.ALUMNI]: "/alumni/profile",
 };
 
 export default function DashboardLayout() {
