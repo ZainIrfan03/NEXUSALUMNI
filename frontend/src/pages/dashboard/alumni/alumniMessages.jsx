@@ -4,7 +4,7 @@ import { useLocation } from "react-router-dom";
 import { getImageUrl as fileUrl } from "../../../utils/getImageUrl";
 import LoadingSpinner from "../LoadingSpinner";
 import EmptyState from "../EmptyState";
- import { SOCKET_URL, UI_AVATARS_BASE_URL } from "../../../consts/const"; 
+ import { SOCKET_URL, UI_AVATARS_BASE_URL, SOCKET_EVENTS } from "../../../consts/const"; 
 import {
   messagesApi,
   useGetConversationsQuery,
@@ -95,7 +95,7 @@ export default function AlumniMessages() {
   useEffect(() => {
     const socket = connectSocket();
 
-    socket.on("receiveMessage", (msg) => {
+    socket.on(SOCKET_EVENTS.RECEIVE_MESSAGE, (msg) => {
       // Patch the cached message history for that conversation, if we've
       // fetched it before — if not, there's nothing to patch and the
       // next visit to that chat fetches it fresh from the backend anyway.
@@ -117,7 +117,7 @@ export default function AlumniMessages() {
       );
     });
 
-    socket.on("messageSent", (msg) => {
+    socket.on(SOCKET_EVENTS.MESSAGE_SENT, (msg) => {
       dispatch(
         messagesApi.util.updateQueryData("getMessages", msg.conversation, (draftMessages) => {
           draftMessages.push(msg);
@@ -125,7 +125,7 @@ export default function AlumniMessages() {
       );
     });
 
-    socket.on("typing", ({ conversationId }) => {
+    socket.on(SOCKET_EVENTS.TYPING, ({ conversationId }) => {
       if (conversationId === activeIdRef.current) {
         setTyping(true);
         setTimeout(() => setTyping(false), 2000);
@@ -133,9 +133,9 @@ export default function AlumniMessages() {
     });
 
     return () => {
-      socket.off("receiveMessage");
-      socket.off("messageSent");
-      socket.off("typing");
+      socket.off(SOCKET_EVENTS.RECEIVE_MESSAGE);
+      socket.off(SOCKET_EVENTS.MESSAGE_SENT);
+      socket.off(SOCKET_EVENTS.TYPING);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -166,7 +166,7 @@ export default function AlumniMessages() {
   const handleSend = () => {
     if (!draft.trim() || !activeConvo || !otherPerson) return;
     const socket = getSocket();
-    socket.emit("sendMessage", {
+    socket.emit(SOCKET_EVENTS.SEND_MESSAGE, {
       conversationId: activeId,
       text: draft,
       toUserId: otherPerson._id,
@@ -176,7 +176,7 @@ export default function AlumniMessages() {
 
   const handleTyping = () => {
     if (!otherPerson) return;
-    getSocket()?.emit("typing", { conversationId: activeId, toUserId: otherPerson._id });
+    getSocket()?.emit(SOCKET_EVENTS.TYPING, { conversationId: activeId, toUserId: otherPerson._id });
   };
 
   const handleKeyDown = (event) => {
@@ -201,7 +201,7 @@ export default function AlumniMessages() {
 
       // ...and relay it live to the other participant (attachments are
       // saved over REST, not the socket "sendMessage" event).
-      getSocket()?.emit("fileMessageSent", { message, toUserId: otherPerson._id });
+      getSocket()?.emit(SOCKET_EVENTS.FILE_MESSAGE_SENT, { message, toUserId: otherPerson._id });
     } catch (err) {
       setAttachError(err.data?.message || "Upload failed. Try a smaller file.");
     }
