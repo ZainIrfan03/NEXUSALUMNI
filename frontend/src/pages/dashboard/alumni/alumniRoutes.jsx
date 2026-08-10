@@ -1,6 +1,6 @@
 import React from "react";
 import { Route } from "react-router-dom";
-import ProtectedRoute from "../../../routes/protectedRoute";
+import ProtectedRoute from "../../../routes/ProtectedRoute";
 import AlumniDashboard from "./AlumniDashboard";
 import StudentDirectory from "./StudentDirectory";
 import AlumniMentorship from "./AlumniMentorship";
