@@ -7,6 +7,7 @@ import {
   useUploadResumeMutation,
 } from "../../../store/api/studentProfileApi";
 import { getImageUrl as fileUrl } from "../../../utils/getImageUrl";
+import { REDIRECT_DELAY_MS } from "../../../consts/const";
 import LoadingSpinner from "../LoadingSpinner";
 import {
   UserCog,
@@ -159,7 +160,7 @@ export default function EditProfile() {
       await updateMyProfile(payload).unwrap();
       setSuccessMsg("Profile saved successfully.");
       // Give the user a moment to see the success message, then go back to View Mode
-      setTimeout(() => navigate("/dashboard/student/profile"), 800);
+      setTimeout(() => navigate("/dashboard/student/profile"), REDIRECT_DELAY_MS);
     } catch (err) {
       setActionError(err.data?.message || "Could not save profile.");
     }

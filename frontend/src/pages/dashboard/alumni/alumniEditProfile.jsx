@@ -7,6 +7,7 @@ import {
   useUploadAlumniResumeMutation,
 } from "../../../store/api/alumniProfileApi";
 import { getImageUrl as fileUrl } from "../../../utils/getImageUrl";
+import { REDIRECT_DELAY_MS } from "../../../consts/const";
 import LoadingSpinner from "../LoadingSpinner";
 import {
   UserCog,
@@ -166,7 +167,7 @@ export default function AlumniEditProfile() {
       };
       await updateMyAlumniProfile(payload).unwrap();
       setSuccessMsg("Profile saved successfully.");
-      setTimeout(() => navigate("/dashboard/alumni/profile"), 800);
+      setTimeout(() => navigate("/dashboard/alumni/profile"), REDIRECT_DELAY_MS);
     } catch (err) {
       setError(err.data?.message || "Could not save profile.");
     }
@@ -519,4 +520,3 @@ export default function AlumniEditProfile() {
     </div>
   );
 }
-

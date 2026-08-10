@@ -11,7 +11,7 @@ import {
   useSendFileMessageMutation,
   useDeleteConversationMutation,
 } from "../../../store/api/messagesApi";
- import { SOCKET_URL, UI_AVATARS_BASE_URL, SOCKET_EVENTS } from "../../../consts/const"; 
+ import { SOCKET_URL, UI_AVATARS_BASE_URL, SOCKET_EVENTS, TYPING_TIMEOUT_MS } from "../../../consts/const"; 
 
 import {
   Search,
@@ -127,7 +127,7 @@ export default function Messages() {
     socket.on(SOCKET_EVENTS.TYPING, ({ conversationId }) => {
       if (conversationId === activeIdRef.current) {
         setTyping(true);
-        setTimeout(() => setTyping(false), 2000);
+        setTimeout(() => setTyping(false), TYPING_TIMEOUT_MS);
       }
     });
 

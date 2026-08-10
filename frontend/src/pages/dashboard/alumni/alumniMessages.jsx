@@ -4,7 +4,7 @@ import { useLocation } from "react-router-dom";
 import { getImageUrl as fileUrl } from "../../../utils/getImageUrl";
 import LoadingSpinner from "../LoadingSpinner";
 import EmptyState from "../EmptyState";
- import { SOCKET_URL, UI_AVATARS_BASE_URL, SOCKET_EVENTS } from "../../../consts/const"; 
+ import { SOCKET_URL, UI_AVATARS_BASE_URL, SOCKET_EVENTS, TYPING_TIMEOUT_MS } from "../../../consts/const"; 
 import {
   messagesApi,
   useGetConversationsQuery,
@@ -128,7 +128,7 @@ export default function AlumniMessages() {
     socket.on(SOCKET_EVENTS.TYPING, ({ conversationId }) => {
       if (conversationId === activeIdRef.current) {
         setTyping(true);
-        setTimeout(() => setTyping(false), 2000);
+        setTimeout(() => setTyping(false), TYPING_TIMEOUT_MS);
       }
     });
 

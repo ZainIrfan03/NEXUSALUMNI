@@ -67,3 +67,12 @@ export const PASSWORD_MIN_LENGTH = 8;
 export const FULL_NAME_MAX_LENGTH = 15;
 
 export const LOCAL_STORAGE_USER_KEY = "user";
+
+// How long to wait after the last keystroke before clearing the
+// "typing..." indicator in a chat. Must match on both sides of a
+// conversation (Messages.jsx = student, AlumniMessages.jsx = alumni).
+export const TYPING_TIMEOUT_MS = 2000;
+
+// How long to show the "saved" state on a profile edit form before
+// navigating back to the read-only profile view.
+export const REDIRECT_DELAY_MS = 800;
