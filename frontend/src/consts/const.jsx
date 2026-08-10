@@ -18,6 +18,7 @@ export const SOCKET_EVENTS = {
 export const ROLES = {
   STUDENT: "student",
   ALUMNI: "alumni",
+  FACULTY: "faculty",
   ADMIN: "admin",
 };
  

@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const { MENTORSHIP_STATUS } = require("../utils/constants");
 
 /**
  * MentorshipRequest — one document per "Send Request" click.
@@ -21,8 +22,8 @@ const mentorshipRequestSchema = new mongoose.Schema(
     message: { type: String }, // optional note the student adds when sending
     status: {
       type: String,
-      enum: ["pending", "accepted", "declined", "completed"],
-      default: "pending",
+      enum: Object.values(MENTORSHIP_STATUS),
+      default: MENTORSHIP_STATUS.PENDING,
     },
   },
   { timestamps: true } // createdAt = "Sent: ..." date shown in the UI

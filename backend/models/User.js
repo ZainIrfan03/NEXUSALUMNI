@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const { ROLES } = require("../utils/constants");
 
 /**
  * Base User model — common to every account regardless of role.
@@ -14,7 +15,7 @@ const userSchema = new mongoose.Schema(
 
     role: {
       type: String,
-      enum: ["student", "alumni", "faculty", "admin"],
+      enum: Object.values(ROLES),
       required: true,
     },
   },

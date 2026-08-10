@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const { JOB_TYPE, JOB_STATUS } = require("../utils/constants");
 
 /**
  * Job — posted by an Alumni, browsed/applied to by Students.
@@ -14,14 +15,14 @@ const jobSchema = new mongoose.Schema(
 
     type: {
       type: String,
-      enum: ["Full-time", "Part-time", "Internship", "Remote"],
+      enum: Object.values(JOB_TYPE),
       required: true,
     },
 
     status: {
       type: String,
-      enum: ["Active", "Closed", "Draft"],
-      default: "Active",
+      enum: Object.values(JOB_STATUS),
+      default: JOB_STATUS.ACTIVE,
     },
 
     payRange: { type: String },        // e.g. "$35 - $45 / hr"

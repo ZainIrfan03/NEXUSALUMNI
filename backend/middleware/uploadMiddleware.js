@@ -5,6 +5,11 @@
 const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
+const {
+  MAX_AVATAR_SIZE,
+  MAX_RESUME_SIZE,
+  MAX_CHAT_FILE_SIZE,
+} = require("../utils/constants");
 
 // Make sure these folders exist (create them if they don't)
 const AVATAR_DIR = path.join(__dirname, "..", "uploads", "avatars");
@@ -38,7 +43,7 @@ const avatarFileFilter = (req, file, cb) => {
 const uploadAvatar = multer({
   storage: avatarStorage,
   fileFilter: avatarFileFilter,
-  limits: { fileSize: 3 * 1024 * 1024 }, // 3MB
+  limits: { fileSize: MAX_AVATAR_SIZE },
 });
 
 // ---- Resume storage (PDF only, 5MB limit) ----
@@ -63,7 +68,7 @@ const resumeFileFilter = (req, file, cb) => {
 const uploadResume = multer({
   storage: resumeStorage,
   fileFilter: resumeFileFilter,
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+  limits: { fileSize: MAX_RESUME_SIZE },
 });
 
 // ---- Chat storage (images + common docs, 10MB limit) ----
@@ -93,7 +98,7 @@ const chatFileFilter = (req, file, cb) => {
 const uploadChat = multer({
   storage: chatStorage,
   fileFilter: chatFileFilter,
-  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
+  limits: { fileSize: MAX_CHAT_FILE_SIZE },
 });
 
 module.exports = { uploadAvatar, uploadResume, uploadChat };

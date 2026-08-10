@@ -1,3 +1,4 @@
+const fs = require("fs");
 const Conversation = require("../models/Conversation");
 const Message = require("../models/Message");
 const MentorshipRequest = require("../models/MentorshipRequest");
@@ -92,9 +93,23 @@ const deleteConversation = async (req, res) => {
 
 // @route  GET /api/messages/:conversationId
 // Full message history for one conversation.
+// Only a participant of this conversation may read it.
 const getMessages = async (req, res) => {
   try {
-    const messages = await Message.find({ conversation: req.params.conversationId }).sort({
+    const { conversationId } = req.params;
+
+    const conversation = await Conversation.findOne({
+      _id: conversationId,
+      participants: req.user.id,
+    });
+
+    if (!conversation) {
+      return res.status(HTTP_STATUS.FORBIDDEN).json({
+        message: "Not authorized to view this conversation",
+      });
+    }
+
+    const messages = await Message.find({ conversation: conversationId }).sort({
       createdAt: 1,
     });
     res.json(messages);
@@ -108,10 +123,28 @@ const getMessages = async (req, res) => {
 // @file   file       (optional — image or document, handled by uploadChat middleware)
 // Saves a message to the DB, with an optional attached image/file.
 // The socket layer (server.js) additionally emits it live to the other participant.
+// Only a participant of this conversation may send into it.
 const sendMessage = async (req, res) => {
   try {
     const { text } = req.body;
     const { conversationId } = req.params;
+
+    const conversation = await Conversation.findOne({
+      _id: conversationId,
+      participants: req.user.id,
+    });
+
+    if (!conversation) {
+      // multer already wrote the uploaded file to disk before this
+      // controller ran — clean it up so an unauthorized attempt
+      // doesn't leave an orphaned file behind.
+      if (req.file) {
+        fs.unlink(req.file.path, () => {});
+      }
+      return res.status(HTTP_STATUS.FORBIDDEN).json({
+        message: "Not authorized to send messages in this conversation",
+      });
+    }
 
     let fileUrl = null;
     let fileType = null;

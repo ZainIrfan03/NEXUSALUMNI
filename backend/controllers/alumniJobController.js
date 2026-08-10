@@ -1,7 +1,7 @@
 const Job = require("../models/Job");
 const Application = require("../models/Application");
 const Student = require("../models/Student");
-const { HTTP_STATUS } = require("../utils/constants");
+const { HTTP_STATUS, JOB_STATUS, APPLICATION_STATUS } = require("../utils/constants");
 
 // Builds the { applicants: [{avatarUrl}], applicantCount } shown as the
 // avatar-stack + count in the postings table.
@@ -61,10 +61,10 @@ const getMyJobs = async (req, res) => {
     const jobIds = allMyJobs.map((j) => j._id);
     const [totalApplicants, unreadApplicants] = await Promise.all([
       Application.countDocuments({ job: { $in: jobIds } }),
-      Application.countDocuments({ job: { $in: jobIds }, status: "applied" }),
+      Application.countDocuments({ job: { $in: jobIds }, status: APPLICATION_STATUS.APPLIED }),
     ]);
 
-    const closedCount = allMyJobs.filter((j) => j.status === "Closed").length;
+    const closedCount = allMyJobs.filter((j) => j.status === JOB_STATUS.CLOSED).length;
     const fillRate = allMyJobs.length
       ? Math.round((closedCount / allMyJobs.length) * 100)
       : 0;
@@ -157,8 +157,7 @@ const getJobApplicants = async (req, res) => {
 const updateApplicationStatus = async (req, res) => {
   try {
     const { status } = req.body;
-    const allowedStatuses = ["applied", "in_review", "interview", "rejected", "accepted"];
-    if (!allowedStatuses.includes(status)) {
+    if (!Object.values(APPLICATION_STATUS).includes(status)) {
       return res.status(HTTP_STATUS.BAD_REQUEST).json({ message: "Invalid status" });
     }
 

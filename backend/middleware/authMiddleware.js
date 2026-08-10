@@ -1,6 +1,6 @@
 const jwt = require("jsonwebtoken");
 const { JWT_SECRET } = require("../config/env");
-const { AUTH_COOKIE_NAME } = require("../utils/constants");
+const { AUTH_COOKIE_NAME, HTTP_STATUS } = require("../utils/constants");
 
 // Verifies the JWT from the httpOnly "token" cookie and attaches the
 // decoded { id, role } to req.user for use in protected routes.
@@ -8,7 +8,7 @@ const protect = (req, res, next) => {
   const token = req.cookies?.[AUTH_COOKIE_NAME];
 
   if (!token) {
-    return res.status(401).json({ message: "Not authorized, no token" });
+    return res.status(HTTP_STATUS.UNAUTHORIZED).json({ message: "Not authorized, no token" });
   }
 
   try {
@@ -16,7 +16,7 @@ const protect = (req, res, next) => {
     req.user = decoded; // { id, role }
     next();
   } catch (error) {
-    return res.status(401).json({ message: "Not authorized, token failed" });
+    return res.status(HTTP_STATUS.UNAUTHORIZED).json({ message: "Not authorized, token failed" });
   }
 };
 
@@ -25,7 +25,7 @@ const protect = (req, res, next) => {
 const authorize = (...allowedRoles) => {
   return (req, res, next) => {
     if (!allowedRoles.includes(req.user.role)) {
-      return res.status(403).json({ message: "Access denied for this role" });
+      return res.status(HTTP_STATUS.FORBIDDEN).json({ message: "Access denied for this role" });
     }
     next();
   };

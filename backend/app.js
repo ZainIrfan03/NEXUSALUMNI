@@ -27,6 +27,7 @@ const messageRoutes = require("./routes/messageRoutes");
 const Message = require("./models/Message");
 const Conversation = require("./models/Conversation");
 const activityRoutes = require("./routes/activityRoutes");
+const { notFound, errorHandler } = require("./middleware/errorHandler");
 
 connectDB(); // connect to MongoDB before anything else
 
@@ -58,6 +59,16 @@ app.use("/api/messages", messageRoutes);
 app.get("/", (req, res) => {
   res.send("Alumni Nexus API is running");
 });
+
+// Must come after all routes above: catches any request that didn't match
+// a route, and returns a clean JSON 404 instead of Express's default HTML page.
+app.use(notFound);
+
+// Must be the LAST app.use(): Express detects it as an error handler because
+// it takes 4 args (err, req, res, next). Any next(err) call from a route or
+// middleware — or any error a route forgets to try/catch and passes along —
+// lands here instead of crashing the process.
+app.use(errorHandler);
 
 // --- Socket.io setup ---
 // Express needs a raw http server so Socket.io can attach to the same port.
@@ -94,7 +105,13 @@ io.on("connection", (socket) => {
   console.log(`User connected: ${socket.userId}`);
 
   // Client emits this while the other person is typing
-  socket.on(SOCKET_EVENTS.TYPING, ({ conversationId, toUserId }) => {
+  socket.on(SOCKET_EVENTS.TYPING, async ({ conversationId, toUserId }) => {
+    const isParticipant = await Conversation.exists({
+      _id: conversationId,
+      participants: socket.userId,
+    });
+    if (!isParticipant) return; // silently ignore — not this user's conversation
+
     const targetSocketId = onlineUsers.get(toUserId);
     if (targetSocketId) {
       io.to(targetSocketId).emit(SOCKET_EVENTS.TYPING, { conversationId, fromUserId: socket.userId });
@@ -104,6 +121,17 @@ io.on("connection", (socket) => {
   // Client emits this to send a message
   socket.on(SOCKET_EVENTS.SEND_MESSAGE, async ({ conversationId, text, toUserId }) => {
     try {
+      const conversation = await Conversation.findOne({
+        _id: conversationId,
+        participants: socket.userId,
+      });
+
+      if (!conversation) {
+        return socket.emit(SOCKET_EVENTS.MESSAGE_ERROR, {
+          message: "Not authorized to send messages in this conversation",
+        });
+      }
+
       const message = await Message.create({
         conversation: conversationId,
         sender: socket.userId,

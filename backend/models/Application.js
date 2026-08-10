@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const { APPLICATION_STATUS } = require("../utils/constants");
 
 /**
  * Application — one document per student "Apply Now" click.
@@ -11,8 +12,8 @@ const applicationSchema = new mongoose.Schema(
 
     status: {
       type: String,
-      enum: ["applied", "in_review", "interview", "rejected", "accepted"],
-      default: "applied",
+      enum: Object.values(APPLICATION_STATUS),
+      default: APPLICATION_STATUS.APPLIED,
     },
   },
   { timestamps: true }
