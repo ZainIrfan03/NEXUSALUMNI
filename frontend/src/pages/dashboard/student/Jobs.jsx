@@ -7,6 +7,7 @@ import {
   useApplyToJobMutation,
   useToggleSaveJobMutation,
 } from "../../../store/api/studentJobsApi";
+import { LOCAL_STORAGE_USER_KEY } from "../../../consts/const";
 
 import {
   SlidersHorizontal,
@@ -41,7 +42,7 @@ import {
 
 const tabs = ["All Jobs", "Full-time", "Internship", "Part-time", "Remote"];
 
-const currentUserId = () => JSON.parse(localStorage.getItem("user"))?._id;
+const currentUserId = () => JSON.parse(localStorage.getItem(LOCAL_STORAGE_USER_KEY))?._id;
 
 export default function Jobs() {
   const [activeTab, setActiveTab] = useState("All Jobs");

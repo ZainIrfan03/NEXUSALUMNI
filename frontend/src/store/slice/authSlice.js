@@ -1,8 +1,9 @@
 import { createSlice } from "@reduxjs/toolkit";
+import { LOCAL_STORAGE_USER_KEY } from "../../consts/const";
 
 // On app load, try to restore the real session from localStorage
 // (so refreshing the page doesn't log the user out).
-const storedUser = localStorage.getItem("user");
+const storedUser = localStorage.getItem(LOCAL_STORAGE_USER_KEY);
 
 // ── DEV-ONLY MOCK LOGIN ──────────────────────────────────────────────
 // Lets you jump straight into a dashboard without going through /login.
@@ -47,12 +48,12 @@ const authSlice = createSlice({
     // Called right after a successful login/register API response
     setCredentials: (state, action) => {
       state.user = action.payload;
-      localStorage.setItem("user", JSON.stringify(action.payload));
+      localStorage.setItem(LOCAL_STORAGE_USER_KEY, JSON.stringify(action.payload));
     },
     // Called on logout
     logout: (state) => {
       state.user = null;
-      localStorage.removeItem("user");
+      localStorage.removeItem(LOCAL_STORAGE_USER_KEY);
       sessionStorage.removeItem("mock_user"); // also clear any active mock
     },
   },

@@ -65,3 +65,5 @@ export const TAGS = {
 export const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 export const PASSWORD_MIN_LENGTH = 8;
 export const FULL_NAME_MAX_LENGTH = 15;
+
+export const LOCAL_STORAGE_USER_KEY = "user";
