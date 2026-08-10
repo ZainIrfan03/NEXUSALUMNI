@@ -21,3 +21,10 @@ export const ROLES = {
   ADMIN: "admin",
 };
  
+// Must exactly match BACKEND/models/MentorshipRequest.js -> status enum
+export const MENTORSHIP_STATUS = {
+  PENDING: "pending",
+  ACCEPTED: "accepted",
+  DECLINED: "declined",
+  COMPLETED: "completed",
+};
