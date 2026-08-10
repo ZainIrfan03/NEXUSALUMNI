@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import api from "../api/axios";
 import { setCredentials } from "../store/slice/authSlice";
-import { ROLES } from "../consts/const";
+import { ROLES, EMAIL_REGEX, PASSWORD_MIN_LENGTH, FULL_NAME_MAX_LENGTH } from "../consts/const";
 
 
 export default function Register() {
@@ -27,9 +27,6 @@ export default function Register() {
   const [fieldErrors, setFieldErrors] = useState({});
   const [loading, setLoading] = useState(false);
 
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  const FULL_NAME_MAX_LENGTH = 15;
-
   // Fires on every keystroke so the user sees feedback immediately,
   // instead of only finding out about problems after hitting submit.
   const handleChange = (event) => {
@@ -48,7 +45,7 @@ export default function Register() {
       }
 
       if (name === "email") {
-        if (value && !emailRegex.test(value)) {
+        if (value && !EMAIL_REGEX.test(value)) {
           next.email = "Enter a valid email address.";
         } else {
           delete next.email;
@@ -56,8 +53,8 @@ export default function Register() {
       }
 
       if (name === "password") {
-        if (value && value.length < 8) {
-          next.password = "Password must be at least 8 characters.";
+        if (value && value.length < PASSWORD_MIN_LENGTH) {
+          next.password = `Password must be at least ${PASSWORD_MIN_LENGTH} characters.`;
         } else if (value && (!/[A-Za-z]/.test(value) || !/[0-9]/.test(value))) {
           next.password = "Password must include both letters and numbers.";
         } else {
@@ -96,7 +93,6 @@ export default function Register() {
   // never has to make a round trip to the server to get rejected.
   const validate = () => {
     const errors = {};
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
     if (!form.fullName.trim()) {
       errors.fullName = "Full name is required.";
@@ -106,14 +102,14 @@ export default function Register() {
 
     if (!form.email.trim()) {
       errors.email = "Email is required.";
-    } else if (!emailRegex.test(form.email.trim())) {
+    } else if (!EMAIL_REGEX.test(form.email.trim())) {
       errors.email = "Enter a valid email address.";
     }
 
     if (!form.password) {
       errors.password = "Password is required.";
-    } else if (form.password.length < 8) {
-      errors.password = "Password must be at least 8 characters.";
+    } else if (form.password.length < PASSWORD_MIN_LENGTH) {
+      errors.password = `Password must be at least ${PASSWORD_MIN_LENGTH} characters.`;
     } else if (!/[A-Za-z]/.test(form.password) || !/[0-9]/.test(form.password)) {
       errors.password = "Password must include both letters and numbers.";
     }
@@ -254,7 +250,7 @@ export default function Register() {
               name="password"
               value={form.password}
               onChange={handleChange}
-              placeholder="Create a password (min. 8 characters, letters + numbers)"
+              placeholder={`Create a password (min. ${PASSWORD_MIN_LENGTH} characters, letters + numbers)`}
               className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-primary transition-colors"
               required
             />

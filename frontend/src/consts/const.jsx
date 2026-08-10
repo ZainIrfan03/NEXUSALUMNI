@@ -59,3 +59,9 @@ export const TAGS = {
   CONVERSATIONS: "Conversations",
   MESSAGES: "Messages",
 };
+
+// Register.jsx form validation — was duplicated (email regex x2, min
+// length x2, max length x3) inside the same file.
+export const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+export const PASSWORD_MIN_LENGTH = 8;
+export const FULL_NAME_MAX_LENGTH = 15;
