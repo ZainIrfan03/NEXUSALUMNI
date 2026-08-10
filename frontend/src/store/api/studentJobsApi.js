@@ -1,4 +1,5 @@
 import { baseApi } from "./baseApi";
+import { TAGS } from "../../consts/const";
 
 /**
  * Student Jobs API — covers:
@@ -23,15 +24,15 @@ export const studentJobsApi = baseApi.injectEndpoints({
       providesTags: (result) =>
         result
           ? [
-              ...result.map((job) => ({ type: "Jobs", id: job._id })),
-              { type: "Jobs", id: "LIST" },
+              ...result.map((job) => ({ type: TAGS.JOBS, id: job._id })),
+              { type: TAGS.JOBS, id: "LIST" },
             ]
-          : [{ type: "Jobs", id: "LIST" }],
+          : [{ type: TAGS.JOBS, id: "LIST" }],
     }),
 
     getMyApplicationStats: builder.query({
       query: () => "/jobs/my-applications",
-      providesTags: ["MyApplications"],
+      providesTags: [TAGS.MY_APPLICATIONS],
     }),
 
     applyToJob: builder.mutation({
@@ -42,8 +43,8 @@ export const studentJobsApi = baseApi.injectEndpoints({
       // Runs on success AND on failure (e.g. a 400 for "already applied")
       // — either way the truth now lives on the backend, so just refetch.
       invalidatesTags: (result, error, jobId) => [
-        { type: "Jobs", id: jobId },
-        "MyApplications",
+        { type: TAGS.JOBS, id: jobId },
+        TAGS.MY_APPLICATIONS,
       ],
     }),
 
@@ -52,7 +53,7 @@ export const studentJobsApi = baseApi.injectEndpoints({
         url: `/jobs/${jobId}/save`,
         method: "POST",
       }),
-      invalidatesTags: (result, error, jobId) => [{ type: "Jobs", id: jobId }],
+      invalidatesTags: (result, error, jobId) => [{ type: TAGS.JOBS, id: jobId }],
     }),
   }),
 });

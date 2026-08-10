@@ -6,7 +6,7 @@ import {
   useDeleteMyJobMutation,
   useUpdateApplicationStatusMutation,
 } from "../../../store/api/alumniJobsApi";
- import { PRAVATAR_BASE_URL } from "../../../consts/const";
+ import { PRAVATAR_BASE_URL, APPLICATION_STATUS } from "../../../consts/const";
 import { getImageUrl as fileUrl } from "../../../utils/getImageUrl";
 import LoadingSpinner from "../LoadingSpinner";
 import EmptyState from "../EmptyState";
@@ -72,18 +72,18 @@ const JOB_STATUS_TONES = {
 
 // Applicant pipeline stages — same order the alumni moves someone through.
 const APPLICANT_STATUS_TONES = {
-  applied: "neutral",
-  in_review: "warning",
-  interview: "info",
-  accepted: "success",
-  rejected: "danger",
+  [APPLICATION_STATUS.APPLIED]: "neutral",
+  [APPLICATION_STATUS.IN_REVIEW]: "warning",
+  [APPLICATION_STATUS.INTERVIEW]: "info",
+  [APPLICATION_STATUS.ACCEPTED]: "success",
+  [APPLICATION_STATUS.REJECTED]: "danger",
 };
 const APPLICANT_STATUS_LABELS = {
-  applied: "Applied",
-  in_review: "In Review",
-  interview: "Interview",
-  accepted: "Accepted",
-  rejected: "Rejected",
+  [APPLICATION_STATUS.APPLIED]: "Applied",
+  [APPLICATION_STATUS.IN_REVIEW]: "In Review",
+  [APPLICATION_STATUS.INTERVIEW]: "Interview",
+  [APPLICATION_STATUS.ACCEPTED]: "Accepted",
+  [APPLICATION_STATUS.REJECTED]: "Rejected",
 };
 
 export default function AlumniJobs() {
@@ -439,11 +439,11 @@ export default function AlumniJobs() {
                           onChange={(event) => handleStatusChange(applicant.applicationId, event.target.value)}
                           className="text-xs border border-gray-200 rounded-lg px-2 py-1.5 text-gray-600 disabled:opacity-50"
                         >
-                          <option value="applied">Applied</option>
-                          <option value="in_review">Move to Review</option>
-                          <option value="interview">Schedule Interview</option>
-                          <option value="accepted">Accept</option>
-                          <option value="rejected">Reject</option>
+                          <option value={APPLICATION_STATUS.APPLIED}>Applied</option>
+                          <option value={APPLICATION_STATUS.IN_REVIEW}>Move to Review</option>
+                          <option value={APPLICATION_STATUS.INTERVIEW}>Schedule Interview</option>
+                          <option value={APPLICATION_STATUS.ACCEPTED}>Accept</option>
+                          <option value={APPLICATION_STATUS.REJECTED}>Reject</option>
                         </select>
                       </div>
                     </div>

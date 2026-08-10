@@ -1,4 +1,5 @@
 import { baseApi } from "./baseApi";
+import { TAGS } from "../../consts/const";
 
 /**
  * Alumni Dashboard API — covers:
@@ -8,7 +9,7 @@ import { baseApi } from "./baseApi";
  * `useAcceptMentorshipRequestMutation` / `useRejectMentorshipRequestMutation`
  * from alumniMentorshipApi.js (same hooks AlumniMentorship.jsx uses) instead
  * of new dashboard-scoped mutations. Those already invalidate
- * "MentorshipRequests" on success — so getOverview lists it in
+ * TAGS.MENTORSHIP_REQUESTS on success — so getOverview lists it in
  * providesTags too, meaning the incomingRequests preview (and the
  * studentsMentored count once one is accepted) refetch automatically
  * with no manual fetchOverview() call after every action.
@@ -17,7 +18,7 @@ export const alumniDashboardApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     getAlumniOverview: builder.query({
       query: () => "/alumni/dashboard",
-      providesTags: ["AlumniDashboard", "MentorshipRequests"],
+      providesTags: [TAGS.ALUMNI_DASHBOARD, TAGS.MENTORSHIP_REQUESTS],
     }),
   }),
 });

@@ -1,4 +1,5 @@
 import { baseApi } from "./baseApi";
+import { TAGS } from "../../consts/const";
 import { getImageUrl as fileUrl } from "../../utils/getImageUrl";
 
 /**
@@ -32,15 +33,15 @@ export const studentDirectoryApi = baseApi.injectEndpoints({
       providesTags: (result) =>
         result
           ? [
-              ...result.results.map((alumnus) => ({ type: "AlumniDirectory", id: alumnus.id })),
-              { type: "AlumniDirectory", id: "LIST" },
+              ...result.results.map((alumnus) => ({ type: TAGS.ALUMNI_DIRECTORY, id: alumnus.id })),
+              { type: TAGS.ALUMNI_DIRECTORY, id: "LIST" },
             ]
-          : [{ type: "AlumniDirectory", id: "LIST" }],
+          : [{ type: TAGS.ALUMNI_DIRECTORY, id: "LIST" }],
     }),
 
     getAlumniById: builder.query({
       query: (id) => `/directory/${id}`,
-      providesTags: (result, error, id) => [{ type: "AlumniDirectory", id }],
+      providesTags: (result, error, id) => [{ type: TAGS.ALUMNI_DIRECTORY, id }],
     }),
   }),
 });

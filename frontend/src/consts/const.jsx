@@ -1,4 +1,4 @@
- export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL; 
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL; 
  export const SOCKET_URL = import.meta.env.VITE_SOCKET_URL;
 
  export const UI_AVATARS_BASE_URL = "https://ui-avatars.com/api"; 
@@ -27,4 +27,35 @@ export const MENTORSHIP_STATUS = {
   ACCEPTED: "accepted",
   DECLINED: "declined",
   COMPLETED: "completed",
+};
+
+// Must exactly match BACKEND/models/Application.js -> status enum
+// (job application pipeline stage, alumni moves applicants through this)
+export const APPLICATION_STATUS = {
+  APPLIED: "applied",
+  IN_REVIEW: "in_review",
+  INTERVIEW: "interview",
+  ACCEPTED: "accepted",
+  REJECTED: "rejected",
+};
+
+// RTK Query cache tag names. Must exactly match the `tagTypes` array
+// declared in store/api/baseApi.js — every providesTags/invalidatesTags
+// across the *Api.js feature files should reference these instead of
+// raw strings, so a typo becomes a build error instead of a silent
+// cache-invalidation bug.
+export const TAGS = {
+  JOBS: "Jobs",
+  MY_APPLICATIONS: "MyApplications",
+  JOB_APPLICANTS: "JobApplicants",
+  MENTORSHIP_REQUESTS: "MentorshipRequests",
+  RECOMMENDED_MENTORS: "RecommendedMentors",
+  STUDENT_DIRECTORY: "StudentDirectory",
+  ALUMNI_DIRECTORY: "AlumniDirectory",
+  STUDENT_PROFILE: "StudentProfile",
+  ALUMNI_PROFILE: "AlumniProfile",
+  STUDENT_DASHBOARD: "StudentDashboard",
+  ALUMNI_DASHBOARD: "AlumniDashboard",
+  CONVERSATIONS: "Conversations",
+  MESSAGES: "Messages",
 };

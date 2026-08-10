@@ -1,6 +1,6 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 
-import { API_BASE_URL } from "../../consts/const";
+import { API_BASE_URL, TAGS } from "../../consts/const";
 
 /**
  * Single RTK Query instance for the whole app. Every feature (jobs,
@@ -22,20 +22,6 @@ export const baseApi = createApi({
   }),
   // Every cache tag used by any feature slice must be declared here up
   // front — injectEndpoints can't add new tag types later.
-  tagTypes: [
-    "Jobs",
-    "MyApplications",
-    "JobApplicants",
-    "MentorshipRequests",
-    "RecommendedMentors",
-    "StudentDirectory",
-    "AlumniDirectory",
-    "StudentProfile",
-    "AlumniProfile",
-    "StudentDashboard",
-    "AlumniDashboard",
-    "Conversations",
-    "Messages",
-  ],
+  tagTypes: Object.values(TAGS),
   endpoints: () => ({}),
 });

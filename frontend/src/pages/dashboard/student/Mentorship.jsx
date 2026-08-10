@@ -10,6 +10,7 @@ import {
   useSendMentorshipRequestMutation,
 } from "../../../store/api/studentMentorshipApi";
 import { useStartConversationMutation } from "../../../store/api/messagesApi";
+import { MENTORSHIP_STATUS } from "../../../consts/const";
 
 /**
  * Mentorship Hub — file: src/pages/dashboard/student/Mentorship.jsx
@@ -34,10 +35,10 @@ function MentorAvatar({ name, img }) {
 }
 
 const statusTones = {
-  pending: "warning",
-  accepted: "success",
-  completed: "info",
-  declined: "danger",
+  [MENTORSHIP_STATUS.PENDING]: "warning",
+  [MENTORSHIP_STATUS.ACCEPTED]: "success",
+  [MENTORSHIP_STATUS.COMPLETED]: "info",
+  [MENTORSHIP_STATUS.DECLINED]: "danger",
 };
 
 const REQUEST_PAGE_SIZE = 4; // how many "Request Status" rows to reveal per "Load More" click
@@ -139,19 +140,19 @@ export default function Mentorship() {
               {mentors.map((mentor) => {
                 const isSending = sendingId === mentor.alumniUserId;
                 const status = getRequestStatus(mentor.alumniUserId);
-                const canChat = status === "accepted" || status === "completed";
+                const canChat = status === MENTORSHIP_STATUS.ACCEPTED || status === MENTORSHIP_STATUS.COMPLETED;
                 // Only "pending" locks the button — a decline lets the student try again.
-                const isLocked = isSending || status === "pending" || canChat;
+                const isLocked = isSending || status === MENTORSHIP_STATUS.PENDING || canChat;
 
                 const buttonLabel = isSending
                   ? "Sending..."
-                  : status === "accepted"
+                  : status === MENTORSHIP_STATUS.ACCEPTED
                   ? "Accepted"
-                  : status === "completed"
+                  : status === MENTORSHIP_STATUS.COMPLETED
                   ? "Completed"
-                  : status === "pending"
+                  : status === MENTORSHIP_STATUS.PENDING
                   ? "Request Sent"
-                  : status === "declined"
+                  : status === MENTORSHIP_STATUS.DECLINED
                   ? "Send Request Again"
                   : "Send Request";
 

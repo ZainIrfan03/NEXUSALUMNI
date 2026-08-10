@@ -1,4 +1,5 @@
 import { baseApi } from "./baseApi";
+import { TAGS } from "../../consts/const";
 
 /**
  * Alumni Jobs API — covers:
@@ -25,15 +26,15 @@ export const alumniJobsApi = baseApi.injectEndpoints({
       providesTags: (result) =>
         result
           ? [
-              ...result.jobs.map((job) => ({ type: "Jobs", id: job._id })),
-              { type: "Jobs", id: "ALUMNI_LIST" },
+              ...result.jobs.map((job) => ({ type: TAGS.JOBS, id: job._id })),
+              { type: TAGS.JOBS, id: "ALUMNI_LIST" },
             ]
-          : [{ type: "Jobs", id: "ALUMNI_LIST" }],
+          : [{ type: TAGS.JOBS, id: "ALUMNI_LIST" }],
     }),
 
     getJobApplicants: builder.query({
       query: (jobId) => `/alumni/jobs/${jobId}/applicants`,
-      providesTags: (result, error, jobId) => [{ type: "JobApplicants", id: jobId }],
+      providesTags: (result, error, jobId) => [{ type: TAGS.JOB_APPLICANTS, id: jobId }],
     }),
 
     deleteMyJob: builder.mutation({
@@ -42,9 +43,9 @@ export const alumniJobsApi = baseApi.injectEndpoints({
         method: "DELETE",
       }),
       invalidatesTags: (result, error, jobId) => [
-        { type: "Jobs", id: jobId },
-        { type: "Jobs", id: "ALUMNI_LIST" },
-        { type: "Jobs", id: "LIST" }, // deleting a posting should drop it off the student board too
+        { type: TAGS.JOBS, id: jobId },
+        { type: TAGS.JOBS, id: "ALUMNI_LIST" },
+        { type: TAGS.JOBS, id: "LIST" }, // deleting a posting should drop it off the student board too
       ],
     }),
 
@@ -58,9 +59,9 @@ export const alumniJobsApi = baseApi.injectEndpoints({
         body: { status },
       }),
       invalidatesTags: (result, error, { jobId }) => [
-        { type: "JobApplicants", id: jobId },
-        { type: "Jobs", id: jobId },
-        { type: "Jobs", id: "ALUMNI_LIST" }, // unreadApplicants stat depends on status
+        { type: TAGS.JOB_APPLICANTS, id: jobId },
+        { type: TAGS.JOBS, id: jobId },
+        { type: TAGS.JOBS, id: "ALUMNI_LIST" }, // unreadApplicants stat depends on status
       ],
     }),
 
@@ -71,8 +72,8 @@ export const alumniJobsApi = baseApi.injectEndpoints({
         body: jobData,
       }),
       invalidatesTags: [
-        { type: "Jobs", id: "ALUMNI_LIST" },
-        { type: "Jobs", id: "LIST" }, // new posting should show up on the student board immediately
+        { type: TAGS.JOBS, id: "ALUMNI_LIST" },
+        { type: TAGS.JOBS, id: "LIST" }, // new posting should show up on the student board immediately
       ],
     }),
   }),

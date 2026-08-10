@@ -1,4 +1,5 @@
 import { baseApi } from "./baseApi";
+import { TAGS } from "../../consts/const";
 
 /**
  * Alumni Directory API — the student directory an alumni browses. Covers:
@@ -19,15 +20,15 @@ export const alumniDirectoryApi = baseApi.injectEndpoints({
       providesTags: (result) =>
         result
           ? [
-              ...result.students.map((student) => ({ type: "StudentDirectory", id: student._id })),
-              { type: "StudentDirectory", id: "LIST" },
+              ...result.students.map((student) => ({ type: TAGS.STUDENT_DIRECTORY, id: student._id })),
+              { type: TAGS.STUDENT_DIRECTORY, id: "LIST" },
             ]
-          : [{ type: "StudentDirectory", id: "LIST" }],
+          : [{ type: TAGS.STUDENT_DIRECTORY, id: "LIST" }],
     }),
 
     getStudentById: builder.query({
       query: (id) => `/alumni/directory/${id}`,
-      providesTags: (result, error, id) => [{ type: "StudentDirectory", id }],
+      providesTags: (result, error, id) => [{ type: TAGS.STUDENT_DIRECTORY, id }],
     }),
   }),
 });

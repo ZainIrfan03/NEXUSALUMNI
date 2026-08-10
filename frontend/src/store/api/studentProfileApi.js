@@ -1,4 +1,5 @@
 import { baseApi } from "./baseApi";
+import { TAGS } from "../../consts/const";
 
 /**
  * Student Profile API — covers:
@@ -15,7 +16,7 @@ import { baseApi } from "./baseApi";
  * messagesApi starting minimal; add it here if a "remove role" button
  * shows up later.
  *
- * Every mutation invalidates "StudentProfile", so MyProfile.jsx and
+ * Every mutation invalidates TAGS.STUDENT_PROFILE, so MyProfile.jsx and
  * EditProfile.jsx share one cache entry — save on the edit page, and the
  * read-only view refetches with the new data the moment you navigate back,
  * no passing data between routes needed.
@@ -24,7 +25,7 @@ export const studentProfileApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     getMyProfile: builder.query({
       query: () => "/student/profile",
-      providesTags: ["StudentProfile"],
+      providesTags: [TAGS.STUDENT_PROFILE],
     }),
 
     updateMyProfile: builder.mutation({
@@ -33,7 +34,7 @@ export const studentProfileApi = baseApi.injectEndpoints({
         method: "PUT",
         body: payload,
       }),
-      invalidatesTags: ["StudentProfile"],
+      invalidatesTags: [TAGS.STUDENT_PROFILE],
     }),
 
     uploadAvatar: builder.mutation({
@@ -42,7 +43,7 @@ export const studentProfileApi = baseApi.injectEndpoints({
         method: "POST",
         body: formData,
       }),
-      invalidatesTags: ["StudentProfile"],
+      invalidatesTags: [TAGS.STUDENT_PROFILE],
     }),
 
     uploadResume: builder.mutation({
@@ -51,7 +52,7 @@ export const studentProfileApi = baseApi.injectEndpoints({
         method: "POST",
         body: formData,
       }),
-      invalidatesTags: ["StudentProfile"],
+      invalidatesTags: [TAGS.STUDENT_PROFILE],
     }),
 
     addExperience: builder.mutation({
@@ -60,7 +61,7 @@ export const studentProfileApi = baseApi.injectEndpoints({
         method: "POST",
         body: roleData,
       }),
-      invalidatesTags: ["StudentProfile"],
+      invalidatesTags: [TAGS.STUDENT_PROFILE],
     }),
 
     addEducation: builder.mutation({
@@ -69,7 +70,7 @@ export const studentProfileApi = baseApi.injectEndpoints({
         method: "POST",
         body: eduData,
       }),
-      invalidatesTags: ["StudentProfile"],
+      invalidatesTags: [TAGS.STUDENT_PROFILE],
     }),
 
     deleteEducation: builder.mutation({
@@ -77,7 +78,7 @@ export const studentProfileApi = baseApi.injectEndpoints({
         url: `/student/profile/education/${educationId}`,
         method: "DELETE",
       }),
-      invalidatesTags: ["StudentProfile"],
+      invalidatesTags: [TAGS.STUDENT_PROFILE],
     }),
   }),
 });

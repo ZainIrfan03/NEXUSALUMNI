@@ -1,4 +1,5 @@
 import { baseApi } from "./baseApi";
+import { TAGS } from "../../consts/const";
 import { getImageUrl as fileUrl } from "../../utils/getImageUrl";
 
 /**
@@ -11,7 +12,7 @@ import { getImageUrl as fileUrl } from "../../utils/getImageUrl";
  * Mentorship.jsx's fetchMentors() now lives in `transformResponse` —
  * the component just consumes already-shaped data.
  *
- * sendMentorshipRequest invalidates "MentorshipRequests", so the old
+ * sendMentorshipRequest invalidates TAGS.MENTORSHIP_REQUESTS, so the old
  * manual "prepend the new request to local state" code goes away —
  * the request list just refetches and the new one is already in it.
  */
@@ -19,7 +20,7 @@ export const studentMentorshipApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     getRecommendedMentors: builder.query({
       query: () => "/mentorship/recommended",
-      providesTags: ["RecommendedMentors"],
+      providesTags: [TAGS.RECOMMENDED_MENTORS],
       transformResponse: (alumniList) =>
         alumniList.map((alumnus) => ({
           alumniUserId: alumnus.user?._id, // needed when sending a request (must be the User id)
@@ -37,7 +38,7 @@ export const studentMentorshipApi = baseApi.injectEndpoints({
 
     getMyRequests: builder.query({
       query: () => "/mentorship/my-requests",
-      providesTags: ["MentorshipRequests"],
+      providesTags: [TAGS.MENTORSHIP_REQUESTS],
     }),
 
     sendMentorshipRequest: builder.mutation({
@@ -48,7 +49,7 @@ export const studentMentorshipApi = baseApi.injectEndpoints({
         method: "POST",
         body: { alumniId: alumniDocId },
       }),
-      invalidatesTags: ["MentorshipRequests"],
+      invalidatesTags: [TAGS.MENTORSHIP_REQUESTS],
     }),
   }),
 });

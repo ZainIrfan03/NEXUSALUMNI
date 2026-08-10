@@ -6,6 +6,7 @@ import {
   useSendMentorshipRequestMutation,
 } from "../../../store/api/studentMentorshipApi";
 import { getImageUrl as fileUrl } from "../../../utils/getImageUrl";
+import { MENTORSHIP_STATUS } from "../../../consts/const";
 import LoadingSpinner from "../LoadingSpinner";
 import { ArrowLeft, MapPin, Briefcase, GraduationCap, Send } from "lucide-react";
 
@@ -134,19 +135,19 @@ export default function AlumniProfileView() {
               )}
             </div>
 
-            {openToMentorship && !checkingRequest && requestStatus !== "accepted" && (
+            {openToMentorship && !checkingRequest && requestStatus !== MENTORSHIP_STATUS.ACCEPTED && (
               <button
                 onClick={handleRequestMentorship}
-                disabled={requesting || requestStatus === "pending" || requestStatus === "completed"}
+                disabled={requesting || requestStatus === MENTORSHIP_STATUS.PENDING || requestStatus === MENTORSHIP_STATUS.COMPLETED}
                 className="flex items-center gap-2 text-sm font-medium text-white bg-dark rounded-xl px-5 py-2.5 hover:opacity-90 transition-opacity disabled:opacity-50"
               >
                 {requesting ? (
                   "Sending..."
-                ) : requestStatus === "pending" ? (
+                ) : requestStatus === MENTORSHIP_STATUS.PENDING ? (
                   "Request Sent"
-                ) : requestStatus === "completed" ? (
+                ) : requestStatus === MENTORSHIP_STATUS.COMPLETED ? (
                   "Completed"
-                ) : requestStatus === "declined" ? (
+                ) : requestStatus === MENTORSHIP_STATUS.DECLINED ? (
                   <>
                     <Send size={14} /> Send Request Again
                   </>

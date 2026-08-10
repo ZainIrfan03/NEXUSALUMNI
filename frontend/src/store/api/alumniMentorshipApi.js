@@ -1,4 +1,5 @@
 import { baseApi } from "./baseApi";
+import { TAGS } from "../../consts/const";
 
 /**
  * Alumni Mentorship API — covers:
@@ -6,7 +7,7 @@ import { baseApi } from "./baseApi";
  *   POST /alumni/mentorship/requests/:id/accept
  *   POST /alumni/mentorship/requests/:id/reject
  *
- * Reuses the "MentorshipRequests" tag that studentMentorshipApi's
+ * Reuses the TAGS.MENTORSHIP_REQUESTS tag that studentMentorshipApi's
  * getMyRequests already provides — same tag type declared once in
  * baseApi, just standing in for "the mentorship request state has
  * changed" on whichever side is looking at it. accept/reject invalidate
@@ -17,7 +18,7 @@ export const alumniMentorshipApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     getMentorshipOverview: builder.query({
       query: () => "/alumni/mentorship",
-      providesTags: ["MentorshipRequests"],
+      providesTags: [TAGS.MENTORSHIP_REQUESTS],
     }),
 
     acceptMentorshipRequest: builder.mutation({
@@ -25,7 +26,7 @@ export const alumniMentorshipApi = baseApi.injectEndpoints({
         url: `/alumni/mentorship/requests/${requestId}/accept`,
         method: "POST",
       }),
-      invalidatesTags: ["MentorshipRequests"],
+      invalidatesTags: [TAGS.MENTORSHIP_REQUESTS],
     }),
 
     rejectMentorshipRequest: builder.mutation({
@@ -33,7 +34,7 @@ export const alumniMentorshipApi = baseApi.injectEndpoints({
         url: `/alumni/mentorship/requests/${requestId}/reject`,
         method: "POST",
       }),
-      invalidatesTags: ["MentorshipRequests"],
+      invalidatesTags: [TAGS.MENTORSHIP_REQUESTS],
     }),
   }),
 });

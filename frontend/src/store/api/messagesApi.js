@@ -1,4 +1,5 @@
 import { baseApi } from "./baseApi";
+import { TAGS } from "../../consts/const";
 
 /**
  * Messages API — covers:
@@ -24,17 +25,17 @@ export const messagesApi = baseApi.injectEndpoints({
         method: "POST",
         body: { otherUserId },
       }),
-      invalidatesTags: ["Conversations"],
+      invalidatesTags: [TAGS.CONVERSATIONS],
     }),
 
     getConversations: builder.query({
       query: () => "/messages/conversations",
-      providesTags: ["Conversations"],
+      providesTags: [TAGS.CONVERSATIONS],
     }),
 
     getMessages: builder.query({
       query: (conversationId) => `/messages/${conversationId}`,
-      providesTags: (result, error, conversationId) => [{ type: "Messages", id: conversationId }],
+      providesTags: (result, error, conversationId) => [{ type: TAGS.MESSAGES, id: conversationId }],
     }),
 
     sendFileMessage: builder.mutation({
@@ -44,8 +45,8 @@ export const messagesApi = baseApi.injectEndpoints({
         body: formData,
       }),
       invalidatesTags: (result, error, { conversationId }) => [
-        { type: "Messages", id: conversationId },
-        "Conversations",
+        { type: TAGS.MESSAGES, id: conversationId },
+        TAGS.CONVERSATIONS,
       ],
     }),
 
@@ -54,7 +55,7 @@ export const messagesApi = baseApi.injectEndpoints({
         url: `/messages/conversations/${conversationId}`,
         method: "DELETE",
       }),
-      invalidatesTags: ["Conversations"],
+      invalidatesTags: [TAGS.CONVERSATIONS],
     }),
   }),
 });
