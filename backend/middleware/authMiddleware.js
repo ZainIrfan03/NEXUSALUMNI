@@ -1,16 +1,18 @@
 const jwt = require("jsonwebtoken");
+const { JWT_SECRET } = require("../config/env");
+const { AUTH_COOKIE_NAME } = require("../utils/constants");
 
 // Verifies the JWT from the httpOnly "token" cookie and attaches the
 // decoded { id, role } to req.user for use in protected routes.
 const protect = (req, res, next) => {
-  const token = req.cookies?.token;
+  const token = req.cookies?.[AUTH_COOKIE_NAME];
 
   if (!token) {
     return res.status(401).json({ message: "Not authorized, no token" });
   }
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = jwt.verify(token, JWT_SECRET);
     req.user = decoded; // { id, role }
     next();
   } catch (error) {

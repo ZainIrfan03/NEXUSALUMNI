@@ -3,16 +3,17 @@ const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 const Student = require("../models/Student");
 const Alumni = require("../models/Alumni");
-const { HTTP_STATUS } = require("../utils/constants");
+const { HTTP_STATUS, AUTH_COOKIE_NAME } = require("../utils/constants");
+const { JWT_SECRET } = require("../config/env");
 const generateToken = (id, role) => {
-  return jwt.sign({ id, role }, process.env.JWT_SECRET, { expiresIn: "30d" });
+  return jwt.sign({ id, role }, JWT_SECRET, { expiresIn: "30d" });
 };
 
 // Sets the JWT as an httpOnly cookie so client-side JS can never read it
 // (protects against XSS token theft). `secure` is only forced in production
 // because it requires HTTPS, which localhost doesn't have during dev.
 const setTokenCookie = (res, token) => {
-  res.cookie("token", token, {
+  res.cookie(AUTH_COOKIE_NAME, token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
@@ -130,7 +131,7 @@ const loginUser = async (req, res) => {
 // Clears the httpOnly auth cookie. Options passed to clearCookie must match
 // the options used in setTokenCookie or the browser won't remove it.
 const logoutUser = (req, res) => {
-  res.clearCookie("token", {
+  res.clearCookie(AUTH_COOKIE_NAME, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",

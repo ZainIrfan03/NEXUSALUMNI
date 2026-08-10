@@ -20,4 +20,6 @@ const SOCKET_EVENTS = {
   FILE_MESSAGE_SENT: "fileMessageSent",
 };
 
-module.exports = { HTTP_STATUS, SOCKET_EVENTS };
+const AUTH_COOKIE_NAME = "token";
+
+module.exports = { HTTP_STATUS, SOCKET_EVENTS, AUTH_COOKIE_NAME };

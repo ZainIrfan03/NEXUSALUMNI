@@ -8,7 +8,8 @@ const cookieParser = require("cookie-parser");
 const cookie = require("cookie");
 const connectDB = require("./config/db");
 const path = require("path");
-const { SOCKET_EVENTS } = require("./utils/constants");
+const { SOCKET_EVENTS, AUTH_COOKIE_NAME } = require("./utils/constants");
+const { JWT_SECRET } = require("./config/env");
 const FRONTEND_URL = process.env.FRONTEND_URL;
 
 const directoryRoutes = require("./routes/directoryRoutes");
@@ -75,12 +76,12 @@ const onlineUsers = new Map(); // userId -> socketId
 // (socket.io doesn't parse cookies itself, so we do it manually here).
 io.use((socket, next) => {
   const rawCookie = socket.handshake.headers.cookie;
-  const token = rawCookie ? cookie.parse(rawCookie).token : null;
+  const token = rawCookie ? cookie.parse(rawCookie)[AUTH_COOKIE_NAME] : null;
 
   if (!token) return next(new Error("No token provided"));
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = jwt.verify(token, JWT_SECRET);
     socket.userId = decoded.id;
     next();
   } catch (err) {
