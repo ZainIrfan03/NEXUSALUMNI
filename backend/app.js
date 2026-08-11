@@ -27,6 +27,7 @@ const messageRoutes = require("./routes/messageRoutes");
 const Message = require("./models/Message");
 const Conversation = require("./models/Conversation");
 const activityRoutes = require("./routes/activityRoutes");
+const storyRoutes = require("./routes/storyRoutes");
 const { notFound, errorHandler } = require("./middleware/errorHandler");
 
 connectDB(); // connect to MongoDB before anything else
@@ -44,6 +45,7 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 // Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/directory", directoryRoutes);
+app.use("/api/stories", storyRoutes);
 app.use("/api/mentorship", mentorshipRoutes);
 app.use("/api/jobs", jobRoutes);
 app.use("/api/student/profile", studentProfileRoutes);
