@@ -1,6 +1,30 @@
 const Alumni = require("../models/Alumni");
 const { HTTP_STATUS } = require("../utils/constants");
 
+// @route  GET /api/directory/featured
+// Public (no auth) — used on the marketing Home page's "Featured Alumni"
+// section, so it can't reuse getAlumniDirectory (that route requires login).
+// Picks a small set of alumni with a complete public profile so the
+// homepage never shows blank names/roles.
+const getFeaturedAlumni = async (req, res) => {
+  try {
+    const limit = Math.min(Number(req.query.limit) || 4, 12);
+
+    const alumni = await Alumni.find({
+      isPublic: true,
+      jobTitle: { $exists: true, $ne: "" },
+      company: { $exists: true, $ne: "" },
+    })
+      .populate("user", "fullName")
+      .sort({ createdAt: -1 })
+      .limit(limit);
+
+    res.json({ results: alumni });
+  } catch (error) {
+    res.status(HTTP_STATUS.SERVER_ERROR).json({ message: "Server error", error: error.message });
+  }
+};
+
 // @route  GET /api/directory
 // @query  ?industry=&department=&fromYear=&toYear=&location=&page=&limit=
 // Returns paginated alumni profiles (joined with their base User info).
@@ -60,4 +84,4 @@ const getAlumniById = async (req, res) => {
   }
 };
 
-module.exports = { getAlumniDirectory, getAlumniById };
+module.exports = { getFeaturedAlumni, getAlumniDirectory, getAlumniById };
