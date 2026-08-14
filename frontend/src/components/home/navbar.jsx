@@ -21,6 +21,7 @@ export default function Navbar() {
         : "text-gray-600 border-transparent hover:text-primary"
     }`;
 
+
   const mobileLinkClass = ({ isActive }) =>
     isActive ? "text-primary" : "text-gray-600";
 
@@ -39,7 +40,7 @@ export default function Navbar() {
           </nav>
 
           <div className="flex items-center gap-3">
-            {/* Login button: hidden only when already on /login */}
+            
             {!onLoginPage && (
               <NavLink
                 to="/login"
@@ -48,7 +49,7 @@ export default function Navbar() {
                 Login
               </NavLink>
             )}
-            {/* Register button: hidden only when already on /register */}
+           
             {!onRegisterPage && (
               <NavLink
                 to="/register"

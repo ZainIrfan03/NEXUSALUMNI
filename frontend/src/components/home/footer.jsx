@@ -5,13 +5,15 @@ export default function Footer() {
   return (
     <footer className="w-full bg-white border-t border-gray-100">
       <div className="mx-auto max-w-7xl px-6 py-16 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10">
-        {/* Brand */}
+        
         <div>
           <h3 className="text-lg font-semibold text-primary mb-3">Alumni Nexus</h3>
           <p className="text-sm text-gray-500 leading-relaxed mb-5">
             Connecting graduates globally. Fostering lifelong relationships and
             professional growth.
           </p>
+
+
           <div className="flex items-center gap-4 text-gray-500">
             <Link2 size={18} className="cursor-pointer hover:text-primary transition-colors" />
             <Share2 size={18} className="cursor-pointer hover:text-primary transition-colors" />
@@ -19,7 +21,7 @@ export default function Footer() {
           </div>
         </div>
 
-        {/* Quick Links */}
+     
         <div>
           <h4 className="text-sm font-semibold text-dark mb-4">Quick Links</h4>
           <ul className="flex flex-col gap-3 text-sm text-gray-500">
@@ -30,7 +32,6 @@ export default function Footer() {
           </ul>
         </div>
 
-        {/* Resources */}
         <div>
           <h4 className="text-sm font-semibold text-dark mb-4">Resources</h4>
           <ul className="flex flex-col gap-3 text-sm text-gray-500">
@@ -41,7 +42,7 @@ export default function Footer() {
           </ul>
         </div>
 
-        {/* Contact */}
+        
         <div>
           <h4 className="text-sm font-semibold text-dark mb-4">Contact</h4>
           <ul className="flex flex-col gap-3 text-sm text-gray-500">
@@ -58,7 +59,7 @@ export default function Footer() {
         </div>
       </div>
 
-      {/* Bottom bar */}
+     
       <div className="border-t border-gray-100">
         <div className="mx-auto max-w-7xl px-6 py-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-gray-500">
           <span>© 2024 Alumni Nexus University. All rights reserved.</span>
