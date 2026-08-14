@@ -27,13 +27,10 @@ export default function Login() {
     try {
       const { data } = await api.post(`/auth/login`, form)
 
-      // Backend also sets the auth token as an httpOnly cookie (sent
-      // automatically on future requests) — nothing to store manually here.
-      // Save { _id, fullName, email, role } into Redux.
-      // authSlice also mirrors it to localStorage so refresh keeps the session.
+      
       dispatch(setCredentials(data));
 
-      // Send each role to its own dashboard
+    
       const roleRoutes = {
         student: "/dashboard/student",
         alumni: "/dashboard/alumni",

@@ -27,8 +27,7 @@ export default function Register() {
   const [fieldErrors, setFieldErrors] = useState({});
   const [loading, setLoading] = useState(false);
 
-  // Fires on every keystroke so the user sees feedback immediately,
-  // instead of only finding out about problems after hitting submit.
+
   const handleChange = (event) => {
     const { name, value } = event.target;
     setForm((prev) => ({ ...prev, [name]: value }));
@@ -61,7 +60,7 @@ export default function Register() {
           delete next.password;
         }
 
-        // Keep the confirm-password check in sync as the password changes.
+       
         if (confirmPassword) {
           next.confirmPassword =
             confirmPassword === value ? undefined : "Passwords do not match.";
@@ -73,7 +72,7 @@ export default function Register() {
     });
   };
 
-  // Live match-check against whatever is currently in the password field.
+ 
   const handleConfirmPasswordChange = (event) => {
     const value = event.target.value;
     setConfirmPassword(value);
@@ -89,8 +88,7 @@ export default function Register() {
     });
   };
 
-  // Client-side validation — runs before the API call so bad input
-  // never has to make a round trip to the server to get rejected.
+  
   const validate = () => {
     const errors = {};
 
@@ -157,7 +155,7 @@ export default function Register() {
         ...form,
       });
 
-      // Registration successful — send them to login instead of auto-login
+      
       navigate("/login", {
         state: { message: "Account created! Please log in to continue." },
       });
@@ -184,7 +182,7 @@ export default function Register() {
           </div>
         )}
 
-        {/* Role toggle */}
+        
         <div className="flex bg-gray-100 rounded-xl p-1 mb-6">
           <button
             type="button"
@@ -207,7 +205,7 @@ export default function Register() {
         </div>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-          {/* Shared fields */}
+         
           <div>
             <label className="block text-sm font-medium text-dark mb-1.5">Full Name</label>
             <input

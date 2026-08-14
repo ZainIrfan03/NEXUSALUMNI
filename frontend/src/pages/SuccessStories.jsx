@@ -5,16 +5,7 @@ import { getImageUrl } from "../utils/getImageUrl";
 import LoadingSpinner from "./dashboard/LoadingSpinner";
 import EmptyState from "./dashboard/EmptyState";
 
-/**
- * Success Stories — full page (Navbar/Footer come from PublicLayout, not here)
- * File: src/pages/SuccessStories.jsx
- *
- * Real-time: fetches from GET /api/stories (search/category/pagination)
- * and GET /api/stories/categories — both public, no login required.
- * The first result (page 1) is always the newest "featured" story
- * (backend sorts isFeatured first), so it's rendered in the big hero
- * slot; the rest fill the grid below.
- */
+
 
 const initialsOf = (name = "") =>
   name
@@ -38,13 +29,13 @@ export default function SuccessStoriesPage() {
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
 
-  // Debounce the search box so we're not firing a request per keystroke.
+ 
   useEffect(() => {
     const t = setTimeout(() => setSearch(searchInput.trim()), 400);
     return () => clearTimeout(t);
   }, [searchInput]);
 
-  // Category pills — fetched once, "All Categories" always available.
+  
   useEffect(() => {
     api
       .get("/stories/categories")
@@ -52,7 +43,7 @@ export default function SuccessStoriesPage() {
       .catch(() => setCategories(["All Categories"]));
   }, []);
 
-  // Reset to page 1 whenever the filter/search changes.
+
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
@@ -99,7 +90,7 @@ export default function SuccessStoriesPage() {
   return (
     <section className="w-full bg-background">
       <div className="mx-auto max-w-7xl px-6 py-16">
-        {/* Page title */}
+     
         <div className="text-center max-w-xl mx-auto mb-10">
           <h1 className="text-3xl font-bold text-dark mb-3">Success Stories</h1>
           <p className="text-gray-500">
@@ -108,7 +99,7 @@ export default function SuccessStoriesPage() {
           </p>
         </div>
 
-        {/* Search + category pills */}
+       
         <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-10">
           <div className="relative flex-1">
             <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
@@ -143,13 +134,13 @@ export default function SuccessStoriesPage() {
           <EmptyState message="No success stories match your search yet." />
         ) : (
           <>
-            {/* Row 1: hero story + one secondary story */}
+            
             <div className="grid lg:grid-cols-3 gap-6 mb-6">
               <HeroCard story={hero} />
               {secondary && <StoryCard story={secondary} />}
             </div>
 
-            {/* Remaining stories */}
+           
             {rest.length > 0 && (
               <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {rest.map((s) => (
@@ -158,7 +149,7 @@ export default function SuccessStoriesPage() {
               </div>
             )}
 
-            {/* Load more */}
+            
             {page < totalPages && (
               <div className="text-center mt-12">
                 <button
