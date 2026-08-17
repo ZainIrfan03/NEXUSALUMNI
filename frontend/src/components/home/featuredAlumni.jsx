@@ -2,8 +2,8 @@ import React, { useEffect, useState } from "react";
 import { ArrowRight } from "lucide-react";
 import api from "../../api/axios";
 import { getImageUrl as fileUrl } from "../../utils/getImageUrl";
-import LoadingSpinner from "../../pages/dashboard/LoadingSpinner";
-import EmptyState from "../../pages/dashboard/EmptyState";
+import LoadingSpinner from "../common/LoadingSpinner";
+import EmptyState from "../common/EmptyState";
 
 export default function FeaturedAlumni() {
   const [alumni, setAlumni] = useState([]);

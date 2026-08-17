@@ -7,7 +7,7 @@ import {
   useDeleteEducationMutation,
 } from "../../../store/api/studentProfileApi";
 import { getImageUrl as fileUrl } from "../../../utils/getImageUrl";
-import LoadingSpinner from "../LoadingSpinner";
+import LoadingSpinner from "../../../components/common/LoadingSpinner";
 import {
   Pencil,
   MapPin,

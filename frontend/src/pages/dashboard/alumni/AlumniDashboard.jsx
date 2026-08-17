@@ -7,25 +7,7 @@ import {
   useRejectMentorshipRequestMutation,
 } from "../../../store/api/alumniMentorshipApi";
 import { GraduationCap, Briefcase, Plus, FileEdit, Image, Link2, Loader2 } from "lucide-react";
-
-function StatCard({ label, value, note, icon: Icon }) {
-  return (
-    <div className="bg-white rounded-xl border border-gray-200 p-6 flex flex-col gap-3">
-      <div className="flex items-center justify-between">
-        <span className="text-xs font-semibold tracking-wide text-gray-500 uppercase">
-          {label}
-        </span>
-        <span className="w-8 h-8 rounded-full bg-blue-50 text-primary flex items-center justify-center">
-          <Icon size={16} />
-        </span>
-      </div>
-      <div className="flex items-baseline gap-2">
-        <span className="text-3xl font-bold text-gray-900">{value}</span>
-        {note && <span className="text-sm text-gray-400">{note}</span>}
-      </div>
-    </div>
-  );
-}
+import DashboardStatCard from "../../../components/common/DashboardStatCard";
 
 function MentorshipRequestCard({ request, onAccept, onDecline }) {
   const studentName = request.student?.fullName || "Unknown student";
@@ -133,8 +115,8 @@ export default function AlumniDashboard() {
       {/* Top row: stats + mentorship requests */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="flex flex-col gap-6">
-          <StatCard label="Students Mentored" value={studentsMentored} icon={GraduationCap} />
-          <StatCard label="Jobs Posted" value={jobsPosted} note="Total listings" icon={Briefcase} />
+          <DashboardStatCard label="Students Mentored" value={studentsMentored} icon={GraduationCap} />
+          <DashboardStatCard label="Jobs Posted" value={jobsPosted} note="Total listings" icon={Briefcase} />
         </div>
 
         <div className="lg:col-span-2 bg-white rounded-xl border border-gray-200 p-6">

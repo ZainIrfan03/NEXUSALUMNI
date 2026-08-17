@@ -6,11 +6,13 @@ import {
   useDeleteMyJobMutation,
   useUpdateApplicationStatusMutation,
 } from "../../../store/api/alumniJobsApi";
- import { PRAVATAR_BASE_URL, APPLICATION_STATUS } from "../../../consts/const";
+ import { APPLICATION_STATUS } from "../../../consts/const";
 import { getImageUrl as fileUrl } from "../../../utils/getImageUrl";
-import LoadingSpinner from "../LoadingSpinner";
-import EmptyState from "../EmptyState";
-import StatusBadge from "../StatusBadge";
+import LoadingSpinner from "../../../components/common/LoadingSpinner";
+import EmptyState from "../../../components/common/EmptyState";
+import StatusBadge from "../../../components/common/StatusBadge";
+import DashboardStatCard from "../../../components/common/DashboardStatCard";
+import UserAvatar from "../../../components/common/UserAvatar";
 
 import {
   Plus,
@@ -27,32 +29,18 @@ import {
 const PAGE_SIZE = 4;
 
 
-function StatCard({ icon: Icon, note, value, label }) {
-  return (
-    <div className="bg-white rounded-xl border border-gray-200 p-5 flex flex-col gap-2">
-      <div className="flex items-center justify-between">
-        <span className="w-9 h-9 rounded-lg bg-blue-50 text-primary flex items-center justify-center">
-          <Icon size={18} />
-        </span>
-        {note && <span className="text-sm font-medium text-primary">{note}</span>}
-      </div>
-      <span className="text-3xl font-bold text-gray-900">{value}</span>
-      <span className="text-sm text-gray-500">{label}</span>
-    </div>
-  );
-}
-
 function AvatarStack({ applicants = [], count }) {
   const shown = applicants.slice(0, 2);
   const extra = count - shown.length;
   return (
     <div className="flex items-center -space-x-2">
       {shown.map((applicant, index) => (
-        <img
+        <UserAvatar
           key={applicant._id || index}
-          src={fileUrl(applicant.avatarUrl) ||  `${PRAVATAR_BASE_URL}?u=${applicant._id || index}`}
-          alt=""
-          className="h-8 w-8 rounded-full object-cover border-2 border-white"
+          name={applicant.fullName || "Applicant"}
+          src={fileUrl(applicant.avatarUrl)}
+          className="h-8 w-8"
+          imageClassName="border-2 border-white text-[10px]"
         />
       ))}
       {extra > 0 && (
@@ -194,19 +182,21 @@ export default function AlumniJobs() {
 
       {/* Stats */}
       <div className="grid sm:grid-cols-3 gap-5 mb-8">
-        <StatCard
+        <DashboardStatCard
+          variant="jobs"
           icon={Briefcase}
           note={stats.newThisWeek ? `+${stats.newThisWeek} this week` : null}
           value={stats.totalPostings}
           label="Total Postings"
         />
-        <StatCard
+        <DashboardStatCard
+          variant="jobs"
           icon={Users}
           note={stats.unreadApplicants ? `${stats.unreadApplicants} unread` : null}
           value={stats.totalApplicants}
           label="Total Applicants"
         />
-        <StatCard icon={TrendingUp} value={`${stats.fillRate}%`} label="Fill Rate" />
+        <DashboardStatCard variant="jobs" icon={TrendingUp} value={`${stats.fillRate}%`} label="Fill Rate" />
       </div>
 
       {/* Postings table */}
@@ -408,10 +398,10 @@ export default function AlumniJobs() {
                       key={applicant.applicationId}
                       className="flex items-center gap-4 border border-gray-100 rounded-xl px-4 py-3"
                     >
-                      <img
-                        src={fileUrl(applicant.avatarUrl) ||  `${PRAVATAR_BASE_URL}?u=${applicant.studentId}`}
-                        alt={applicant.fullName}
-                        className="h-11 w-11 rounded-full object-cover shrink-0"
+                      <UserAvatar
+                        name={applicant.fullName}
+                        src={fileUrl(applicant.avatarUrl)}
+                        className="h-11 w-11"
                       />
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-semibold text-dark truncate">{applicant.fullName}</p>

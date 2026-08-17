@@ -33,6 +33,22 @@ export const messagesApi = baseApi.injectEndpoints({
       providesTags: [TAGS.CONVERSATIONS],
     }),
 
+    getUnreadMessageCount: builder.query({
+      query: () => "/messages/unread-count",
+      providesTags: [TAGS.UNREAD_MESSAGES],
+    }),
+
+    markConversationRead: builder.mutation({
+      query: (conversationId) => ({
+        url: `/messages/${conversationId}/read`,
+        method: "PATCH",
+      }),
+      invalidatesTags: (result, error, conversationId) => [
+        TAGS.UNREAD_MESSAGES,
+        { type: TAGS.MESSAGES, id: conversationId },
+      ],
+    }),
+
     getMessages: builder.query({
       query: (conversationId) => `/messages/${conversationId}`,
       providesTags: (result, error, conversationId) => [{ type: TAGS.MESSAGES, id: conversationId }],
@@ -63,6 +79,8 @@ export const messagesApi = baseApi.injectEndpoints({
 export const {
   useStartConversationMutation,
   useGetConversationsQuery,
+  useGetUnreadMessageCountQuery,
+  useMarkConversationReadMutation,
   useGetMessagesQuery,
   useSendFileMessageMutation,
   useDeleteConversationMutation,

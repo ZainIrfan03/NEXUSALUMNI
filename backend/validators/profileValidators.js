@@ -14,7 +14,6 @@ const updateProfileValidators = [
   body("interests.*").optional().isString().trim(),
   body("isPublic").optional().isBoolean().withMessage("isPublic must be true or false"),
   body("resumeUrl").optional({ values: "falsy" }).trim(),
-  body("avatarUrl").optional({ values: "falsy" }).trim(),
   body("openToNetworking").optional().isBoolean().withMessage("openToNetworking must be true or false"),
   // Alumni-only fields — harmless no-ops on the student route
   body("company").optional({ values: "falsy" }).trim().isLength({ max: 150 }),

@@ -5,6 +5,8 @@ const {
   getMessages,
   sendMessage,
   deleteConversation,
+  getUnreadMessageCount,
+  markConversationRead,
 } = require("../controllers/messageController");
 const { protect } = require("../middleware/authMiddleware");
 const { uploadChat } = require("../middleware/uploadMiddleware");
@@ -15,6 +17,7 @@ const validate = require("../middleware/validate");
 const router = express.Router();
 
 router.get("/conversations", protect, getMyConversations);
+router.get("/unread-count", protect, getUnreadMessageCount);
 router.post("/conversations", protect, startConversationValidators, validate, startConversation);
 router.delete(
   "/conversations/:conversationId",
@@ -22,6 +25,14 @@ router.delete(
   validateMongoIdParam("conversationId"),
   validate,
   deleteConversation
+);
+
+router.patch(
+  "/:conversationId/read",
+  protect,
+  validateMongoIdParam("conversationId"),
+  validate,
+  markConversationRead
 );
 
 router.get("/:conversationId", protect, validateMongoIdParam("conversationId"), validate, getMessages);

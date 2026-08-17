@@ -7,7 +7,7 @@ import {
 } from "../../../store/api/alumniMentorshipApi";
 import { useStartConversationMutation } from "../../../store/api/messagesApi";
 import { getImageUrl as fileUrl } from "../../../utils/getImageUrl";
-import LoadingSpinner from "../LoadingSpinner";
+import LoadingSpinner from "../../../components/common/LoadingSpinner";
 import { ClipboardList, Users, Send } from "lucide-react";
 
 // Files come back from the backend as relative paths (e.g. "/uploads/avatars/xyz.png"),

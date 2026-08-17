@@ -23,7 +23,7 @@ const getMyProfile = async (req, res) => {
 
 // @route  PUT /api/alumni/profile
 // @body   { fullName, location, headline, bio, skills, interests, isPublic,
-//           avatarUrl, company, jobTitle, openToMentorship }
+//           company, jobTitle, openToMentorship }
 // Updates fields split across User (fullName) and Alumni (everything else).
 const updateMyProfile = async (req, res) => {
   try {
@@ -35,7 +35,6 @@ const updateMyProfile = async (req, res) => {
       skills,
       interests,
       isPublic,
-      avatarUrl,
       company,
       jobTitle,
       openToMentorship,
@@ -55,7 +54,6 @@ const updateMyProfile = async (req, res) => {
         skills,
         interests,
         isPublic,
-        avatarUrl,
         company,
         jobTitle,
         openToMentorship,

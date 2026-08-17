@@ -7,7 +7,7 @@ import {
 } from "../../../store/api/studentMentorshipApi";
 import { getImageUrl as fileUrl } from "../../../utils/getImageUrl";
 import { MENTORSHIP_STATUS } from "../../../consts/const";
-import LoadingSpinner from "../LoadingSpinner";
+import LoadingSpinner from "../../../components/common/LoadingSpinner";
 import { ArrowLeft, MapPin, Briefcase, GraduationCap, Send } from "lucide-react";
 
 // Files come back from the backend as relative paths (e.g. "/uploads/avatars/xyz.png"),

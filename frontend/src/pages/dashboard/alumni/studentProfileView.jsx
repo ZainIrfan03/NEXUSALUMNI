@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useGetStudentByIdQuery } from "../../../store/api/alumniDirectoryApi";
 import { useStartConversationMutation } from "../../../store/api/messagesApi";
 import { getImageUrl as fileUrl } from "../../../utils/getImageUrl";
-import LoadingSpinner from "../LoadingSpinner";
+import LoadingSpinner from "../../../components/common/LoadingSpinner";
 import {
   ArrowLeft,
   MapPin,

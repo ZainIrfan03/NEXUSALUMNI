@@ -3,7 +3,11 @@ import { Outlet, NavLink, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import api from "../api/axios";
 import { getImageUrl as fileUrl } from "../utils/getImageUrl";
-import {SOCKET_URL, ROLES} from "../consts/const";
+import { ROLES, SOCKET_EVENTS } from "../consts/const";
+import { useGetUnreadMessageCountQuery } from "../store/api/messagesApi";
+import { useGetMyProfileQuery } from "../store/api/studentProfileApi";
+import { useGetMyAlumniProfileQuery } from "../store/api/alumniProfileApi";
+import UserAvatar from "../components/common/UserAvatar";
 
 
 import {
@@ -24,7 +28,7 @@ import {
   X,
 } from "lucide-react";
 import { logout } from "../store/slice/authSlice";
-import { disconnectSocket } from "../utils/socket";
+import { connectSocket, disconnectSocket } from "../utils/socket";
 
 /**
  * DashboardLayout — dark sidebar + light topbar (search, notifications, avatar).
@@ -67,47 +71,48 @@ const linksByRole = {
 // Add ROLES.ALUMNI here once /dashboard/alumni/settings actually exists.
 const rolesWithSettings = [ROLES.ADMIN];
 
-// Only student/alumni currently have an avatarUrl on their profile model.
-// Faculty/admin fall back to the initials avatar.
-const profileEndpointByRole = {
-  [ROLES.STUDENT]: "/student/profile",
-  [ROLES.ALUMNI]: "/alumni/profile",
-};
-
 export default function DashboardLayout() {
   const { user } = useSelector((state) => state.auth);
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [avatarUrl, setAvatarUrl] = useState("");
   const menuRef = useRef(null);
 
   const links = linksByRole[user?.role] || [];
   const showSettings = rolesWithSettings.includes(user?.role);
+  const supportsMessages = [ROLES.STUDENT, ROLES.ALUMNI].includes(user?.role);
+  const { data: unreadData, refetch: refetchUnreadMessages } = useGetUnreadMessageCountQuery(
+    undefined,
+    { skip: !supportsMessages }
+  );
+  const unreadMessageCount = unreadData?.count || 0;
+  const { data: studentProfile } = useGetMyProfileQuery(undefined, {
+    skip: user?.role !== ROLES.STUDENT,
+  });
+  const { data: alumniProfile } = useGetMyAlumniProfileQuery(undefined, {
+    skip: user?.role !== ROLES.ALUMNI,
+  });
+  const activeProfile = user?.role === ROLES.STUDENT ? studentProfile : alumniProfile;
+  const displayName = activeProfile?.user?.fullName || user?.fullName;
+  const avatarUrl = activeProfile?.avatarUrl || "";
+
+  useEffect(() => {
+    if (!supportsMessages) return undefined;
+
+    const socket = connectSocket();
+    const handleIncomingMessage = () => refetchUnreadMessages();
+    socket.on(SOCKET_EVENTS.RECEIVE_MESSAGE, handleIncomingMessage);
+
+    return () => {
+      socket.off(SOCKET_EVENTS.RECEIVE_MESSAGE, handleIncomingMessage);
+    };
+  }, [supportsMessages, refetchUnreadMessages]);
 
   // Pull the real avatar from the role's profile endpoint (User model doesn't
   // store avatarUrl — it lives on Student/Alumni). Falls back to initials
   // if the role has no profile endpoint yet or the request fails.
-  useEffect(() => {
-    const endpoint = profileEndpointByRole[user?.role];
-    if (!endpoint) return;
-
-    let cancelled = false;
-    api
-      .get(endpoint)
-      .then(({ data }) => {
-        if (!cancelled) setAvatarUrl(data.avatarUrl || "");
-      })
-      .catch(() => {
         // Silent fail is fine here — initials avatar covers it
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [user?.role]);
-
   const handleLogout = () => {
     // Best-effort: clears the httpOnly cookie server-side. Local logout still
     // proceeds even if this fails (e.g. network hiccup) — the user shouldn't
@@ -182,7 +187,7 @@ export default function DashboardLayout() {
   return (
     <div className="flex min-h-screen bg-background">
       {/* Desktop sidebar */}
-      <aside className="hidden md:flex md:flex-col w-64 bg-dark p-5">
+      <aside className="hidden md:flex md:flex-col md:sticky md:top-0 md:h-screen md:overflow-y-auto w-64 bg-dark p-5">
         <SidebarContent />
       </aside>
 
@@ -219,9 +224,22 @@ export default function DashboardLayout() {
           </div>
 
           <div className="flex items-center gap-5 ml-auto">
-            <button className="relative text-gray-500 hover:text-dark transition-colors">
+            <button
+              type="button"
+              onClick={() => supportsMessages && navigate(`/dashboard/${user.role}/messages`)}
+              className="relative text-gray-500 hover:text-dark transition-colors"
+              aria-label={
+                unreadMessageCount
+                  ? `${unreadMessageCount} unread message${unreadMessageCount === 1 ? "" : "s"}`
+                  : "No unread messages"
+              }
+            >
               <Bell size={20} />
-              <span className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-red-500" />
+              {unreadMessageCount > 0 && (
+                <span className="absolute -top-2 -right-2 min-w-4 h-4 px-1 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center">
+                  {unreadMessageCount > 99 ? "99+" : unreadMessageCount}
+                </span>
+              )}
             </button>
 
             <div className="hidden sm:flex items-center gap-3 relative" ref={menuRef}>
@@ -231,21 +249,16 @@ export default function DashboardLayout() {
               >
                 <div className="text-right">
                   <p className="text-sm font-semibold text-dark leading-tight">
-                    {user?.fullName}
+                    {displayName}
                   </p>
                   <p className="text-xs text-gray-400 capitalize">{user?.role}</p>
                 </div>
-                {fileUrl(avatarUrl) ? (
-                  <img
-                    src={fileUrl(avatarUrl)}
-                    alt={user?.fullName}
-                    className="h-10 w-10 rounded-full object-cover"
-                  />
-                ) : (
-                  <div className="h-10 w-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-400 text-sm font-semibold">
-                    {user?.fullName ? user.fullName.charAt(0).toUpperCase() : "?"}
-                  </div>
-                )}
+                <UserAvatar
+                  name={displayName}
+                  src={fileUrl(avatarUrl)}
+                  className="h-10 w-10"
+                  imageClassName="text-sm"
+                />
               </button>
 
               {menuOpen && (

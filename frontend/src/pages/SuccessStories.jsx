@@ -2,8 +2,8 @@ import React, { useEffect, useState } from "react";
 import { ArrowUpRight, ChevronDown, Search } from "lucide-react";
 import api from "../api/axios";
 import { getImageUrl } from "../utils/getImageUrl";
-import LoadingSpinner from "./dashboard/LoadingSpinner";
-import EmptyState from "./dashboard/EmptyState";
+import LoadingSpinner from "../components/common/LoadingSpinner";
+import EmptyState from "../components/common/EmptyState";
 
 
 

@@ -2,17 +2,97 @@ const fs = require("fs");
 const Conversation = require("../models/Conversation");
 const Message = require("../models/Message");
 const MentorshipRequest = require("../models/MentorshipRequest");
+const Student = require("../models/Student");
+const Alumni = require("../models/Alumni");
 const { HTTP_STATUS } = require("../utils/constants");
+
+// @route GET /api/messages/unread-count
+// Counts unseen messages sent by other users across this user's conversations.
+const getUnreadMessageCount = async (req, res) => {
+  try {
+    const conversationIds = await Conversation.find({ participants: req.user.id }).distinct("_id");
+    const count = await Message.countDocuments({
+      conversation: { $in: conversationIds },
+      sender: { $ne: req.user.id },
+      seen: false,
+    });
+
+    res.json({ count });
+  } catch (error) {
+    res.status(HTTP_STATUS.SERVER_ERROR).json({ message: "Server error", error: error.message });
+  }
+};
+
+// @route PATCH /api/messages/:conversationId/read
+// Marks only messages received by the current user as read.
+const markConversationRead = async (req, res) => {
+  try {
+    const { conversationId } = req.params;
+    const conversation = await Conversation.exists({
+      _id: conversationId,
+      participants: req.user.id,
+    });
+
+    if (!conversation) {
+      return res.status(HTTP_STATUS.FORBIDDEN).json({
+        message: "Not authorized to view this conversation",
+      });
+    }
+
+    await Message.updateMany(
+      {
+        conversation: conversationId,
+        sender: { $ne: req.user.id },
+        seen: false,
+      },
+      { $set: { seen: true } }
+    );
+
+    res.json({ message: "Conversation marked as read" });
+  } catch (error) {
+    res.status(HTTP_STATUS.SERVER_ERROR).json({ message: "Server error", error: error.message });
+  }
+};
 
 // @route  GET /api/messages/conversations
 // List of the logged-in user's conversations (for the Inbox list).
 const getMyConversations = async (req, res) => {
   try {
     const conversations = await Conversation.find({ participants: req.user.id })
-      .populate("participants", "fullName email role profileImage")
+      .populate("participants", "fullName email role")
       .sort({ lastMessageAt: -1 });
 
-    res.json(conversations);
+    const participantIds = [
+      ...new Set(
+        conversations.flatMap((conversation) =>
+          conversation.participants
+            .filter(Boolean)
+            .map((participant) => participant._id.toString())
+        )
+      ),
+    ];
+
+    const [studentProfiles, alumniProfiles] = await Promise.all([
+      Student.find({ user: { $in: participantIds } }).select("user avatarUrl"),
+      Alumni.find({ user: { $in: participantIds } }).select("user avatarUrl"),
+    ]);
+
+    const avatarByUserId = new Map();
+    [...studentProfiles, ...alumniProfiles].forEach((profile) => {
+      if (profile.avatarUrl) {
+        avatarByUserId.set(profile.user.toString(), profile.avatarUrl);
+      }
+    });
+
+    const response = conversations.map((conversation) => ({
+      ...conversation.toObject(),
+      participants: conversation.participants.filter(Boolean).map((participant) => ({
+          ...participant.toObject(),
+          avatarUrl: avatarByUserId.get(participant._id.toString()) || null,
+        })),
+    }));
+
+    res.json(response);
   } catch (error) {
     res.status(HTTP_STATUS.SERVER_ERROR).json({ message: "Server error", error: error.message });
   }
@@ -184,6 +264,8 @@ const sendMessage = async (req, res) => {
 };
 
 module.exports = {
+  getUnreadMessageCount,
+  markConversationRead,
   getMyConversations,
   startConversation,
   deleteConversation,

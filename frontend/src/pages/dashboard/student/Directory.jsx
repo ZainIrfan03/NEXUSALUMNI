@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useGetAlumniDirectoryQuery } from "../../../store/api/studentDirectoryApi";
 import { ChevronDown, LayoutGrid, List, ChevronLeft, ChevronRight } from "lucide-react";
-import LoadingSpinner from "../LoadingSpinner";
+import LoadingSpinner from "../../../components/common/LoadingSpinner";
 
 /**
  * Alumni Directory — file: src/pages/dashboard/student/Directory.jsx

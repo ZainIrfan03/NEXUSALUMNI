@@ -32,11 +32,12 @@ const avatarStorage = multer.diskStorage({
 
 const avatarFileFilter = (req, file, cb) => {
   const allowed = [".png", ".jpg", ".jpeg", ".webp"];
+  const allowedMimeTypes = ["image/png", "image/jpeg", "image/webp"];
   const ext = path.extname(file.originalname).toLowerCase();
-  if (allowed.includes(ext)) {
+  if (allowed.includes(ext) && allowedMimeTypes.includes(file.mimetype)) {
     cb(null, true);
   } else {
-    cb(new Error("Only PNG, JPG, or WEBP images are allowed."), false);
+    cb(new Error("Only real PNG, JPG, or WEBP image uploads are allowed."), false);
   }
 };
 

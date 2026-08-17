@@ -3,7 +3,7 @@ import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { useGetDashboardStatsQuery, useGetRecentActivityQuery } from "../../../store/api/studentDashboardApi";
 import { useGetRecommendedMentorsQuery } from "../../../store/api/studentMentorshipApi";
- import { PRAVATAR_BASE_URL } from "../../../consts/const";
+import UserAvatar from "../../../components/common/UserAvatar";
 import {
   Users,
   Users2,
@@ -52,7 +52,7 @@ export default function StudentDashboard() {
   const mentors = (recommendedMentors ?? []).slice(0, 2).map((mentor) => ({
     name: mentor.name,
     role: [mentor.role, mentor.company].filter(Boolean).join(", "),
-    img: mentor.img || `${PRAVATAR_BASE_URL}?u=${mentor.alumniDocId}`,
+    img: mentor.img,
   }));
 
   const stats = [
@@ -203,7 +203,7 @@ export default function StudentDashboard() {
               mentors.map((mentor) => (
                 <div key={mentor.name} className="border border-gray-100 rounded-xl p-4">
                   <div className="flex items-center gap-3 mb-3">
-                    <img src={mentor.img} alt={mentor.name} className="h-11 w-11 rounded-full object-cover" />
+                    <UserAvatar name={mentor.name} src={mentor.img} className="h-11 w-11" />
                     <div>
                       <p className="text-sm font-semibold text-dark">{mentor.name}</p>
                       <p className="text-xs text-gray-500">{mentor.role}</p>

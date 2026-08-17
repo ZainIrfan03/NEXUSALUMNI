@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Compass, Clock3, GraduationCap, MessageCircle } from "lucide-react";
-import LoadingSpinner from "../LoadingSpinner";
-import EmptyState from "../EmptyState";
-import StatusBadge from "../StatusBadge";
+import LoadingSpinner from "../../../components/common/LoadingSpinner";
+import EmptyState from "../../../components/common/EmptyState";
+import StatusBadge from "../../../components/common/StatusBadge";
 import {
   useGetRecommendedMentorsQuery,
   useGetMyRequestsQuery,

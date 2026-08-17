@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import LoadingSpinner from "../LoadingSpinner";
-import EmptyState from "../EmptyState";
+import LoadingSpinner from "../../../components/common/LoadingSpinner";
+import EmptyState from "../../../components/common/EmptyState";
 import {
   useGetJobsQuery,
   useGetMyApplicationStatsQuery,

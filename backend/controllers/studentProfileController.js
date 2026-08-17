@@ -24,7 +24,7 @@ const getMyProfile = async (req, res) => {
 };
 
 // @route  PUT /api/student/profile
-// @body   { fullName, location, headline, bio, skills, interests, isPublic, resumeUrl, avatarUrl, openToNetworking }
+// @body   { fullName, location, headline, bio, skills, interests, isPublic, resumeUrl, openToNetworking }
 // Updates fields split across User (fullName) and Student (everything else).
 const updateMyProfile = async (req, res) => {
   try {
@@ -37,7 +37,6 @@ const updateMyProfile = async (req, res) => {
       interests,
       isPublic,
       resumeUrl,
-      avatarUrl,
       openToNetworking,
     } = req.body;
 
@@ -48,7 +47,7 @@ const updateMyProfile = async (req, res) => {
 
     const student = await Student.findOneAndUpdate(
       { user: req.user.id },
-      { location, headline, bio, skills, interests, isPublic, resumeUrl, avatarUrl, openToNetworking },
+      { location, headline, bio, skills, interests, isPublic, resumeUrl, openToNetworking },
       { new: true, runValidators: true }
     ).populate("user", "fullName email");
 
