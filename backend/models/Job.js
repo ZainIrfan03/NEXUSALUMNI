@@ -1,5 +1,5 @@
 const mongoose = require("mongoose");
-const { JOB_TYPE, JOB_STATUS } = require("../utils/constants");
+const { JOB_TYPE, JOB_STATUS, EXPERIENCE_LEVEL } = require("../utils/constants");
 
 /**
  * Job — posted by an Alumni, browsed/applied to by Students.
@@ -27,6 +27,13 @@ const jobSchema = new mongoose.Schema(
 
     payRange: { type: String },        // e.g. "$35 - $45 / hr"
     description: { type: String },
+    requirements: [{ type: String, trim: true }],
+    experienceLevel: {
+      type: String,
+      enum: Object.values(EXPERIENCE_LEVEL),
+      default: EXPERIENCE_LEVEL.ENTRY,
+    },
+    deadline: { type: Date },
 
     postedBy: {
       type: mongoose.Schema.Types.ObjectId,
@@ -38,5 +45,8 @@ const jobSchema = new mongoose.Schema(
   },
   { timestamps: true } // createdAt used to show the "NEW" badge (e.g. < 3 days old)
 );
+
+jobSchema.index({ status: 1, type: 1, createdAt: -1 });
+jobSchema.index({ title: "text", company: "text", description: "text" });
 
 module.exports = mongoose.model("Job", jobSchema);

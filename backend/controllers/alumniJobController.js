@@ -1,7 +1,13 @@
 const Job = require("../models/Job");
 const Application = require("../models/Application");
 const Student = require("../models/Student");
-const { HTTP_STATUS, JOB_STATUS, APPLICATION_STATUS } = require("../utils/constants");
+const {
+  HTTP_STATUS,
+  JOB_STATUS,
+  APPLICATION_STATUS,
+  INTERVIEW_RESPONSE,
+  SOCKET_EVENTS,
+} = require("../utils/constants");
 
 // Builds the { applicants: [{avatarUrl}], applicantCount } shown as the
 // avatar-stack + count in the postings table.
@@ -124,7 +130,7 @@ const getJobApplicants = async (req, res) => {
     const studentIds = applications.map((a) => a.student._id);
     const profiles = await Student.find(
       { user: { $in: studentIds } },
-      "user avatarUrl department session"
+      "user avatarUrl department session resumeUrl"
     );
     const profileMap = new Map(profiles.map((p) => [String(p.user), p]));
 
@@ -133,12 +139,15 @@ const getJobApplicants = async (req, res) => {
       return {
         applicationId: a._id,
         studentId: a.student._id,
+        profileId: profile?._id,
         fullName: a.student.fullName,
         email: a.student.email,
         avatarUrl: profile?.avatarUrl || null,
         department: profile?.department,
         session: profile?.session,
+        resumeUrl: a.resumeUrl || profile?.resumeUrl || null,
         status: a.status,
+        interview: a.interview || null,
         appliedAt: a.createdAt,
       };
     });
@@ -159,6 +168,11 @@ const updateApplicationStatus = async (req, res) => {
     const { status } = req.body;
     if (!Object.values(APPLICATION_STATUS).includes(status)) {
       return res.status(HTTP_STATUS.BAD_REQUEST).json({ message: "Invalid status" });
+    }
+    if (status === APPLICATION_STATUS.INTERVIEW) {
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({
+        message: "Schedule the interview date and meeting link first",
+      });
     }
 
     const application = await Application.findById(req.params.applicationId).populate("job");
@@ -181,9 +195,50 @@ const updateApplicationStatus = async (req, res) => {
   }
 };
 
+// @route PATCH /api/alumni/jobs/applications/:applicationId/interview
+const scheduleInterview = async (req, res) => {
+  try {
+    const application = await Application.findById(req.params.applicationId).populate("job");
+    if (!application) {
+      return res.status(HTTP_STATUS.NOT_FOUND).json({ message: "Application not found" });
+    }
+    if (String(application.job.postedBy) !== req.user.id) {
+      return res.status(HTTP_STATUS.FORBIDDEN).json({ message: "Not authorized to schedule this interview" });
+    }
+
+    application.status = APPLICATION_STATUS.INTERVIEW;
+    application.interview = {
+      scheduledAt: new Date(req.body.scheduledAt),
+      timezone: req.body.timezone,
+      durationMinutes: req.body.durationMinutes,
+      meetingUrl: req.body.meetingUrl,
+      instructions: req.body.instructions,
+      response: INTERVIEW_RESPONSE.PENDING,
+    };
+    await application.save();
+
+    const payload = {
+      applicationId: application._id,
+      jobId: application.job._id,
+      jobTitle: application.job.title,
+      status: application.status,
+      interview: application.interview,
+    };
+    req.app
+      .get("io")
+      ?.to(String(application.student))
+      .emit(SOCKET_EVENTS.INTERVIEW_SCHEDULED, payload);
+
+    res.json(payload);
+  } catch (error) {
+    res.status(HTTP_STATUS.SERVER_ERROR).json({ message: "Server error", error: error.message });
+  }
+};
+
 module.exports = {
   getMyJobs,
   deleteMyJob,
   getJobApplicants,
   updateApplicationStatus,
+  scheduleInterview,
 };

@@ -9,6 +9,8 @@ export const SOCKET_EVENTS = {
   RECEIVE_MESSAGE: "receiveMessage",
   MESSAGE_ERROR: "messageError",
   FILE_MESSAGE_SENT: "fileMessageSent",
+  INTERVIEW_SCHEDULED: "interviewScheduled",
+  INTERVIEW_RESPONSE_UPDATED: "interviewResponseUpdated",
 };
 
 // Must exactly match BACKEND/models/User.js -> role enum
@@ -77,6 +79,12 @@ export const JOB_TYPES = {
   REMOTE: "Remote",
 };
 
+export const EXPERIENCE_LEVELS = {
+  ENTRY: "Entry Level",
+  MID: "Mid Level",
+  SENIOR: "Senior Level",
+};
+
 export const UI_LIMITS = {
   FEATURED_ALUMNI: 4,
   SUCCESS_STORIES_PAGE_SIZE: 6,
@@ -127,6 +135,12 @@ export const TAGS = {
   CONVERSATIONS: "Conversations",
   MESSAGES: "Messages",
   UNREAD_MESSAGES: "UnreadMessages",
+};
+
+export const INTERVIEW_RESPONSE = {
+  PENDING: "pending",
+  CONFIRMED: "confirmed",
+  RESCHEDULE_REQUESTED: "reschedule_requested",
 };
 
 // Register.jsx form validation — was duplicated (email regex x2, min

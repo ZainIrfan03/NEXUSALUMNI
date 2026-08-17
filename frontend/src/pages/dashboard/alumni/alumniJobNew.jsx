@@ -1,8 +1,8 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useCreateJobMutation } from "../../../store/api/alumniJobsApi";
 import { Briefcase, ArrowLeft, Loader2 } from "lucide-react";
-import { JOB_TYPES, ROUTES } from "../../../consts/appConstants";
+import { EXPERIENCE_LEVELS, JOB_TYPES, ROUTES } from "../../../consts/appConstants";
 
 const TYPE_OPTIONS = [
   JOB_TYPES.FULL_TIME,
@@ -28,6 +28,9 @@ export default function AlumniJobNew() {
     type: JOB_TYPES.FULL_TIME,
     payRange: "",
     description: "",
+    requirements: "",
+    experienceLevel: EXPERIENCE_LEVELS.ENTRY,
+    deadline: "",
     ...location.state?.prefill,
   });
 
@@ -49,7 +52,13 @@ export default function AlumniJobNew() {
     }
 
     try {
-      await createJob(form).unwrap();
+      await createJob({
+        ...form,
+        requirements: form.requirements
+          .split("\n")
+          .map((requirement) => requirement.trim())
+          .filter(Boolean),
+      }).unwrap();
       navigate(ROUTES.ALUMNI.JOBS);
     } catch (err) {
       setError(err.data?.message || "Could not post this job. Please try again.");
@@ -185,6 +194,35 @@ export default function AlumniJobNew() {
               className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-primary transition-colors"
             />
           </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">
+              Experience Level
+            </label>
+            <select
+              name="experienceLevel"
+              value={form.experienceLevel}
+              onChange={handleChange}
+              className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-primary"
+            >
+              {Object.values(EXPERIENCE_LEVELS).map((level) => (
+                <option key={level} value={level}>{level}</option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">
+              Application Deadline
+            </label>
+            <input
+              type="date"
+              name="deadline"
+              value={form.deadline}
+              onChange={handleChange}
+              className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-primary"
+            />
+          </div>
         </div>
 
         <div>
@@ -198,6 +236,20 @@ export default function AlumniJobNew() {
             rows={6}
             placeholder="Describe the role, responsibilities, and requirements..."
             className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-primary transition-colors resize-none"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1.5">
+            Requirements <span className="text-xs font-normal text-gray-400">(one per line)</span>
+          </label>
+          <textarea
+            name="requirements"
+            value={form.requirements}
+            onChange={handleChange}
+            rows={4}
+            placeholder={"JavaScript and React\nStrong communication skills\nCurrently enrolled or recently graduated"}
+            className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-primary resize-none"
           />
         </div>
 

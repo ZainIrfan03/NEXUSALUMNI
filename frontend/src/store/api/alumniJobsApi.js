@@ -65,6 +65,19 @@ export const alumniJobsApi = baseApi.injectEndpoints({
       ],
     }),
 
+    scheduleInterview: builder.mutation({
+      query: ({ applicationId, ...interview }) => ({
+        url: `/alumni/jobs/applications/${applicationId}/interview`,
+        method: "PATCH",
+        body: interview,
+      }),
+      invalidatesTags: (result, error, { jobId }) => [
+        { type: TAGS.JOB_APPLICANTS, id: jobId },
+        { type: TAGS.JOBS, id: jobId },
+        { type: TAGS.JOBS, id: "ALUMNI_LIST" },
+      ],
+    }),
+
     createJob: builder.mutation({
       query: (jobData) => ({
         url: "/jobs",
@@ -84,5 +97,6 @@ export const {
   useGetJobApplicantsQuery,
   useDeleteMyJobMutation,
   useUpdateApplicationStatusMutation,
+  useScheduleInterviewMutation,
   useCreateJobMutation,
 } = alumniJobsApi;

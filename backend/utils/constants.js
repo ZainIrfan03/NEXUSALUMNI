@@ -20,6 +20,8 @@ const SOCKET_EVENTS = {
   RECEIVE_MESSAGE: "receiveMessage",
   MESSAGE_ERROR: "messageError",
   FILE_MESSAGE_SENT: "fileMessageSent",
+  INTERVIEW_SCHEDULED: "interviewScheduled",
+  INTERVIEW_RESPONSE_UPDATED: "interviewResponseUpdated",
 };
 
 const AUTH_COOKIE_NAME = "token";
@@ -57,6 +59,7 @@ const APPLICATION_STATUS = {
   REJECTED: "rejected",
 };
 
+
 // Job posting fields — models/Job.js -> type / status enums
 const JOB_TYPE = {
   FULL_TIME: "Full-time",
@@ -69,6 +72,18 @@ const JOB_STATUS = {
   ACTIVE: "Active",
   CLOSED: "Closed",
   DRAFT: "Draft",
+};
+
+const INTERVIEW_RESPONSE = {
+  PENDING: "pending",
+  CONFIRMED: "confirmed",
+  RESCHEDULE_REQUESTED: "reschedule_requested",
+};
+
+const EXPERIENCE_LEVEL = {
+  ENTRY: "Entry Level",
+  MID: "Mid Level",
+  SENIOR: "Senior Level",
 };
 
 // File upload size limits — middleware/uploadMiddleware.js
@@ -107,8 +122,10 @@ module.exports = {
   ROLES,
   MENTORSHIP_STATUS,
   APPLICATION_STATUS,
+  INTERVIEW_RESPONSE,
   JOB_TYPE,
   JOB_STATUS,
+  EXPERIENCE_LEVEL,
   MAX_AVATAR_SIZE,
   MAX_RESUME_SIZE,
   MAX_CHAT_FILE_SIZE,

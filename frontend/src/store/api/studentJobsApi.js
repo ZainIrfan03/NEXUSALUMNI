@@ -20,17 +20,17 @@ import { TAGS } from "../../consts/appConstants";
 export const studentJobsApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     getJobs: builder.query({
-      query: (type) => ({ url: "/jobs", params: { type } }),
+      query: (params) => ({ url: "/jobs", params }),
       providesTags: (result) =>
-        result
+        result?.jobs
           ? [
-              ...result.map((job) => ({ type: TAGS.JOBS, id: job._id })),
+              ...result.jobs.map((job) => ({ type: TAGS.JOBS, id: job._id })),
               { type: TAGS.JOBS, id: "LIST" },
             ]
           : [{ type: TAGS.JOBS, id: "LIST" }],
     }),
 
-    getMyApplicationStats: builder.query({
+    getMyApplications: builder.query({
       query: () => "/jobs/my-applications",
       providesTags: [TAGS.MY_APPLICATIONS],
     }),
@@ -55,12 +55,22 @@ export const studentJobsApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: (result, error, jobId) => [{ type: TAGS.JOBS, id: jobId }],
     }),
+
+    respondToInterview: builder.mutation({
+      query: ({ applicationId, response }) => ({
+        url: `/jobs/applications/${applicationId}/interview-response`,
+        method: "PATCH",
+        body: { response },
+      }),
+      invalidatesTags: [TAGS.MY_APPLICATIONS],
+    }),
   }),
 });
 
 export const {
   useGetJobsQuery,
-  useGetMyApplicationStatsQuery,
+  useGetMyApplicationsQuery,
   useApplyToJobMutation,
   useToggleSaveJobMutation,
+  useRespondToInterviewMutation,
 } = studentJobsApi;

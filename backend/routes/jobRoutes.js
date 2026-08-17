@@ -4,17 +4,18 @@ const {
   createJob,
   applyToJob,
   toggleSaveJob,
-  getMyApplicationStats,
+  getMyApplications,
+  respondToInterview,
 } = require("../controllers/jobController");
 const { protect, authorize } = require("../middleware/authMiddleware");
-const { createJobValidators } = require("../validators/jobValidators");
+const { createJobValidators, interviewResponseValidators } = require("../validators/jobValidators");
 const { validateMongoIdParam } = require("../validators/paramValidators");
 const validate = require("../middleware/validate");
 
 const router = express.Router();
 
 router.get("/", protect, getJobs);
-router.get("/my-applications", protect, authorize("student"), getMyApplicationStats);
+router.get("/my-applications", protect, authorize("student"), getMyApplications);
 router.post("/", protect, authorize("alumni"), createJobValidators, validate, createJob);
 router.post(
   "/:id/apply",
@@ -23,6 +24,15 @@ router.post(
   validateMongoIdParam("id"),
   validate,
   applyToJob
+);
+router.patch(
+  "/applications/:applicationId/interview-response",
+  protect,
+  authorize("student"),
+  validateMongoIdParam("applicationId"),
+  interviewResponseValidators,
+  validate,
+  respondToInterview
 );
 router.post(
   "/:id/save",

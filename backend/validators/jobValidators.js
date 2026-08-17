@@ -1,5 +1,10 @@
 const { body } = require("express-validator");
-const { JOB_TYPE, JOB_STATUS } = require("../utils/constants");
+const {
+  JOB_TYPE,
+  JOB_STATUS,
+  EXPERIENCE_LEVEL,
+  INTERVIEW_RESPONSE,
+} = require("../utils/constants");
 
 // @route POST /api/jobs — alumni creating a new posting
 const createJobValidators = [
@@ -9,6 +14,18 @@ const createJobValidators = [
   body("department").optional({ values: "falsy" }).trim(),
   body("payRange").optional({ values: "falsy" }).trim(),
   body("description").optional({ values: "falsy" }).trim(),
+  body("requirements").optional().isArray({ max: 20 }).withMessage("Requirements must be a list"),
+  body("requirements.*").optional().trim().notEmpty().withMessage("Requirements cannot be empty"),
+  body("experienceLevel")
+    .optional({ values: "falsy" })
+    .isIn(Object.values(EXPERIENCE_LEVEL))
+    .withMessage("Invalid experience level"),
+  body("deadline")
+    .optional({ values: "falsy" })
+    .isISO8601()
+    .withMessage("Deadline must be a valid date")
+    .custom((value) => new Date(value) > new Date())
+    .withMessage("Deadline must be in the future"),
 
   body("type")
     .notEmpty()
@@ -22,4 +39,10 @@ const createJobValidators = [
     .withMessage(`Status must be one of: ${Object.values(JOB_STATUS).join(", ")}`),
 ];
 
-module.exports = { createJobValidators };
+const interviewResponseValidators = [
+  body("response")
+    .isIn([INTERVIEW_RESPONSE.CONFIRMED, INTERVIEW_RESPONSE.RESCHEDULE_REQUESTED])
+    .withMessage("Invalid interview response"),
+];
+
+module.exports = { createJobValidators, interviewResponseValidators };

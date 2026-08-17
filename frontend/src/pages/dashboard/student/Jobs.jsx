@@ -1,346 +1,489 @@
-import React, { useState } from "react";
+import { useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import LoadingSpinner from "../../../components/common/LoadingSpinner";
 import EmptyState from "../../../components/common/EmptyState";
+import StatusBadge from "../../../components/common/StatusBadge";
 import {
   useGetJobsQuery,
-  useGetMyApplicationStatsQuery,
+  useGetMyApplicationsQuery,
   useApplyToJobMutation,
   useToggleSaveJobMutation,
+  useRespondToInterviewMutation,
 } from "../../../store/api/studentJobsApi";
-import { JOB_TYPES, LOCAL_STORAGE_USER_KEY } from "../../../consts/appConstants";
-
 import {
-  SlidersHorizontal,
+  APPLICATION_STATUS,
+  EXPERIENCE_LEVELS,
+  INTERVIEW_RESPONSE,
+  JOB_TYPES,
+  ROUTES,
+  UI_LIMITS,
+} from "../../../consts/appConstants";
+import {
   Bookmark,
-  DollarSign,
   Briefcase,
-  Send,
-  Eye,
-  MessageSquare,
-  UploadCloud,
-  HelpCircle,
-  ChevronDown,
-  X,
-  MapPin,
   CalendarDays,
   CheckCircle2,
+  ChevronLeft,
+  ChevronRight,
+  DollarSign,
+  Eye,
+  FileText,
+  MapPin,
+  MessageSquare,
+  Search,
+  Send,
+  SlidersHorizontal,
+  UploadCloud,
+  Video,
+  X,
 } from "lucide-react";
 
-/**
- * Jobs page — file: src/pages/dashboard/student/Jobs.jsx
- * Now connected to:
- *   GET  /api/jobs?type=          (each job now also carries hasApplied)
- *   GET  /api/jobs/my-applications
- *   POST /api/jobs/:id/apply
- *   POST /api/jobs/:id/save
- *
- * "Apply Now" opens a job-details modal first; applying from there marks
- * the job "✓ Applied" everywhere without a page refresh. The application
- * then shows up on the alumni's side, where they can move it through
- * In Review / Interview / etc.
- */
-
-const tabs = [
-  "All Jobs",
-  JOB_TYPES.FULL_TIME,
-  JOB_TYPES.INTERNSHIP,
-  JOB_TYPES.PART_TIME,
-  JOB_TYPES.REMOTE,
-];
-
-const currentUserId = () => JSON.parse(localStorage.getItem(LOCAL_STORAGE_USER_KEY))?._id;
+const TYPE_TABS = ["All Jobs", ...Object.values(JOB_TYPES)];
+const DEPARTMENTS = ["Engineering", "Design", "Marketing", "Sales", "Operations", "Other"];
+const STATUS_TONES = {
+  [APPLICATION_STATUS.APPLIED]: "neutral",
+  [APPLICATION_STATUS.IN_REVIEW]: "warning",
+  [APPLICATION_STATUS.INTERVIEW]: "info",
+  [APPLICATION_STATUS.ACCEPTED]: "success",
+  [APPLICATION_STATUS.REJECTED]: "danger",
+};
+const STATUS_LABELS = {
+  [APPLICATION_STATUS.APPLIED]: "Applied",
+  [APPLICATION_STATUS.IN_REVIEW]: "In Review",
+  [APPLICATION_STATUS.INTERVIEW]: "Interview",
+  [APPLICATION_STATUS.ACCEPTED]: "Accepted",
+  [APPLICATION_STATUS.REJECTED]: "Rejected",
+};
 
 export default function Jobs() {
-  const [activeTab, setActiveTab] = useState("All Jobs");
-  const [actionError, setActionError] = useState("");
-  const [busyJobId, setBusyJobId] = useState(null);
+  const navigate = useNavigate();
+  const locationState = useLocation();
+  const [selectedView, setSelectedView] = useState("browse");
+  const view = locationState.state?.jobsView || selectedView;
+  const [activeType, setActiveType] = useState("All Jobs");
+  const [searchInput, setSearchInput] = useState("");
+  const [search, setSearch] = useState("");
+  const [location, setLocation] = useState("");
+  const [department, setDepartment] = useState("");
+  const [experienceLevel, setExperienceLevel] = useState("");
+  const [sort, setSort] = useState("newest");
+  const [showFilters, setShowFilters] = useState(false);
+  const [page, setPage] = useState(1);
   const [selectedJobId, setSelectedJobId] = useState(null);
+  const [applyingJobId, setApplyingJobId] = useState(null);
+  const [savingJobId, setSavingJobId] = useState(null);
+  const [actionError, setActionError] = useState("");
+  const [resumeRequired, setResumeRequired] = useState(false);
+  const [renderTime] = useState(() => Date.now());
+
+  const queryParams = {
+    page,
+    pageSize: UI_LIMITS.JOBS_PAGE_SIZE,
+    type: activeType,
+    search: search || undefined,
+    location: location || undefined,
+    department: department || undefined,
+    experienceLevel: experienceLevel || undefined,
+    sort,
+    savedOnly: view === "saved" ? true : undefined,
+  };
 
   const {
-    data: jobs = [],
+    data: jobsData,
     isLoading: loadingJobs,
     error: jobsError,
-  } = useGetJobsQuery(activeTab);
-
-  const { data: tracking = { applied: 0, in_review: 0, interview: 0 } } =
-    useGetMyApplicationStatsQuery();
-
+  } = useGetJobsQuery(queryParams, { skip: view === "applications" });
+  const { data: applicationData, isLoading: loadingApplications } = useGetMyApplicationsQuery();
   const [applyToJob] = useApplyToJobMutation();
   const [toggleSaveJob] = useToggleSaveJobMutation();
+  const [respondToInterview] = useRespondToInterviewMutation();
+  const [respondingApplicationId, setRespondingApplicationId] = useState(null);
 
-  // Modal always shows the live job from the cache instead of a
-  // snapshot copy — once `applyToJob`/`toggleSaveJob` invalidate the
-  // "Jobs" tag and the list refetches, the open modal updates for free.
+  const jobs = jobsData?.jobs || [];
+  const applications = applicationData?.applications || [];
+  const stats = applicationData?.stats || {};
   const selectedJob = jobs.find((job) => job._id === selectedJobId) || null;
-
   const error = actionError || jobsError?.data?.message || (jobsError ? "Failed to load jobs" : "");
 
+  const resetPage = () => setPage(1);
+  const selectView = (nextView) => {
+    setSelectedView(nextView);
+    if (locationState.state?.jobsView) {
+      navigate(ROUTES.STUDENT.JOBS, { replace: true, state: {} });
+    }
+    setSelectedJobId(null);
+    resetPage();
+  };
+
+  const submitSearch = (event) => {
+    event.preventDefault();
+    setSearch(searchInput.trim());
+    resetPage();
+  };
+
+  const clearFilters = () => {
+    setSearchInput("");
+    setSearch("");
+    setLocation("");
+    setDepartment("");
+    setExperienceLevel("");
+    setSort("newest");
+    setActiveType("All Jobs");
+    resetPage();
+  };
+
   const handleApply = async (jobId) => {
-    setBusyJobId(jobId);
+    setApplyingJobId(jobId);
     setActionError("");
+    setResumeRequired(false);
     try {
       await applyToJob(jobId).unwrap();
     } catch (err) {
-      // A 400 here almost always means "already applied" — invalidatesTags
-      // still refetches and shows the correct state either way, so this
-      // is just for any other unexpected failure.
-      if (err?.status !== 400) {
-        setActionError(err?.data?.message || "Could not apply");
-      }
+      setResumeRequired(err?.data?.code === "RESUME_REQUIRED");
+      setActionError(err?.data?.message || "Could not submit your application");
     } finally {
-      setBusyJobId(null);
+      setApplyingJobId(null);
     }
   };
 
   const handleToggleSave = async (jobId) => {
-    setBusyJobId(jobId);
+    setSavingJobId(jobId);
     setActionError("");
     try {
       await toggleSaveJob(jobId).unwrap();
     } catch (err) {
-      setActionError(err?.data?.message || "Could not save job");
+      setActionError(err?.data?.message || "Could not update saved jobs");
     } finally {
-      setBusyJobId(null);
+      setSavingJobId(null);
     }
   };
 
-  const trackingDisplay = [
-    { label: "Applied", value: tracking.applied, icon: Send, accent: "border-l-white/40" },
-    { label: "In Review", value: tracking.in_review, icon: Eye, accent: "border-l-amber-400" },
-    { label: "Interviews", value: tracking.interview, icon: MessageSquare, accent: "border-l-green-400" },
+  const handleInterviewResponse = async (applicationId, response) => {
+    setRespondingApplicationId(applicationId);
+    setActionError("");
+    try {
+      await respondToInterview({ applicationId, response }).unwrap();
+    } catch (err) {
+      setActionError(err?.data?.message || "Could not update your interview response");
+    } finally {
+      setRespondingApplicationId(null);
+    }
+  };
+
+  const tracking = [
+    { label: "Applied", value: stats.applied || 0, icon: Send },
+    { label: "In Review", value: stats.in_review || 0, icon: Eye },
+    { label: "Interviews", value: stats.interview || 0, icon: MessageSquare },
+    { label: "Accepted", value: stats.accepted || 0, icon: CheckCircle2 },
   ];
 
   return (
-    <div className="relative">
-      <h1 className="text-2xl font-bold text-primary mb-1">Job Opportunities</h1>
-      <p className="text-gray-500 mb-6">Find and apply for roles tailored for your career growth</p>
+    <div>
+      <div className="flex flex-wrap items-start justify-between gap-4 mb-6">
+        <div>
+          <h1 className="text-2xl font-bold text-primary">Job Opportunities</h1>
+          <p className="text-gray-500 mt-1">Discover roles and track every application in one place.</p>
+        </div>
+        <button
+          onClick={() => navigate(ROUTES.STUDENT.EDIT_PROFILE)}
+          className="inline-flex items-center gap-2 border border-gray-200 bg-white rounded-xl px-4 py-2.5 text-sm font-medium text-dark hover:border-primary"
+        >
+          <UploadCloud size={16} /> Update Resume
+        </button>
+      </div>
+
+      <div className="flex flex-wrap gap-2 mb-5" role="tablist" aria-label="Job sections">
+        {[
+          ["browse", "Browse Jobs"],
+          ["saved", "Saved Jobs"],
+          ["applications", `My Applications (${stats.total || 0})`],
+        ].map(([key, label]) => (
+          <button
+            key={key}
+            role="tab"
+            aria-selected={view === key}
+            onClick={() => selectView(key)}
+            className={`rounded-full px-4 py-2 text-sm font-semibold ${
+              view === key ? "bg-dark text-white" : "bg-white text-gray-500 hover:bg-gray-100"
+            }`}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
 
       {error && (
-        <p className="text-sm text-red-500 bg-red-50 rounded-xl px-4 py-3 mb-5">{error}</p>
+        <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-red-600 bg-red-50 border border-red-100 rounded-xl px-4 py-3 mb-5">
+          <span>{error}</span>
+          {resumeRequired && (
+            <button onClick={() => navigate(ROUTES.STUDENT.EDIT_PROFILE)} className="font-semibold underline">
+              Upload resume
+            </button>
+          )}
+        </div>
       )}
 
-      <div className="grid lg:grid-cols-[1fr_320px] gap-6">
-        <div>
-          <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
-            <div className="flex flex-wrap gap-2">
-              {tabs.map((tab) => (
+      {view === "applications" ? (
+        <section className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+          <div className="px-5 py-4 border-b border-gray-100">
+            <h2 className="font-semibold text-dark">Application History</h2>
+            <p className="text-sm text-gray-500">Your latest status appears here automatically.</p>
+          </div>
+          {loadingApplications ? (
+            <LoadingSpinner label="Loading applications..." />
+          ) : applications.length === 0 ? (
+            <EmptyState message="You have not applied to any jobs yet." />
+          ) : (
+            <div className="divide-y divide-gray-100">
+              {applications.map((application) => (
+                <article key={application._id} className="p-5 flex flex-wrap items-center justify-between gap-4">
+                  <div>
+                    <h3 className="font-semibold text-dark">{application.job.title}</h3>
+                    <p className="text-sm text-gray-500 mt-1">
+                      {application.job.company} · {application.job.location}
+                    </p>
+                    <p className="text-xs text-gray-400 mt-1">
+                      Applied {new Date(application.appliedAt).toLocaleDateString()}
+                    </p>
+                    {application.interview && application.status === APPLICATION_STATUS.INTERVIEW && (
+                      <div className="mt-3 bg-blue-50 border border-blue-100 rounded-xl p-3 text-sm">
+                        <p className="font-semibold text-primary flex items-center gap-2">
+                          <CalendarDays size={15} /> Interview scheduled
+                        </p>
+                        <p className="text-gray-700 mt-1">
+                          {new Date(application.interview.scheduledAt).toLocaleString([], {
+                            dateStyle: "full",
+                            timeStyle: "short",
+                          })}
+                        </p>
+                        <p className="text-xs text-gray-500 mt-1">
+                          {application.interview.durationMinutes} minutes · {application.interview.timezone}
+                        </p>
+                        {application.interview.instructions && (
+                          <p className="text-xs text-gray-600 mt-2">{application.interview.instructions}</p>
+                        )}
+                        <div className="flex flex-wrap gap-2 mt-3">
+                          <a
+                            href={application.interview.meetingUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="inline-flex items-center gap-1.5 bg-primary text-white rounded-lg px-3 py-2 text-xs font-semibold"
+                          >
+                            <Video size={13} /> Join Interview
+                          </a>
+                          {application.interview.response !== INTERVIEW_RESPONSE.CONFIRMED && (
+                            <button
+                              disabled={respondingApplicationId === application._id}
+                              onClick={() => handleInterviewResponse(application._id, INTERVIEW_RESPONSE.CONFIRMED)}
+                              className="border border-green-200 text-green-700 bg-white rounded-lg px-3 py-2 text-xs font-semibold disabled:opacity-50"
+                            >
+                              Confirm
+                            </button>
+                          )}
+                          {application.interview.response !== INTERVIEW_RESPONSE.RESCHEDULE_REQUESTED && (
+                            <button
+                              disabled={respondingApplicationId === application._id}
+                              onClick={() => handleInterviewResponse(application._id, INTERVIEW_RESPONSE.RESCHEDULE_REQUESTED)}
+                              className="border border-amber-200 text-amber-700 bg-white rounded-lg px-3 py-2 text-xs font-semibold disabled:opacity-50"
+                            >
+                              Request Reschedule
+                            </button>
+                          )}
+                        </div>
+                        <p className="text-xs text-gray-500 mt-2 capitalize">
+                          Response: {application.interview.response.replaceAll("_", " ")}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                  <StatusBadge
+                    label={STATUS_LABELS[application.status] || application.status}
+                    tone={STATUS_TONES[application.status] || "neutral"}
+                  />
+                </article>
+              ))}
+            </div>
+          )}
+        </section>
+      ) : (
+        <div className="grid xl:grid-cols-[1fr_300px] gap-6">
+          <div>
+            <form onSubmit={submitSearch} className="flex gap-2 mb-4">
+              <label className="relative flex-1">
+                <Search size={17} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                <span className="sr-only">Search jobs</span>
+                <input
+                  value={searchInput}
+                  onChange={(event) => setSearchInput(event.target.value)}
+                  placeholder="Search by title, company, or keyword"
+                  className="w-full bg-white border border-gray-200 rounded-xl pl-10 pr-4 py-3 text-sm outline-none focus:border-primary"
+                />
+              </label>
+              <button type="submit" className="bg-primary text-white rounded-xl px-5 text-sm font-semibold">
+                Search
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowFilters((current) => !current)}
+                className="bg-white border border-gray-200 rounded-xl px-4 text-gray-600"
+                aria-label="Toggle advanced filters"
+              >
+                <SlidersHorizontal size={18} />
+              </button>
+            </form>
+
+            {showFilters && (
+              <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3 bg-white border border-gray-100 rounded-xl p-4 mb-4">
+                <input
+                  value={location}
+                  onChange={(event) => { setLocation(event.target.value); resetPage(); }}
+                  placeholder="Location"
+                  className="border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-primary"
+                />
+                <select value={department} onChange={(event) => { setDepartment(event.target.value); resetPage(); }} className="border border-gray-200 rounded-lg px-3 py-2 text-sm">
+                  <option value="">All departments</option>
+                  {DEPARTMENTS.map((item) => <option key={item} value={item}>{item}</option>)}
+                </select>
+                <select value={experienceLevel} onChange={(event) => { setExperienceLevel(event.target.value); resetPage(); }} className="border border-gray-200 rounded-lg px-3 py-2 text-sm">
+                  <option value="">All experience levels</option>
+                  {Object.values(EXPERIENCE_LEVELS).map((item) => <option key={item} value={item}>{item}</option>)}
+                </select>
+                <select value={sort} onChange={(event) => { setSort(event.target.value); resetPage(); }} className="border border-gray-200 rounded-lg px-3 py-2 text-sm">
+                  <option value="newest">Newest first</option>
+                  <option value="oldest">Oldest first</option>
+                  <option value="deadline">Deadline soon</option>
+                </select>
+                <button onClick={clearFilters} type="button" className="text-left text-sm font-medium text-primary">Clear all filters</button>
+              </div>
+            )}
+
+            <div className="flex flex-wrap gap-2 mb-5">
+              {TYPE_TABS.map((type) => (
                 <button
-                  key={tab}
-                  onClick={() => setActiveTab(tab)}
-                  className={`text-sm font-medium px-4 py-2 rounded-full transition-colors ${
-                    activeTab === tab
-                      ? "bg-dark text-white"
-                      : "bg-gray-100 text-gray-500 hover:bg-gray-200"
+                  key={type}
+                  onClick={() => { setActiveType(type); resetPage(); }}
+                  className={`text-sm font-medium px-3.5 py-2 rounded-full ${
+                    activeType === type ? "bg-primary text-white" : "bg-gray-100 text-gray-500"
                   }`}
                 >
-                  {tab}
+                  {type}
                 </button>
               ))}
             </div>
-            <button className="flex items-center gap-1.5 text-sm font-medium text-primary">
-              <SlidersHorizontal size={14} /> Advanced Filters
-            </button>
+
+            {loadingJobs ? (
+              <LoadingSpinner label="Loading jobs..." />
+            ) : jobs.length === 0 ? (
+              <EmptyState message={view === "saved" ? "You have no saved jobs matching these filters." : "No active jobs match these filters."} />
+            ) : (
+              <div className="grid sm:grid-cols-2 gap-5">
+                {jobs.map((job) => {
+                  const isNew = renderTime - new Date(job.createdAt).getTime() < 3 * 24 * 60 * 60 * 1000;
+                  return (
+                    <article key={job._id} className="bg-white border border-gray-100 rounded-2xl p-5 flex flex-col">
+                      <div className="flex items-start justify-between gap-3 mb-4">
+                        <span className="h-11 w-11 rounded-xl bg-blue-50 flex items-center justify-center text-primary"><Briefcase size={18} /></span>
+                        <div className="flex items-center gap-2">
+                          {job.hasApplied ? (
+                            <span className="text-[10px] font-semibold rounded-full px-2.5 py-1 bg-green-50 text-green-600">APPLIED</span>
+                          ) : isNew ? (
+                            <span className="text-[10px] font-semibold rounded-full px-2.5 py-1 bg-gray-100 text-gray-500">NEW</span>
+                          ) : null}
+                          <button
+                            onClick={() => handleToggleSave(job._id)}
+                            disabled={savingJobId === job._id}
+                            aria-label={job.hasSaved ? "Remove from saved jobs" : "Save job"}
+                          >
+                            <Bookmark size={18} className={job.hasSaved ? "fill-primary text-primary" : "text-gray-300"} />
+                          </button>
+                        </div>
+                      </div>
+                      <button onClick={() => setSelectedJobId(job._id)} className="text-left">
+                        <h2 className="font-bold text-dark text-lg hover:text-primary">{job.title}</h2>
+                      </button>
+                      <p className="text-sm text-gray-500 mt-1">{job.company} · {job.location}</p>
+                      <div className="flex flex-wrap gap-3 text-xs text-gray-500 my-4">
+                        <span className="flex items-center gap-1"><Briefcase size={13} /> {job.type}</span>
+                        <span>{job.experienceLevel}</span>
+                        {job.payRange && <span className="flex items-center gap-1"><DollarSign size={13} /> {job.payRange}</span>}
+                      </div>
+                      {job.deadline && <p className="text-xs text-gray-400 mb-4">Apply by {new Date(job.deadline).toLocaleDateString()}</p>}
+                      <button onClick={() => setSelectedJobId(job._id)} className={`mt-auto w-full text-sm font-semibold py-2.5 rounded-xl ${job.hasApplied ? "bg-green-50 text-green-600" : "bg-dark text-white"}`}>
+                        {job.hasApplied ? "Applied" : "View & Apply"}
+                      </button>
+                    </article>
+                  );
+                })}
+              </div>
+            )}
+
+            {(jobsData?.totalPages || 1) > 1 && (
+              <nav className="flex items-center justify-center gap-3 mt-7" aria-label="Jobs pagination">
+                <button onClick={() => setPage((value) => Math.max(1, value - 1))} disabled={page === 1} className="h-9 w-9 bg-white rounded-lg disabled:opacity-40 flex items-center justify-center"><ChevronLeft size={17} /></button>
+                <span className="text-sm text-gray-500">Page {page} of {jobsData.totalPages}</span>
+                <button onClick={() => setPage((value) => Math.min(jobsData.totalPages, value + 1))} disabled={page === jobsData.totalPages} className="h-9 w-9 bg-white rounded-lg disabled:opacity-40 flex items-center justify-center"><ChevronRight size={17} /></button>
+              </nav>
+            )}
           </div>
 
-          {loadingJobs ? (
-            <LoadingSpinner label="Loading jobs..." />
-          ) : jobs.length === 0 ? (
-            <EmptyState message="No jobs posted yet in this category." />
-          ) : (
-            <div className="grid sm:grid-cols-2 gap-5">
-              {jobs.map((job) => {
-                const isNew =
-                  (Date.now() - new Date(job.createdAt).getTime()) / (1000 * 60 * 60 * 24) < 3;
-                const isSaved = job.savedBy?.includes(currentUserId());
-                const isBusy = busyJobId === job._id;
-
-                return (
-                  <div key={job._id} className="bg-white rounded-2xl p-6 flex flex-col">
-                    <div className="flex items-start justify-between mb-4">
-                      <div className="h-11 w-11 rounded-xl bg-blue-50 flex items-center justify-center">
-                        <Briefcase size={18} className="text-primary" />
-                      </div>
-                      <div className="flex items-center gap-2">
-                        {job.hasApplied && (
-                          <span className="flex items-center gap-1 text-[10px] font-semibold rounded-full px-2.5 py-1 bg-green-50 text-green-600">
-                            <CheckCircle2 size={11} /> APPLIED
-                          </span>
-                        )}
-                        {!job.hasApplied && isNew && (
-                          <span className="text-[10px] font-semibold rounded-full px-2.5 py-1 bg-gray-100 text-gray-500">
-                            NEW
-                          </span>
-                        )}
-                        <button onClick={() => handleToggleSave(job._id)} disabled={isBusy}>
-                          <Bookmark
-                            size={17}
-                            className={isSaved ? "text-primary fill-primary" : "text-gray-300"}
-                          />
-                        </button>
-                      </div>
-                    </div>
-
-                    <button onClick={() => setSelectedJobId(job._id)} className="text-left">
-                      <h3 className="font-bold text-dark text-lg leading-snug mb-1 hover:text-primary transition-colors">
-                        {job.title}
-                      </h3>
-                    </button>
-                    <p className="text-sm text-gray-500 mb-5">
-                      {job.company} <span className="mx-1">•</span> {job.location}
-                    </p>
-
-                    <div className="flex items-center gap-5 text-sm text-gray-500 mb-5 mt-auto">
-                      {job.payRange && (
-                        <span className="flex items-center gap-1.5">
-                          <DollarSign size={14} /> {job.payRange}
-                        </span>
-                      )}
-                      <span className="flex items-center gap-1.5">
-                        <Briefcase size={14} /> {job.type}
-                      </span>
-                    </div>
-
-                    <button
-                      onClick={() => setSelectedJobId(job._id)}
-                      disabled={isBusy}
-                      className={`w-full text-sm font-semibold py-2.5 rounded-xl transition-colors disabled:opacity-50 ${
-                        job.hasApplied
-                          ? "bg-green-50 text-green-600 cursor-default"
-                          : "bg-dark text-white hover:opacity-90"
-                      }`}
-                    >
-                      {job.hasApplied ? "✓ Applied" : isBusy ? "Please wait..." : "Apply Now"}
-                    </button>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-
-          <div className="flex justify-center mt-8">
-            <button className="flex items-center gap-2 text-sm font-medium text-dark bg-white border border-gray-200 rounded-full px-5 py-2.5">
-              Load More Listings <ChevronDown size={15} />
-            </button>
-          </div>
-        </div>
-
-        <div className="flex flex-col gap-6">
-          <div className="bg-primary rounded-2xl p-5">
+          <aside className="bg-primary rounded-2xl p-5 h-fit">
             <h2 className="text-white font-semibold text-lg mb-4">Application Tracking</h2>
-            <div className="flex flex-col gap-2">
-              {trackingDisplay.map(({ label, value, icon: Icon, accent }) => (
-                <div
-                  key={label}
-                  className={`flex items-center justify-between bg-white/10 rounded-xl px-4 py-3 border-l-[3px] ${accent}`}
-                >
-                  <span className="flex items-center gap-2 text-sm text-white/90">
-                    <Icon size={15} /> {label}
-                  </span>
-                  <span className="text-lg font-bold text-white">{value}</span>
+            <div className="space-y-2">
+              {tracking.map(({ label, value, icon: Icon }) => (
+                <div key={label} className="flex items-center justify-between bg-white/10 rounded-xl px-4 py-3">
+                  <span className="flex items-center gap-2 text-sm text-white/90"><Icon size={15} /> {label}</span>
+                  <strong className="text-white">{value}</strong>
                 </div>
               ))}
             </div>
-          </div>
-
-          <button className="border-2 border-dashed border-gray-300 rounded-2xl p-6 flex flex-col items-center text-center hover:border-primary transition-colors">
-            <UploadCloud size={22} className="text-gray-400 mb-2" />
-            <p className="font-semibold text-dark text-sm">Update Your Resume</p>
-            <p className="text-xs text-gray-500 mt-1">Enhance your matching accuracy</p>
-          </button>
+            {(stats.rejected || 0) > 0 && <p className="text-xs text-white/60 mt-3">Rejected: {stats.rejected}</p>}
+          </aside>
         </div>
-      </div>
+      )}
 
       {selectedJob && (
-        <div
-          className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4"
-          onClick={() => setSelectedJobId(null)}
-        >
-          <div
-            className="bg-white rounded-2xl max-w-lg w-full max-h-[85vh] overflow-y-auto"
-            onClick={(event) => event.stopPropagation()}
-          >
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4" onClick={() => setSelectedJobId(null)}>
+          <div role="dialog" aria-modal="true" aria-labelledby="job-title" className="bg-white rounded-2xl max-w-xl w-full max-h-[88vh] overflow-y-auto" onClick={(event) => event.stopPropagation()}>
             <div className="flex items-start justify-between px-6 pt-6">
-              <div className="h-12 w-12 rounded-xl bg-blue-50 flex items-center justify-center">
-                <Briefcase size={20} className="text-primary" />
-              </div>
-              <button onClick={() => setSelectedJobId(null)} className="text-gray-400 hover:text-dark">
-                <X size={20} />
-              </button>
+              <span className="h-12 w-12 rounded-xl bg-blue-50 flex items-center justify-center text-primary"><Briefcase size={20} /></span>
+              <button onClick={() => setSelectedJobId(null)} aria-label="Close job details" className="text-gray-400"><X size={20} /></button>
             </div>
-
-            <div className="px-6 pt-4 pb-2">
-              <h2 className="text-xl font-bold text-dark">{selectedJob.title}</h2>
-              <p className="text-sm text-gray-500 mt-1">
-                {selectedJob.company}
-                {selectedJob.postedBy?.fullName ? ` • Posted by ${selectedJob.postedBy.fullName}` : ""}
-              </p>
-
-              <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500 mt-4">
-                <span className="flex items-center gap-1.5">
-                  <MapPin size={14} /> {selectedJob.location}
-                </span>
-                <span className="flex items-center gap-1.5">
-                  <Briefcase size={14} /> {selectedJob.type}
-                </span>
-                {selectedJob.payRange && (
-                  <span className="flex items-center gap-1.5">
-                    <DollarSign size={14} /> {selectedJob.payRange}
-                  </span>
-                )}
-                <span className="flex items-center gap-1.5">
-                  <CalendarDays size={14} />
-                  Posted {new Date(selectedJob.createdAt).toLocaleDateString("en-US", {
-                    month: "short",
-                    day: "numeric",
-                    year: "numeric",
-                  })}
-                </span>
+            <div className="px-6 pt-4 pb-5">
+              <h2 id="job-title" className="text-xl font-bold text-dark">{selectedJob.title}</h2>
+              <p className="text-sm text-gray-500 mt-1">{selectedJob.company}{selectedJob.postedBy?.fullName ? ` · Posted by ${selectedJob.postedBy.fullName}` : ""}</p>
+              <div className="flex flex-wrap gap-4 text-sm text-gray-500 mt-4">
+                <span className="flex items-center gap-1"><MapPin size={14} /> {selectedJob.location}</span>
+                <span className="flex items-center gap-1"><Briefcase size={14} /> {selectedJob.type}</span>
+                <span>{selectedJob.experienceLevel}</span>
+                {selectedJob.payRange && <span className="flex items-center gap-1"><DollarSign size={14} /> {selectedJob.payRange}</span>}
+                {selectedJob.deadline && <span className="flex items-center gap-1"><CalendarDays size={14} /> Apply by {new Date(selectedJob.deadline).toLocaleDateString()}</span>}
               </div>
-
-              {selectedJob.department && (
-                <span className="inline-block mt-4 text-xs font-medium bg-gray-100 text-gray-600 rounded-full px-3 py-1">
-                  {selectedJob.department}
-                </span>
+              <section className="mt-5">
+                <h3 className="text-sm font-semibold text-dark mb-2">Job Description</h3>
+                <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-line">{selectedJob.description || "No description provided."}</p>
+              </section>
+              {selectedJob.requirements?.length > 0 && (
+                <section className="mt-5">
+                  <h3 className="text-sm font-semibold text-dark mb-2">Requirements</h3>
+                  <ul className="list-disc pl-5 space-y-1 text-sm text-gray-600">
+                    {selectedJob.requirements.map((requirement) => <li key={requirement}>{requirement}</li>)}
+                  </ul>
+                </section>
               )}
-
-              <div className="mt-5">
-                <h3 className="text-sm font-semibold text-dark mb-1.5">Job Description</h3>
-                <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-line">
-                  {selectedJob.description || "No description was provided for this role."}
-                </p>
-              </div>
             </div>
-
-            <div className="px-6 py-5 border-t border-gray-100 mt-2">
+            <div className="px-6 py-5 border-t border-gray-100">
+              <p className="flex items-center gap-2 text-xs text-gray-500 mb-3"><FileText size={14} /> Your currently uploaded resume will be submitted.</p>
               <button
                 onClick={() => handleApply(selectedJob._id)}
-                disabled={selectedJob.hasApplied || busyJobId === selectedJob._id}
-                className={`w-full text-sm font-semibold py-3 rounded-xl transition-colors disabled:opacity-60 ${
-                  selectedJob.hasApplied
-                    ? "bg-green-50 text-green-600 cursor-default"
-                    : "bg-primary text-white hover:opacity-90"
-                }`}
+                disabled={selectedJob.hasApplied || applyingJobId === selectedJob._id}
+                className={`w-full text-sm font-semibold py-3 rounded-xl disabled:opacity-60 ${selectedJob.hasApplied ? "bg-green-50 text-green-600" : "bg-primary text-white"}`}
               >
-                {selectedJob.hasApplied
-                  ? "✓ You've applied to this role"
-                  : busyJobId === selectedJob._id
-                  ? "Submitting application..."
-                  : "Apply Now"}
+                {selectedJob.hasApplied ? "Application submitted" : applyingJobId === selectedJob._id ? "Submitting..." : "Submit Application"}
               </button>
-              {selectedJob.hasApplied && (
-                <p className="text-xs text-gray-400 text-center mt-2">
-                  The alumni who posted this job will review your application and can move it to
-                  interview from their side.
-                </p>
-              )}
             </div>
           </div>
         </div>
       )}
-
-      <button className="fixed bottom-6 right-6 h-12 w-12 rounded-full bg-primary text-white flex items-center justify-center shadow-lg hover:opacity-90 transition-opacity">
-        <HelpCircle size={20} />
-      </button>
     </div>
   );
 }

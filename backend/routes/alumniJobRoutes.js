@@ -4,9 +4,13 @@ const {
   deleteMyJob,
   getJobApplicants,
   updateApplicationStatus,
+  scheduleInterview,
 } = require("../controllers/alumniJobController");
 const { protect, authorize } = require("../middleware/authMiddleware");
-const { updateApplicationStatusValidators } = require("../validators/alumniJobValidators");
+const {
+  updateApplicationStatusValidators,
+  scheduleInterviewValidators,
+} = require("../validators/alumniJobValidators");
 const { validateMongoIdParam } = require("../validators/paramValidators");
 const validate = require("../middleware/validate");
 const router = express.Router();
@@ -19,6 +23,15 @@ router.get(
   validateMongoIdParam("id"),
   validate,
   getJobApplicants
+);
+router.patch(
+  "/applications/:applicationId/interview",
+  protect,
+  authorize("alumni"),
+  validateMongoIdParam("applicationId"),
+  scheduleInterviewValidators,
+  validate,
+  scheduleInterview
 );
 router.patch(
   "/applications/:applicationId/status",

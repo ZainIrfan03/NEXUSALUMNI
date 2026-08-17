@@ -83,6 +83,7 @@ const httpServer = http.createServer(app);
 const io = new Server(httpServer, {
   cors: { origin: FRONTEND_URL, credentials: true },
 });
+app.set("io", io);
 
 // Tracks which socket belongs to which logged-in user, so a message can be
 // emitted straight to that specific user (no rooms/broadcast needed for 1:1 chat).
@@ -111,6 +112,7 @@ io.use(async (socket, next) => {
 
 io.on("connection", (socket) => {
   onlineUsers.set(socket.userId, socket.id);
+  socket.join(socket.userId);
   console.log(`User connected: ${socket.userId}`);
 
   // Client emits this while the other person is typing

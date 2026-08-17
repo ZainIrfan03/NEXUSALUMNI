@@ -1,12 +1,14 @@
-import React, { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Outlet, NavLink, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import api from "../api/axios";
 import { getImageUrl as fileUrl } from "../utils/getImageUrl";
-import { ROLES, ROUTES, SOCKET_EVENTS } from "../consts/appConstants";
+import { APPLICATION_STATUS, ROLES, ROUTES, SOCKET_EVENTS, TAGS } from "../consts/appConstants";
+import { baseApi } from "../store/api/baseApi";
 import { useGetUnreadMessageCountQuery } from "../store/api/messagesApi";
 import { useGetMyProfileQuery } from "../store/api/studentProfileApi";
 import { useGetMyAlumniProfileQuery } from "../store/api/alumniProfileApi";
+import { useGetMyApplicationsQuery } from "../store/api/studentJobsApi";
 import UserAvatar from "../components/common/UserAvatar";
 
 
@@ -77,7 +79,10 @@ export default function DashboardLayout() {
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [interviewNotice, setInterviewNotice] = useState(null);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
   const menuRef = useRef(null);
+  const notificationsRef = useRef(null);
 
   const links = linksByRole[user?.role] || [];
   const showSettings = rolesWithSettings.includes(user?.role);
@@ -87,6 +92,23 @@ export default function DashboardLayout() {
     { skip: !supportsMessages }
   );
   const unreadMessageCount = unreadData?.count || 0;
+  const { data: applicationsData } = useGetMyApplicationsQuery(undefined, {
+    skip: user?.role !== ROLES.STUDENT,
+  });
+  const interviewNotifications = (applicationsData?.applications || [])
+    .filter(
+      (application) =>
+        application.interview && application.status === APPLICATION_STATUS.INTERVIEW
+    )
+    .slice(0, 3);
+  const pendingInterviewCount = interviewNotifications.filter(
+    (application) => application.interview.response === "pending"
+  ).length;
+  const liveNoticeAlreadyLoaded = interviewNotifications.some(
+    (application) => String(application._id) === String(interviewNotice?.applicationId)
+  );
+  const notificationCount =
+    unreadMessageCount + pendingInterviewCount + (interviewNotice && !liveNoticeAlreadyLoaded ? 1 : 0);
   const { data: studentProfile } = useGetMyProfileQuery(undefined, {
     skip: user?.role !== ROLES.STUDENT,
   });
@@ -102,12 +124,19 @@ export default function DashboardLayout() {
 
     const socket = connectSocket();
     const handleIncomingMessage = () => refetchUnreadMessages();
+    const handleInterviewScheduled = (payload) => {
+      if (user?.role !== ROLES.STUDENT) return;
+      setInterviewNotice(payload);
+      dispatch(baseApi.util.invalidateTags([TAGS.MY_APPLICATIONS]));
+    };
     socket.on(SOCKET_EVENTS.RECEIVE_MESSAGE, handleIncomingMessage);
+    socket.on(SOCKET_EVENTS.INTERVIEW_SCHEDULED, handleInterviewScheduled);
 
     return () => {
       socket.off(SOCKET_EVENTS.RECEIVE_MESSAGE, handleIncomingMessage);
+      socket.off(SOCKET_EVENTS.INTERVIEW_SCHEDULED, handleInterviewScheduled);
     };
-  }, [supportsMessages, refetchUnreadMessages]);
+  }, [supportsMessages, refetchUnreadMessages, dispatch, user?.role]);
 
   // Pull the real avatar from the role's profile endpoint (User model doesn't
   // store avatarUrl — it lives on Student/Alumni). Falls back to initials
@@ -128,11 +157,25 @@ export default function DashboardLayout() {
     navigate(user?.role === ROLES.STUDENT ? ROUTES.STUDENT.PROFILE : ROUTES.ALUMNI.PROFILE);
   };
 
+  const openInterviewNotifications = () => {
+    setNotificationsOpen(false);
+    setInterviewNotice(null);
+    navigate(ROUTES.STUDENT.JOBS, { state: { jobsView: "applications" } });
+  };
+
+  const openMessageNotifications = () => {
+    setNotificationsOpen(false);
+    navigate(user.role === ROLES.STUDENT ? ROUTES.STUDENT.MESSAGES : ROUTES.ALUMNI.MESSAGES);
+  };
+
   // Close the account dropdown when clicking anywhere outside it
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (menuRef.current && !menuRef.current.contains(event.target)) {
         setMenuOpen(false);
+      }
+      if (notificationsRef.current && !notificationsRef.current.contains(event.target)) {
+        setNotificationsOpen(false);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
@@ -144,7 +187,7 @@ export default function DashboardLayout() {
       isActive ? "bg-white/10 text-white" : "text-gray-400 hover:bg-white/5 hover:text-white"
     }`;
 
-  const SidebarContent = () => (
+  const renderSidebarContent = () => (
     <>
       <div className="px-4 mb-8">
         <span className="text-lg font-bold text-white">Alumni Nexus</span>
@@ -188,7 +231,7 @@ export default function DashboardLayout() {
     <div className="flex min-h-screen bg-background">
       {/* Desktop sidebar */}
       <aside className="hidden md:flex md:flex-col md:sticky md:top-0 md:h-screen md:overflow-y-auto w-64 bg-dark p-5">
-        <SidebarContent />
+        {renderSidebarContent()}
       </aside>
 
       {/* Mobile sidebar (slide-over) */}
@@ -199,7 +242,7 @@ export default function DashboardLayout() {
             <button className="self-end mb-4 text-white" onClick={() => setSidebarOpen(false)}>
               <X size={20} />
             </button>
-            <SidebarContent />
+            {renderSidebarContent()}
           </aside>
         </div>
       )}
@@ -224,26 +267,79 @@ export default function DashboardLayout() {
           </div>
 
           <div className="flex items-center gap-5 ml-auto">
-            <button
-              type="button"
-              onClick={() =>
-                supportsMessages &&
-                navigate(user.role === ROLES.STUDENT ? ROUTES.STUDENT.MESSAGES : ROUTES.ALUMNI.MESSAGES)
-              }
-              className="relative text-gray-500 hover:text-dark transition-colors"
-              aria-label={
-                unreadMessageCount
-                  ? `${unreadMessageCount} unread message${unreadMessageCount === 1 ? "" : "s"}`
-                  : "No unread messages"
-              }
-            >
-              <Bell size={20} />
-              {unreadMessageCount > 0 && (
-                <span className="absolute -top-2 -right-2 min-w-4 h-4 px-1 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center">
-                  {unreadMessageCount > 99 ? "99+" : unreadMessageCount}
-                </span>
+            <div className="relative" ref={notificationsRef}>
+              <button
+                type="button"
+                onClick={() => setNotificationsOpen((open) => !open)}
+                className="relative text-gray-500 hover:text-dark transition-colors"
+                aria-label={notificationCount ? `${notificationCount} notification(s)` : "No notifications"}
+                aria-expanded={notificationsOpen}
+              >
+                <Bell size={20} />
+                {notificationCount > 0 && (
+                  <span className="absolute -top-2 -right-2 min-w-4 h-4 px-1 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center">
+                    {notificationCount > 99 ? "99+" : notificationCount}
+                  </span>
+                )}
+              </button>
+
+              {notificationsOpen && (
+                <div className="absolute right-0 top-full mt-3 w-80 max-w-[calc(100vw-2rem)] overflow-hidden rounded-xl border border-gray-100 bg-white shadow-xl z-50">
+                  <div className="flex items-center justify-between border-b border-gray-100 px-4 py-3">
+                    <h2 className="text-sm font-semibold text-dark">Notifications</h2>
+                    {notificationCount > 0 && (
+                      <span className="rounded-full bg-red-50 px-2 py-0.5 text-xs font-semibold text-red-500">
+                        {notificationCount} new
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="max-h-80 overflow-y-auto py-1">
+                    {interviewNotice && !liveNoticeAlreadyLoaded && (
+                      <button onClick={openInterviewNotifications} className="w-full flex gap-3 px-4 py-3 text-left hover:bg-blue-50">
+                        <span className="mt-0.5 rounded-lg bg-blue-50 p-2 text-primary"><CalendarDays size={16} /></span>
+                        <span>
+                          <strong className="block text-sm text-dark">Interview scheduled</strong>
+                          <span className="block text-xs text-gray-500 mt-0.5">{interviewNotice.jobTitle}</span>
+                        </span>
+                      </button>
+                    )}
+
+                    {interviewNotifications.map((application) => (
+                      <button key={application._id} onClick={openInterviewNotifications} className="w-full flex gap-3 px-4 py-3 text-left hover:bg-blue-50 border-b border-gray-50 last:border-0">
+                        <span className="mt-0.5 rounded-lg bg-blue-50 p-2 text-primary"><CalendarDays size={16} /></span>
+                        <span className="min-w-0">
+                          <strong className="block text-sm text-dark truncate">Interview: {application.job.title}</strong>
+                          <span className="block text-xs text-gray-500 mt-0.5">
+                            {new Date(application.interview.scheduledAt).toLocaleString([], {
+                              dateStyle: "medium",
+                              timeStyle: "short",
+                            })}
+                          </span>
+                          <span className="block text-[11px] capitalize text-primary mt-1">
+                            {application.interview.response.replaceAll("_", " ")}
+                          </span>
+                        </span>
+                      </button>
+                    ))}
+
+                    {unreadMessageCount > 0 && (
+                      <button onClick={openMessageNotifications} className="w-full flex gap-3 px-4 py-3 text-left hover:bg-gray-50">
+                        <span className="mt-0.5 rounded-lg bg-gray-100 p-2 text-gray-600"><Mail size={16} /></span>
+                        <span>
+                          <strong className="block text-sm text-dark">Unread messages</strong>
+                          <span className="block text-xs text-gray-500 mt-0.5">You have {unreadMessageCount} unread message{unreadMessageCount === 1 ? "" : "s"}.</span>
+                        </span>
+                      </button>
+                    )}
+
+                    {!interviewNotice && interviewNotifications.length === 0 && unreadMessageCount === 0 && (
+                      <p className="px-4 py-8 text-center text-sm text-gray-400">No notifications yet.</p>
+                    )}
+                  </div>
+                </div>
               )}
-            </button>
+            </div>
 
             <div className="hidden sm:flex items-center gap-3 relative" ref={menuRef}>
               <button

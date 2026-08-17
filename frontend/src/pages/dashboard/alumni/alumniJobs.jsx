@@ -1,12 +1,14 @@
-import React, { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   useGetMyJobsQuery,
   useGetJobApplicantsQuery,
   useDeleteMyJobMutation,
   useUpdateApplicationStatusMutation,
+  useScheduleInterviewMutation,
 } from "../../../store/api/alumniJobsApi";
- import { APPLICATION_STATUS, ROUTES, UI_LIMITS } from "../../../consts/appConstants";
+ import { APPLICATION_STATUS, ROUTES, SOCKET_EVENTS, UI_LIMITS } from "../../../consts/appConstants";
+import { connectSocket } from "../../../utils/socket";
 import { getImageUrl as fileUrl } from "../../../utils/getImageUrl";
 import LoadingSpinner from "../../../components/common/LoadingSpinner";
 import EmptyState from "../../../components/common/EmptyState";
@@ -24,7 +26,24 @@ import {
   Sparkles,
   X,
   Mail,
+  FileText,
+  CalendarDays,
+  Video,
 } from "lucide-react";
+
+const emptyInterviewForm = () => ({
+  scheduledAt: "",
+  timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || "Asia/Karachi",
+  durationMinutes: 30,
+  meetingUrl: "",
+  instructions: "",
+});
+
+const toLocalDateTimeInput = (value) => {
+  if (!value) return "";
+  const date = new Date(value);
+  return new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+};
 
 function AvatarStack({ applicants = [], count }) {
   const shown = applicants.slice(0, UI_LIMITS.AVATAR_STACK_SIZE);
@@ -98,11 +117,15 @@ export default function AlumniJobs() {
   // whatever the backend most recently said.
   const [applicantsJobId, setApplicantsJobId] = useState(null);
   const [updatingId, setUpdatingId] = useState(null);
+  const [interviewTarget, setInterviewTarget] = useState(null);
+  const [interviewForm, setInterviewForm] = useState(emptyInterviewForm);
+  const [scheduleError, setScheduleError] = useState("");
 
   const {
     data: applicantsData,
     isLoading: loadingApplicants,
     error: applicantsQueryError,
+    refetch: refetchApplicants,
   } = useGetJobApplicantsQuery(applicantsJobId, { skip: !applicantsJobId });
 
   const applicants = applicantsData?.applicants || [];
@@ -111,6 +134,17 @@ export default function AlumniJobs() {
 
   const [deleteMyJob] = useDeleteMyJobMutation();
   const [updateApplicationStatus] = useUpdateApplicationStatusMutation();
+  const [scheduleInterview, { isLoading: schedulingInterview }] = useScheduleInterviewMutation();
+
+  useEffect(() => {
+    if (!applicantsJobId) return undefined;
+    const socket = connectSocket();
+    const handleResponse = ({ jobId }) => {
+      if (String(jobId) === String(applicantsJobId)) refetchApplicants();
+    };
+    socket.on(SOCKET_EVENTS.INTERVIEW_RESPONSE_UPDATED, handleResponse);
+    return () => socket.off(SOCKET_EVENTS.INTERVIEW_RESPONSE_UPDATED, handleResponse);
+  }, [applicantsJobId, refetchApplicants]);
 
   const error =
     actionError ||
@@ -123,6 +157,12 @@ export default function AlumniJobs() {
   };
 
   const closeApplicants = () => setApplicantsJobId(null);
+
+  const openStudentProfile = (profileId) => {
+    if (!profileId) return;
+    closeApplicants();
+    navigate(ROUTES.ALUMNI.directoryProfile(profileId));
+  };
 
   const handleDelete = async (jobId) => {
     setActionError("");
@@ -137,15 +177,49 @@ export default function AlumniJobs() {
   // Interview / Accept / Reject) from the modal. invalidatesTags on the
   // mutation refreshes both the applicants list and the postings table's
   // unread count — no manual local-state patching or refetch call needed.
-  const handleStatusChange = async (applicationId, status) => {
+  const handleStatusChange = async (applicant, status) => {
+    if (status === APPLICATION_STATUS.INTERVIEW) {
+      setScheduleError("");
+      setInterviewTarget(applicant);
+      setInterviewForm(
+        applicant.interview
+          ? {
+              scheduledAt: toLocalDateTimeInput(applicant.interview.scheduledAt),
+              timezone: applicant.interview.timezone,
+              durationMinutes: applicant.interview.durationMinutes,
+              meetingUrl: applicant.interview.meetingUrl,
+              instructions: applicant.interview.instructions || "",
+            }
+          : emptyInterviewForm()
+      );
+      return;
+    }
+
     setActionError("");
-    setUpdatingId(applicationId);
+    setUpdatingId(applicant.applicationId);
     try {
-      await updateApplicationStatus({ applicationId, status, jobId: applicantsJobId }).unwrap();
+      await updateApplicationStatus({ applicationId: applicant.applicationId, status, jobId: applicantsJobId }).unwrap();
     } catch (err) {
       setActionError(err.data?.message || "Could not update this application.");
     } finally {
       setUpdatingId(null);
+    }
+  };
+
+  const handleScheduleInterview = async (event) => {
+    event.preventDefault();
+    setScheduleError("");
+    try {
+      await scheduleInterview({
+        applicationId: interviewTarget.applicationId,
+        jobId: applicantsJobId,
+        ...interviewForm,
+        scheduledAt: new Date(interviewForm.scheduledAt).toISOString(),
+        durationMinutes: Number(interviewForm.durationMinutes),
+      }).unwrap();
+      setInterviewTarget(null);
+    } catch (err) {
+      setScheduleError(err.data?.message || "Could not schedule the interview.");
     }
   };
 
@@ -394,7 +468,17 @@ export default function AlumniJobs() {
                   {applicants.map((applicant) => (
                     <div
                       key={applicant.applicationId}
-                      className="flex items-center gap-4 border border-gray-100 rounded-xl px-4 py-3"
+                      role="link"
+                      tabIndex={applicant.profileId ? 0 : -1}
+                      onClick={() => openStudentProfile(applicant.profileId)}
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter" || event.key === " ") {
+                          event.preventDefault();
+                          openStudentProfile(applicant.profileId);
+                        }
+                      }}
+                      title="Open student profile"
+                      className="flex items-center gap-4 border border-gray-100 rounded-xl px-4 py-3 cursor-pointer hover:border-primary/30 hover:bg-blue-50/30 transition-colors"
                     >
                       <UserAvatar
                         name={applicant.fullName}
@@ -414,6 +498,32 @@ export default function AlumniJobs() {
                             day: "numeric",
                           })}
                         </p>
+                        {applicant.resumeUrl && (
+                          <a
+                            href={fileUrl(applicant.resumeUrl)}
+                            target="_blank"
+                            rel="noreferrer"
+                            onClick={(event) => event.stopPropagation()}
+                            onKeyDown={(event) => event.stopPropagation()}
+                            className="inline-flex items-center gap-1 text-xs font-medium text-primary mt-1 hover:underline"
+                          >
+                            <FileText size={11} /> View submitted resume
+                          </a>
+                        )}
+                        {applicant.interview && applicant.status === APPLICATION_STATUS.INTERVIEW && (
+                          <div className="mt-2 text-xs text-blue-700 bg-blue-50 rounded-lg px-2.5 py-2">
+                            <p className="font-medium flex items-center gap-1">
+                              <CalendarDays size={12} />
+                              {new Date(applicant.interview.scheduledAt).toLocaleString([], {
+                                dateStyle: "medium",
+                                timeStyle: "short",
+                              })}
+                            </p>
+                            <p className="mt-1 capitalize">
+                              Student response: {applicant.interview.response.replaceAll("_", " ")}
+                            </p>
+                          </div>
+                        )}
                       </div>
 
                       <div className="flex items-center gap-2 shrink-0">
@@ -424,7 +534,9 @@ export default function AlumniJobs() {
                         <select
                           value={applicant.status}
                           disabled={updatingId === applicant.applicationId}
-                          onChange={(event) => handleStatusChange(applicant.applicationId, event.target.value)}
+                          onChange={(event) => handleStatusChange(applicant, event.target.value)}
+                          onClick={(event) => event.stopPropagation()}
+                          onKeyDown={(event) => event.stopPropagation()}
                           className="text-xs border border-gray-200 rounded-lg px-2 py-1.5 text-gray-600 disabled:opacity-50"
                         >
                           <option value={APPLICATION_STATUS.APPLIED}>Applied</option>
@@ -440,6 +552,101 @@ export default function AlumniJobs() {
               )}
             </div>
           </div>
+        </div>
+      )}
+
+      {interviewTarget && (
+        <div className="fixed inset-0 z-[60] bg-black/50 flex items-center justify-center p-4">
+          <form
+            onSubmit={handleScheduleInterview}
+            className="bg-white rounded-2xl w-full max-w-lg shadow-xl"
+          >
+            <div className="flex items-start justify-between px-6 py-4 border-b border-gray-100">
+              <div>
+                <h2 className="text-lg font-bold text-dark flex items-center gap-2">
+                  <Video size={18} /> Schedule Interview
+                </h2>
+                <p className="text-sm text-gray-500 mt-1">
+                  {interviewTarget.fullName} · {applicantsJobTitle}
+                </p>
+              </div>
+              <button type="button" onClick={() => setInterviewTarget(null)} aria-label="Close schedule form">
+                <X size={19} className="text-gray-400" />
+              </button>
+            </div>
+
+            <div className="p-6 grid sm:grid-cols-2 gap-4">
+              {scheduleError && (
+                <p className="sm:col-span-2 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">
+                  {scheduleError}
+                </p>
+              )}
+              <label className="text-sm font-medium text-gray-700 sm:col-span-2">
+                Date and time
+                <input
+                  type="datetime-local"
+                  required
+                  value={interviewForm.scheduledAt}
+                  onChange={(event) => setInterviewForm({ ...interviewForm, scheduledAt: event.target.value })}
+                  className="mt-1.5 w-full border border-gray-200 rounded-lg px-3 py-2.5 font-normal outline-none focus:border-primary"
+                />
+              </label>
+              <label className="text-sm font-medium text-gray-700">
+                Timezone
+                <input
+                  type="text"
+                  required
+                  value={interviewForm.timezone}
+                  onChange={(event) => setInterviewForm({ ...interviewForm, timezone: event.target.value })}
+                  className="mt-1.5 w-full border border-gray-200 rounded-lg px-3 py-2.5 font-normal outline-none focus:border-primary"
+                />
+              </label>
+              <label className="text-sm font-medium text-gray-700">
+                Duration
+                <select
+                  value={interviewForm.durationMinutes}
+                  onChange={(event) => setInterviewForm({ ...interviewForm, durationMinutes: event.target.value })}
+                  className="mt-1.5 w-full border border-gray-200 rounded-lg px-3 py-2.5 font-normal"
+                >
+                  <option value={30}>30 minutes</option>
+                  <option value={45}>45 minutes</option>
+                  <option value={60}>60 minutes</option>
+                  <option value={90}>90 minutes</option>
+                </select>
+              </label>
+              <label className="text-sm font-medium text-gray-700 sm:col-span-2">
+                Google Meet or Zoom link
+                <input
+                  type="url"
+                  required
+                  placeholder="https://meet.google.com/..."
+                  value={interviewForm.meetingUrl}
+                  onChange={(event) => setInterviewForm({ ...interviewForm, meetingUrl: event.target.value })}
+                  className="mt-1.5 w-full border border-gray-200 rounded-lg px-3 py-2.5 font-normal outline-none focus:border-primary"
+                />
+              </label>
+              <label className="text-sm font-medium text-gray-700 sm:col-span-2">
+                Instructions (optional)
+                <textarea
+                  rows={3}
+                  maxLength={1000}
+                  value={interviewForm.instructions}
+                  onChange={(event) => setInterviewForm({ ...interviewForm, instructions: event.target.value })}
+                  placeholder="Please join 5 minutes early..."
+                  className="mt-1.5 w-full border border-gray-200 rounded-lg px-3 py-2.5 font-normal resize-none outline-none focus:border-primary"
+                />
+              </label>
+            </div>
+
+            <div className="flex justify-end gap-3 px-6 py-4 border-t border-gray-100">
+              <button type="button" onClick={() => setInterviewTarget(null)} className="px-4 py-2.5 text-sm font-medium text-gray-600">
+                Cancel
+              </button>
+              <button disabled={schedulingInterview} className="px-5 py-2.5 rounded-lg bg-primary text-white text-sm font-semibold disabled:opacity-60">
+                {schedulingInterview ? "Scheduling..." : "Schedule & Notify Student"}
+              </button>
+            </div>
+          </form>
         </div>
       )}
     </div>

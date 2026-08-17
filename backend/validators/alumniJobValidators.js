@@ -10,4 +10,23 @@ const updateApplicationStatusValidators = [
     .withMessage(`Status must be one of: ${Object.values(APPLICATION_STATUS).join(", ")}`),
 ];
 
-module.exports = { updateApplicationStatusValidators };
+const scheduleInterviewValidators = [
+  body("scheduledAt")
+    .notEmpty()
+    .withMessage("Interview date and time are required")
+    .isISO8601()
+    .withMessage("Interview date must be valid")
+    .custom((value) => new Date(value) > new Date())
+    .withMessage("Interview must be scheduled in the future"),
+  body("timezone").trim().notEmpty().withMessage("Timezone is required"),
+  body("durationMinutes")
+    .isInt({ min: 15, max: 240 })
+    .withMessage("Duration must be between 15 and 240 minutes"),
+  body("meetingUrl")
+    .trim()
+    .isURL({ protocols: ["http", "https"], require_protocol: true })
+    .withMessage("Enter a valid meeting URL"),
+  body("instructions").optional({ values: "falsy" }).trim().isLength({ max: 1000 }),
+];
+
+module.exports = { updateApplicationStatusValidators, scheduleInterviewValidators };
