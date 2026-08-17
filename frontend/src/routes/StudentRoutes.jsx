@@ -1,15 +1,15 @@
 import React from "react";
 import { Route } from "react-router-dom";
-import ProtectedRoute from "../../../routes/ProtectedRoute";
-import StudentDashboard from "./StudentDashboard";
-import MyProfile from "./MyProfile";
-import EditProfile from "./EditProfile";
-import Messages from "./Messages";
-import Directory from "./Directory";
-import Jobs from "./Jobs";
-import Mentorship from "./Mentorship";
-import AlumniProfileView from "./AlumniProfileView";
-import { ROLES } from "../../../consts/const";
+import ProtectedRoute from "./ProtectedRoute";
+import StudentDashboard from "../pages/dashboard/student/StudentDashboard";
+import MyProfile from "../pages/dashboard/student/MyProfile";
+import EditProfile from "../pages/dashboard/student/EditProfile";
+import Messages from "../pages/dashboard/student/Messages";
+import Directory from "../pages/dashboard/student/Directory";
+import Jobs from "../pages/dashboard/student/Jobs";
+import Mentorship from "../pages/dashboard/student/Mentorship";
+import AlumniProfileView from "../pages/dashboard/student/AlumniProfileView";
+import { ROLES } from "../consts/const";
 
 
 /**

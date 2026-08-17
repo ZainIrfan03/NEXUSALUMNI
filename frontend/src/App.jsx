@@ -7,8 +7,8 @@ import SuccessStoriesPage from "./pages/SuccessStories";
 import Register from "./pages/Register";
 import Login from "./pages/Login";
 import DashboardLayout from "./layouts/DashboardLayout";
-import studentRoutes from "./pages/dashboard/student/StudentRoutes";
-import alumniRoutes from "./pages/dashboard/alumni/AlumniRoutes";
+import studentRoutes from "./routes/StudentRoutes";
+import alumniRoutes from "./routes/AlumniRoutes";
 
 
 function App() {

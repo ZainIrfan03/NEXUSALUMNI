@@ -1,16 +1,16 @@
 import React from "react";
 import { Route } from "react-router-dom";
-import ProtectedRoute from "../../../routes/ProtectedRoute";
-import AlumniDashboard from "./AlumniDashboard";
-import StudentDirectory from "./StudentDirectory";
-import AlumniMentorship from "./AlumniMentorship";
-import AlumniMessages from "./AlumniMessages";
-import AlumniProfile from "./AlumniProfile";
-import EditProfile from "./AlumniEditProfile";
-import AlumniJobs from "./AlumniJobs";
-import AlumniJobNew from "./AlumniJobNew";
-import StudentProfileView from "./StudentProfileView";
-import { ROLES } from "../../../consts/const";
+import ProtectedRoute from "./ProtectedRoute";
+import AlumniDashboard from "../pages/dashboard/alumni/AlumniDashboard";
+import StudentDirectory from "../pages/dashboard/alumni/StudentDirectory";
+import AlumniMentorship from "../pages/dashboard/alumni/AlumniMentorship";
+import AlumniMessages from "../pages/dashboard/alumni/AlumniMessages";
+import AlumniProfile from "../pages/dashboard/alumni/AlumniProfile";
+import EditProfile from "../pages/dashboard/alumni/AlumniEditProfile";
+import AlumniJobs from "../pages/dashboard/alumni/AlumniJobs";
+import AlumniJobNew from "../pages/dashboard/alumni/AlumniJobNew";
+import StudentProfileView from "../pages/dashboard/alumni/StudentProfileView";
+import { ROLES } from "../consts/const";
 
 
 /**
