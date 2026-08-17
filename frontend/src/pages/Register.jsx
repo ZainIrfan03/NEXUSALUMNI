@@ -1,14 +1,11 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useDispatch } from "react-redux";
 import api from "../api/axios";
-import { setCredentials } from "../store/slice/authSlice";
 import { ROLES, EMAIL_REGEX, PASSWORD_MIN_LENGTH, FULL_NAME_MAX_LENGTH } from "../consts/appConstants";
 
 
 export default function Register() {
   const navigate = useNavigate();
-  const dispatch = useDispatch();
 
   const [role, setRole] = useState(ROLES.STUDENT);
   const [form, setForm] = useState({

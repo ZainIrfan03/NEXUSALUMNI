@@ -1,5 +1,6 @@
-import React from "react";
+import { useEffect } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
 import PublicLayout from "./layouts/PublicLayout";
 import Home from "./pages/Home";
 import About from "./pages/About"
@@ -10,9 +11,37 @@ import DashboardLayout from "./layouts/DashboardLayout";
 import studentRoutes from "./routes/StudentRoutes";
 import alumniRoutes from "./routes/AlumniRoutes";
 import { ROUTES } from "./consts/appConstants";
+import api from "./api/axios";
+import { logout, setCredentials } from "./store/slice/authSlice";
+import LoadingSpinner from "./components/common/LoadingSpinner";
 
 
 function App() {
+  const dispatch = useDispatch();
+  const { authChecked } = useSelector((state) => state.auth);
+
+  useEffect(() => {
+    if (authChecked) return undefined;
+
+    let active = true;
+    api
+      .get("/auth/me")
+      .then(({ data }) => {
+        if (active) dispatch(setCredentials(data));
+      })
+      .catch(() => {
+        if (active) dispatch(logout());
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [authChecked, dispatch]);
+
+  if (!authChecked) {
+    return <LoadingSpinner label="Verifying session..." className="min-h-screen" />;
+  }
+
   return (
     <BrowserRouter>
       <Routes>

@@ -3,22 +3,29 @@ const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 const Student = require("../models/Student");
 const Alumni = require("../models/Alumni");
-const { HTTP_STATUS, AUTH_COOKIE_NAME } = require("../utils/constants");
+const {
+  HTTP_STATUS,
+  AUTH_COOKIE_NAME,
+  ROLES,
+  JWT_PERSISTENT_EXPIRY,
+  JWT_SESSION_EXPIRY,
+  AUTH_COOKIE_MAX_AGE_MS,
+} = require("../utils/constants");
 const { JWT_SECRET } = require("../config/env");
-const generateToken = (id, role) => {
-  return jwt.sign({ id, role }, JWT_SECRET, { expiresIn: "30d" });
+const generateToken = (id, role, keepSignedIn = true) => {
+  return jwt.sign({ id, role }, JWT_SECRET, {
+    expiresIn: keepSignedIn ? JWT_PERSISTENT_EXPIRY : JWT_SESSION_EXPIRY,
+  });
 };
 
-// Sets the JWT as an httpOnly cookie so client-side JS can never read it
-// (protects against XSS token theft). `secure` is only forced in production
-// because it requires HTTPS, which localhost doesn't have during dev.
-const setTokenCookie = (res, token) => {
-  res.cookie(AUTH_COOKIE_NAME, token, {
+const setLoginTokenCookie = (res, token, keepSignedIn) => {
+  const options = {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
-    maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days — matches JWT expiry
-  });
+  };
+  if (keepSignedIn) options.maxAge = AUTH_COOKIE_MAX_AGE_MS;
+  res.cookie(AUTH_COOKIE_NAME, token, options);
 };
 
 // @route  POST /api/auth/register
@@ -47,7 +54,7 @@ const registerUser = async (req, res) => {
     }
 
     // Admin/Faculty are never created through this open endpoint.
-    const allowedPublicRoles = ["student", "alumni"];
+    const allowedPublicRoles = [ROLES.STUDENT, ROLES.ALUMNI];
     if (!allowedPublicRoles.includes(role)) {
       return res.status(HTTP_STATUS.FORBIDDEN).json({
         message: "This role cannot be self-registered. Contact an administrator.",
@@ -83,9 +90,6 @@ const registerUser = async (req, res) => {
       await Alumni.create({ user: user._id, graduationYear, company, jobTitle });
     }
 
-    const token = generateToken(user._id, user.role);
-    setTokenCookie(res, token);
-
     res.status(HTTP_STATUS.CREATED).json({
       _id: user._id,
       fullName: user.fullName,
@@ -101,7 +105,7 @@ const registerUser = async (req, res) => {
 // Logs in any role (student, alumni, faculty, admin) — same User collection.
 const loginUser = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { email, password, keepSignedIn = false } = req.body;
 
     const user = await User.findOne({ email });
     if (!user) {
@@ -113,8 +117,8 @@ const loginUser = async (req, res) => {
       return res.status(HTTP_STATUS.UNAUTHORIZED).json({ message: "Invalid email or password" });
     }
 
-    const token = generateToken(user._id, user.role);
-    setTokenCookie(res, token);
+    const token = generateToken(user._id, user.role, keepSignedIn);
+    setLoginTokenCookie(res, token, keepSignedIn);
 
     res.json({
       _id: user._id,
@@ -139,4 +143,24 @@ const logoutUser = (req, res) => {
   res.json({ message: "Logged out successfully" });
 };
 
-module.exports = { registerUser, loginUser, logoutUser };
+// @route GET /api/auth/me
+// Verifies the JWT cookie and returns fresh identity data from the database.
+const getCurrentUser = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select("fullName email role");
+    if (!user) {
+      return res.status(HTTP_STATUS.UNAUTHORIZED).json({ message: "Session user not found" });
+    }
+
+    res.json({
+      _id: user._id,
+      fullName: user.fullName,
+      email: user.email,
+      role: user.role,
+    });
+  } catch (error) {
+    res.status(HTTP_STATUS.SERVER_ERROR).json({ message: "Server error", error: error.message });
+  }
+};
+
+module.exports = { registerUser, loginUser, logoutUser, getCurrentUser };

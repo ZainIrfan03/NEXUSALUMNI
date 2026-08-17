@@ -1,6 +1,20 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 
 import { API_BASE_URL, TAGS } from "../../consts/appConstants";
+import { logout } from "../slice/authSlice";
+
+const rawBaseQuery = fetchBaseQuery({
+  baseUrl: API_BASE_URL,
+  credentials: "include",
+});
+
+const baseQueryWithAuth = async (args, api, extraOptions) => {
+  const result = await rawBaseQuery(args, api, extraOptions);
+  if (result.error?.status === 401) {
+    api.dispatch(logout());
+  }
+  return result;
+};
 
 /**
  * Single RTK Query instance for the whole app. Every feature (jobs,
@@ -16,10 +30,7 @@ import { API_BASE_URL, TAGS } from "../../consts/appConstants";
  */
 export const baseApi = createApi({
   reducerPath: "api",
-  baseQuery: fetchBaseQuery({
-    baseUrl: API_BASE_URL,
-    credentials: "include",
-  }),
+  baseQuery: baseQueryWithAuth,
   // Every cache tag used by any feature slice must be declared here up
   // front — injectEndpoints can't add new tag types later.
   tagTypes: Object.values(TAGS),

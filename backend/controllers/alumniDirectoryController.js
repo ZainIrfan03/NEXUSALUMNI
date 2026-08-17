@@ -1,13 +1,6 @@
 const Student = require("../models/Student");
 const MentorshipRequest = require("../models/MentorshipRequest");
-const { HTTP_STATUS } = require("../utils/constants");
-
-const DEPARTMENT_LABELS = {
-  cs: "Computer Science",
-  business: "Business",
-  engineering: "Engineering",
-  design: "Design",
-};
+const { HTTP_STATUS, DEPARTMENT_LABELS } = require("../utils/constants");
 
 // Session is stored as a string like "2021-2025" — the graduation year
 // is the second half of that range.

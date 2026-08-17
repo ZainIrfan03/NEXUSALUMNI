@@ -5,6 +5,16 @@ import { LOCAL_STORAGE_USER_KEY } from "../../consts/appConstants";
 // (so refreshing the page doesn't log the user out).
 const storedUser = localStorage.getItem(LOCAL_STORAGE_USER_KEY);
 
+function parseStoredUser(value) {
+  if (!value) return null;
+  try {
+    return JSON.parse(value);
+  } catch {
+    localStorage.removeItem(LOCAL_STORAGE_USER_KEY);
+    return null;
+  }
+}
+
 // ── DEV-ONLY MOCK LOGIN ──────────────────────────────────────────────
 // Lets you jump straight into a dashboard without going through /login.
 // Only works when running `npm run dev` (import.meta.env.DEV) AND only
@@ -35,10 +45,13 @@ function getMockUser() {
 }
 // ──────────────────────────────────────────────────────────────────────
 
-const activeUser = storedUser ? JSON.parse(storedUser) : getMockUser();
+const persistedUser = parseStoredUser(storedUser);
+const mockUser = persistedUser ? null : getMockUser();
+const activeUser = persistedUser || mockUser;
 
 const initialState = {
   user: activeUser,
+  authChecked: Boolean(mockUser),
 };
 
 const authSlice = createSlice({
@@ -48,11 +61,13 @@ const authSlice = createSlice({
     // Called right after a successful login/register API response
     setCredentials: (state, action) => {
       state.user = action.payload;
+      state.authChecked = true;
       localStorage.setItem(LOCAL_STORAGE_USER_KEY, JSON.stringify(action.payload));
     },
     // Called on logout
     logout: (state) => {
       state.user = null;
+      state.authChecked = true;
       localStorage.removeItem(LOCAL_STORAGE_USER_KEY);
       sessionStorage.removeItem("mock_user"); // also clear any active mock
     },

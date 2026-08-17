@@ -8,9 +8,13 @@ const cookieParser = require("cookie-parser");
 const cookie = require("cookie");
 const connectDB = require("./config/db");
 const path = require("path");
-const { SOCKET_EVENTS, AUTH_COOKIE_NAME } = require("./utils/constants");
+const {
+  SOCKET_EVENTS,
+  AUTH_COOKIE_NAME,
+  FRONTEND_URL,
+  SERVER_PORT,
+} = require("./utils/constants");
 const { JWT_SECRET } = require("./config/env");
-const FRONTEND_URL = process.env.FRONTEND_URL;
 
 const directoryRoutes = require("./routes/directoryRoutes");
 const mentorshipRoutes = require("./routes/mentorshipRoutes");
@@ -26,6 +30,7 @@ const alumniDirectoryRoutes = require("./routes/alumniDirectoryRoutes");
 const messageRoutes = require("./routes/messageRoutes");
 const Message = require("./models/Message");
 const Conversation = require("./models/Conversation");
+const User = require("./models/User");
 const activityRoutes = require("./routes/activityRoutes");
 const storyRoutes = require("./routes/storyRoutes");
 const { notFound, errorHandler } = require("./middleware/errorHandler");
@@ -87,7 +92,7 @@ const onlineUsers = new Map(); // userId -> socketId
 // Client must connect with { withCredentials: true } so the browser
 // includes the httpOnly "token" cookie in the handshake request headers
 // (socket.io doesn't parse cookies itself, so we do it manually here).
-io.use((socket, next) => {
+io.use(async (socket, next) => {
   const rawCookie = socket.handshake.headers.cookie;
   const token = rawCookie ? cookie.parse(rawCookie)[AUTH_COOKIE_NAME] : null;
 
@@ -95,7 +100,9 @@ io.use((socket, next) => {
 
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
-    socket.userId = decoded.id;
+    const user = await User.findById(decoded.id).select("_id");
+    if (!user) return next(new Error("Session user not found"));
+    socket.userId = user._id.toString();
     next();
   } catch (err) {
     next(new Error("Invalid token"));
@@ -176,5 +183,4 @@ io.on("connection", (socket) => {
   });
 });
 
-const PORT = process.env.PORT || 5000;
-httpServer.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+httpServer.listen(SERVER_PORT, () => console.log(`Server running on port ${SERVER_PORT}`));

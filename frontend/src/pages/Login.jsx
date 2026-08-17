@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import api from "../api/axios";
@@ -26,7 +26,7 @@ export default function Login() {
     setLoading(true);
 
     try {
-      const { data } = await api.post(`/auth/login`, form)
+      const { data } = await api.post(`/auth/login`, { ...form, keepSignedIn })
 
       
       dispatch(setCredentials(data));

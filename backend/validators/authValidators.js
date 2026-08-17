@@ -72,6 +72,10 @@ const loginValidators = [
     .normalizeEmail(),
 
   body("password").notEmpty().withMessage("Password is required"),
+  body("keepSignedIn")
+    .optional()
+    .isBoolean()
+    .withMessage("keepSignedIn must be true or false"),
 ];
 
 module.exports = { registerValidators, loginValidators };

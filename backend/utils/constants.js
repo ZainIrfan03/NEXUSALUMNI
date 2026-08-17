@@ -1,6 +1,8 @@
 // Central place for backend-wide constant values.
 // Add more constants here as duplicates are found (see Word report).
 
+const path = require("path");
+
 const HTTP_STATUS = {
   OK: 200,
   CREATED: 201,
@@ -21,8 +23,13 @@ const SOCKET_EVENTS = {
 };
 
 const AUTH_COOKIE_NAME = "token";
+const JWT_PERSISTENT_EXPIRY = "30d";
+const JWT_SESSION_EXPIRY = "1d";
+const AUTH_COOKIE_MAX_AGE_MS = 5 * 24 * 60 * 60 * 1000;
+const FRONTEND_URL = process.env.FRONTEND_URL;
+const SERVER_PORT = process.env.PORT || 5000;
 
-// Must exactly match FRONTEND/src/consts/const.jsx -> ROLES
+// Must exactly match FRONTEND/src/consts/appConstants.js -> ROLES
 // (also used as the `enum` for models/User.js -> role)
 const ROLES = {
   STUDENT: "student",
@@ -31,7 +38,7 @@ const ROLES = {
   ADMIN: "admin",
 };
 
-// Must exactly match FRONTEND/src/consts/const.jsx -> MENTORSHIP_STATUS
+// Must exactly match FRONTEND/src/consts/appConstants.js -> MENTORSHIP_STATUS
 // (also used as the `enum` for models/MentorshipRequest.js -> status)
 const MENTORSHIP_STATUS = {
   PENDING: "pending",
@@ -40,7 +47,7 @@ const MENTORSHIP_STATUS = {
   COMPLETED: "completed",
 };
 
-// Must exactly match FRONTEND/src/consts/const.jsx -> APPLICATION_STATUS
+// Must exactly match FRONTEND/src/consts/appConstants.js -> APPLICATION_STATUS
 // (also used as the `enum` for models/Application.js -> status)
 const APPLICATION_STATUS = {
   APPLIED: "applied",
@@ -69,7 +76,20 @@ const MAX_AVATAR_SIZE = 3 * 1024 * 1024; // 3MB
 const MAX_RESUME_SIZE = 5 * 1024 * 1024; // 5MB
 const MAX_CHAT_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
-// Must exactly match FRONTEND/src/consts/const.jsx -> PASSWORD_MIN_LENGTH / FULL_NAME_MAX_LENGTH
+const UPLOAD_DIRS = {
+  AVATARS: path.join(__dirname, "..", "uploads", "avatars"),
+  RESUMES: path.join(__dirname, "..", "uploads", "resumes"),
+  CHAT: path.join(__dirname, "..", "uploads", "chat"),
+};
+
+const DEPARTMENT_LABELS = {
+  cs: "Computer Science",
+  business: "Business",
+  engineering: "Engineering",
+  design: "Design",
+};
+
+// Must exactly match FRONTEND/src/consts/appConstants.js -> PASSWORD_MIN_LENGTH / FULL_NAME_MAX_LENGTH
 // (Register.jsx enforces these client-side; validators/authValidators.js
 // enforces them again server-side since a client check is bypassable.)
 const PASSWORD_MIN_LENGTH = 8;
@@ -79,6 +99,11 @@ module.exports = {
   HTTP_STATUS,
   SOCKET_EVENTS,
   AUTH_COOKIE_NAME,
+  JWT_PERSISTENT_EXPIRY,
+  JWT_SESSION_EXPIRY,
+  AUTH_COOKIE_MAX_AGE_MS,
+  FRONTEND_URL,
+  SERVER_PORT,
   ROLES,
   MENTORSHIP_STATUS,
   APPLICATION_STATUS,
@@ -87,6 +112,8 @@ module.exports = {
   MAX_AVATAR_SIZE,
   MAX_RESUME_SIZE,
   MAX_CHAT_FILE_SIZE,
+  UPLOAD_DIRS,
+  DEPARTMENT_LABELS,
   PASSWORD_MIN_LENGTH,
   FULL_NAME_MAX_LENGTH,
 };
