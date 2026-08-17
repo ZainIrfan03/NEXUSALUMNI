@@ -18,6 +18,76 @@ export const ROLES = {
   FACULTY: "faculty",
   ADMIN: "admin",
 };
+
+export const ROUTES = {
+  HOME: "/",
+  ABOUT: "/about",
+  SUCCESS_STORIES: "/success-stories",
+  LOGIN: "/login",
+  REGISTER: "/register",
+  STUDENT: {
+    DASHBOARD: "/dashboard/student",
+    PROFILE: "/dashboard/student/profile",
+    EDIT_PROFILE: "/dashboard/student/profile/edit",
+    DIRECTORY: "/dashboard/student/directory",
+    DIRECTORY_PROFILE: "/dashboard/student/directory/:id",
+    directoryProfile: (id) => `/dashboard/student/directory/${id}`,
+    MENTORSHIP: "/dashboard/student/mentorship",
+    JOBS: "/dashboard/student/jobs",
+    MESSAGES: "/dashboard/student/messages",
+  },
+  ALUMNI: {
+    DASHBOARD: "/dashboard/alumni",
+    PROFILE: "/dashboard/alumni/profile",
+    EDIT_PROFILE: "/dashboard/alumni/profile/edit",
+    DIRECTORY: "/dashboard/alumni/directory",
+    DIRECTORY_PROFILE: "/dashboard/alumni/directory/:id",
+    directoryProfile: (id) => `/dashboard/alumni/directory/${id}`,
+    MENTORSHIP: "/dashboard/alumni/mentorship",
+    JOBS: "/dashboard/alumni/jobs",
+    NEW_JOB: "/dashboard/alumni/jobs/new",
+    MESSAGES: "/dashboard/alumni/messages",
+  },
+  FACULTY: {
+    DASHBOARD: "/dashboard/faculty",
+    ENGAGEMENT: "/dashboard/faculty/engagement",
+    EVENTS: "/dashboard/faculty/events",
+    ANNOUNCEMENTS: "/dashboard/faculty/announcements",
+  },
+  ADMIN: {
+    DASHBOARD: "/dashboard/admin",
+    USERS: "/dashboard/admin/users",
+    JOBS: "/dashboard/admin/jobs",
+    EVENTS: "/dashboard/admin/events",
+    REPORTS: "/dashboard/admin/reports",
+  },
+};
+
+export const ROLE_HOME_ROUTES = {
+  [ROLES.STUDENT]: ROUTES.STUDENT.DASHBOARD,
+  [ROLES.ALUMNI]: ROUTES.ALUMNI.DASHBOARD,
+  [ROLES.FACULTY]: ROUTES.FACULTY.DASHBOARD,
+  [ROLES.ADMIN]: ROUTES.ADMIN.DASHBOARD,
+};
+
+export const JOB_TYPES = {
+  FULL_TIME: "Full-time",
+  PART_TIME: "Part-time",
+  INTERNSHIP: "Internship",
+  REMOTE: "Remote",
+};
+
+export const UI_LIMITS = {
+  FEATURED_ALUMNI: 4,
+  SUCCESS_STORIES_PAGE_SIZE: 6,
+  SUCCESS_STORIES_HERO_COUNT: 2,
+  DIRECTORY_PAGE_SIZE: 6,
+  JOBS_PAGE_SIZE: 4,
+  MENTORSHIP_REQUEST_PAGE_SIZE: 4,
+  AVATAR_STACK_SIZE: 2,
+  DASHBOARD_PREVIEW_COUNT: 2,
+  SEARCH_DEBOUNCE_MS: 400,
+};
  
 // Must exactly match BACKEND/models/MentorshipRequest.js -> status enum
 export const MENTORSHIP_STATUS = {

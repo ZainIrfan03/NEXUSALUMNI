@@ -13,7 +13,7 @@ import {
   useDeleteConversationMutation,
   useMarkConversationReadMutation,
 } from "../../store/api/messagesApi";
- import { SOCKET_URL, SOCKET_EVENTS, TYPING_TIMEOUT_MS } from "../../consts/const"; 
+ import { SOCKET_URL, SOCKET_EVENTS, TYPING_TIMEOUT_MS } from "../../consts/appConstants"; 
 
 import {
   Search,

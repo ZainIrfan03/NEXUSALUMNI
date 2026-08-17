@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useGetAlumniDirectoryQuery } from "../../../store/api/studentDirectoryApi";
 import { ChevronDown, LayoutGrid, List, ChevronLeft, ChevronRight } from "lucide-react";
 import LoadingSpinner from "../../../components/common/LoadingSpinner";
+import { ROUTES, UI_LIMITS } from "../../../consts/appConstants";
 
 /**
  * Alumni Directory — file: src/pages/dashboard/student/Directory.jsx
@@ -47,7 +48,7 @@ export default function Directory() {
   // the Alumni model + controller before they can be sent here too.)
   const { data, isLoading: loading, error: queryError } = useGetAlumniDirectoryQuery({
     page: activePage,
-    limit: 6,
+    limit: UI_LIMITS.DIRECTORY_PAGE_SIZE,
     fromYear: filters.fromYear || undefined,
     toYear: filters.toYear || undefined,
   });
@@ -69,7 +70,7 @@ export default function Directory() {
   };
 
   const handleViewProfile = (id) => {
-    navigate(`/dashboard/student/directory/${id}`);
+    navigate(ROUTES.STUDENT.directoryProfile(id));
   };
 
   return (

@@ -10,7 +10,7 @@
  * - Relative path from our own backend (e.g. "/uploads/avatar123.png")
  *   -> prefixed with the API base URL from .env
  */
-import { SOCKET_URL } from "../consts/const";
+import { SOCKET_URL } from "../consts/appConstants";
 
 export function getImageUrl(path) {
   if (!path) return "";

@@ -1,6 +1,6 @@
 import axios from "axios";
-import { API_BASE_URL } from "../consts/const";
-import { SOCKET_URL } from "../consts/const";
+import { API_BASE_URL } from "../consts/appConstants";
+import { SOCKET_URL } from "../consts/appConstants";
 
 const api = axios.create({
   baseURL: API_BASE_URL,

@@ -5,6 +5,7 @@ import {
   useUploadAlumniAvatarMutation,
   useUploadAlumniResumeMutation,
 } from "../../../store/api/alumniProfileApi";
+import { ROUTES } from "../../../consts/appConstants";
 
 export default function AlumniEditProfile() {
   const { data: profile, isLoading: loading, error: queryError } = useGetMyAlumniProfileQuery();
@@ -23,7 +24,7 @@ export default function AlumniEditProfile() {
       updateProfile={updateProfile}
       uploadAvatar={uploadAvatar}
       uploadResume={uploadResume}
-      profilePath="/dashboard/alumni/profile"
+      profilePath={ROUTES.ALUMNI.PROFILE}
     />
   );
 }

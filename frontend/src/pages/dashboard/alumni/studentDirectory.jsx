@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useGetStudentDirectoryQuery } from "../../../store/api/alumniDirectoryApi";
+import { ROUTES } from "../../../consts/appConstants";
 import { useStartConversationMutation } from "../../../store/api/messagesApi";
 import { Filter, UserPlus, Loader2, ChevronLeft, ChevronRight, Send } from "lucide-react";
 import { getImageUrl } from "../../../utils/getImageUrl";
@@ -146,7 +147,7 @@ export default function StudentDirectory() {
     setMessagingId(student._id);
     try {
       const conversation = await startConversation(student.userId).unwrap();
-      navigate("/dashboard/alumni/messages", { state: { conversationId: conversation._id } });
+      navigate(ROUTES.ALUMNI.MESSAGES, { state: { conversationId: conversation._id } });
     } catch (err) {
       setActionError(err.data?.message || "Could not start chat.");
     } finally {
@@ -277,7 +278,7 @@ export default function StudentDirectory() {
                 <StudentCard
                   key={student._id}
                   student={student}
-                  onViewProfile={(id) => navigate(`/dashboard/alumni/directory/${id}`)}
+                  onViewProfile={(id) => navigate(ROUTES.ALUMNI.directoryProfile(id))}
                   onMessage={handleMessage}
                   messagingId={messagingId}
                 />

@@ -1,5 +1,5 @@
 import { baseApi } from "./baseApi";
-import { TAGS } from "../../consts/const";
+import { TAGS } from "../../consts/appConstants";
 import { getImageUrl as fileUrl } from "../../utils/getImageUrl";
 
 /**

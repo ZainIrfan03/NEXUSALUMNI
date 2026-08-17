@@ -10,7 +10,7 @@ import {
   useSendMentorshipRequestMutation,
 } from "../../../store/api/studentMentorshipApi";
 import { useStartConversationMutation } from "../../../store/api/messagesApi";
-import { MENTORSHIP_STATUS } from "../../../consts/const";
+import { MENTORSHIP_STATUS, ROUTES, UI_LIMITS } from "../../../consts/appConstants";
 
 /**
  * Mentorship Hub — file: src/pages/dashboard/student/Mentorship.jsx
@@ -41,13 +41,13 @@ const statusTones = {
   [MENTORSHIP_STATUS.DECLINED]: "danger",
 };
 
-const REQUEST_PAGE_SIZE = 4; // how many "Request Status" rows to reveal per "Load More" click
-
 export default function Mentorship() {
   const navigate = useNavigate();
   const [actionError, setActionError] = useState("");
   const [sendingId, setSendingId] = useState(null); // tracks which card's button is mid-request
-  const [visibleRequestCount, setVisibleRequestCount] = useState(REQUEST_PAGE_SIZE);
+  const [visibleRequestCount, setVisibleRequestCount] = useState(
+    UI_LIMITS.MENTORSHIP_REQUEST_PAGE_SIZE
+  );
 
   const {
     data: mentors = [],
@@ -98,7 +98,7 @@ export default function Mentorship() {
     setActionError("");
     try {
       const conversation = await startConversation(mentor.alumniUserId).unwrap();
-      navigate("/dashboard/student/messages", {
+      navigate(ROUTES.STUDENT.MESSAGES, {
         state: { conversationId: conversation._id },
       });
     } catch (err) {
@@ -263,7 +263,11 @@ export default function Mentorship() {
 
                 {hasMoreRequests && (
                   <button
-                    onClick={() => setVisibleRequestCount((currentCount) => currentCount + REQUEST_PAGE_SIZE)}
+                    onClick={() =>
+                      setVisibleRequestCount(
+                        (currentCount) => currentCount + UI_LIMITS.MENTORSHIP_REQUEST_PAGE_SIZE
+                      )
+                    }
                     className="w-full text-sm font-medium text-primary hover:underline pt-3 mt-1 border-t border-gray-100"
                   >
                     Load More

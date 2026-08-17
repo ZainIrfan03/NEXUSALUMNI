@@ -8,6 +8,7 @@ import {
 import { useStartConversationMutation } from "../../../store/api/messagesApi";
 import { getImageUrl as fileUrl } from "../../../utils/getImageUrl";
 import LoadingSpinner from "../../../components/common/LoadingSpinner";
+import { ROUTES } from "../../../consts/appConstants";
 import { ClipboardList, Users, Send } from "lucide-react";
 
 // Files come back from the backend as relative paths (e.g. "/uploads/avatars/xyz.png"),
@@ -113,7 +114,7 @@ export default function AlumniMentorship() {
     setActionError("");
     try {
       const conversation = await startConversation(menteeUserId).unwrap();
-      navigate("/dashboard/alumni/messages", {
+      navigate(ROUTES.ALUMNI.MESSAGES, {
         state: { conversationId: conversation._id },
       });
     } catch (err) {

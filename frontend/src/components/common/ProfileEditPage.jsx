@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getImageUrl as fileUrl } from "../../utils/getImageUrl";
-import { REDIRECT_DELAY_MS } from "../../consts/const";
+import { REDIRECT_DELAY_MS } from "../../consts/appConstants";
 import LoadingSpinner from "./LoadingSpinner";
 import {
   UserCog,

@@ -9,6 +9,7 @@ import Login from "./pages/Login";
 import DashboardLayout from "./layouts/DashboardLayout";
 import studentRoutes from "./routes/StudentRoutes";
 import alumniRoutes from "./routes/AlumniRoutes";
+import { ROUTES } from "./consts/appConstants";
 
 
 function App() {
@@ -17,11 +18,11 @@ function App() {
       <Routes>
         {/* Public pages: Navbar + Footer wrap everything inside */}
         <Route element={<PublicLayout />}>
-          <Route path="/" element={<Home />} />
-          <Route path="/about" element={<About />} />
-          <Route path="/success-stories" element={<SuccessStoriesPage />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
+          <Route path={ROUTES.HOME} element={<Home />} />
+          <Route path={ROUTES.ABOUT} element={<About />} />
+          <Route path={ROUTES.SUCCESS_STORIES} element={<SuccessStoriesPage />} />
+          <Route path={ROUTES.LOGIN} element={<Login />} />
+          <Route path={ROUTES.REGISTER} element={<Register />} />
         </Route>
          <Route element={<DashboardLayout />}>
           {studentRoutes}

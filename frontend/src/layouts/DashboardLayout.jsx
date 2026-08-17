@@ -3,7 +3,7 @@ import { Outlet, NavLink, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import api from "../api/axios";
 import { getImageUrl as fileUrl } from "../utils/getImageUrl";
-import { ROLES, SOCKET_EVENTS } from "../consts/const";
+import { ROLES, ROUTES, SOCKET_EVENTS } from "../consts/appConstants";
 import { useGetUnreadMessageCountQuery } from "../store/api/messagesApi";
 import { useGetMyProfileQuery } from "../store/api/studentProfileApi";
 import { useGetMyAlumniProfileQuery } from "../store/api/alumniProfileApi";
@@ -37,33 +37,33 @@ import { connectSocket, disconnectSocket } from "../utils/socket";
 
 const linksByRole = {
   [ROLES.STUDENT]: [
-    { label: "Dashboard", icon: LayoutDashboard, path: "/dashboard/student" },
-    { label: "Profile", icon: User, path: "/dashboard/student/profile" },
-    { label: "Directory", icon: Users, path: "/dashboard/student/directory" },
-    { label: "Mentorship", icon: Compass, path: "/dashboard/student/mentorship" },
-    { label: "Jobs", icon: Briefcase, path: "/dashboard/student/jobs" },
-    { label: "Messages", icon: Mail, path: "/dashboard/student/messages" },
+    { label: "Dashboard", icon: LayoutDashboard, path: ROUTES.STUDENT.DASHBOARD },
+    { label: "Profile", icon: User, path: ROUTES.STUDENT.PROFILE },
+    { label: "Directory", icon: Users, path: ROUTES.STUDENT.DIRECTORY },
+    { label: "Mentorship", icon: Compass, path: ROUTES.STUDENT.MENTORSHIP },
+    { label: "Jobs", icon: Briefcase, path: ROUTES.STUDENT.JOBS },
+    { label: "Messages", icon: Mail, path: ROUTES.STUDENT.MESSAGES },
   ],
   [ROLES.ALUMNI]: [
-    { label: "Dashboard", icon: LayoutDashboard, path: "/dashboard/alumni" },
-    { label: "Profile", icon: User, path: "/dashboard/alumni/profile" },
-    { label: "Directory", icon: Users, path: "/dashboard/alumni/directory" },
-    { label: "Mentorship", icon: Compass, path: "/dashboard/alumni/mentorship" },
-    { label: "Post a Job", icon: Briefcase, path: "/dashboard/alumni/jobs" },
-    { label: "Messages", icon: Mail, path: "/dashboard/alumni/messages" },
+    { label: "Dashboard", icon: LayoutDashboard, path: ROUTES.ALUMNI.DASHBOARD },
+    { label: "Profile", icon: User, path: ROUTES.ALUMNI.PROFILE },
+    { label: "Directory", icon: Users, path: ROUTES.ALUMNI.DIRECTORY },
+    { label: "Mentorship", icon: Compass, path: ROUTES.ALUMNI.MENTORSHIP },
+    { label: "Post a Job", icon: Briefcase, path: ROUTES.ALUMNI.JOBS },
+    { label: "Messages", icon: Mail, path: ROUTES.ALUMNI.MESSAGES },
   ],
   [ROLES.FACULTY]: [
-    { label: "Dashboard", icon: LayoutDashboard, path: "/dashboard/faculty" },
-    { label: "Engagement", icon: BarChart3, path: "/dashboard/faculty/engagement" },
-    { label: "Events", icon: CalendarDays, path: "/dashboard/faculty/events" },
-    { label: "Announcements", icon: Megaphone, path: "/dashboard/faculty/announcements" },
+    { label: "Dashboard", icon: LayoutDashboard, path: ROUTES.FACULTY.DASHBOARD },
+    { label: "Engagement", icon: BarChart3, path: ROUTES.FACULTY.ENGAGEMENT },
+    { label: "Events", icon: CalendarDays, path: ROUTES.FACULTY.EVENTS },
+    { label: "Announcements", icon: Megaphone, path: ROUTES.FACULTY.ANNOUNCEMENTS },
   ],
   [ROLES.ADMIN]: [
-    { label: "Dashboard", icon: LayoutDashboard, path: "/dashboard/admin" },
-    { label: "Users", icon: Users, path: "/dashboard/admin/users" },
-    { label: "Jobs", icon: Briefcase, path: "/dashboard/admin/jobs" },
-    { label: "Events", icon: CalendarDays, path: "/dashboard/admin/events" },
-    { label: "Reports", icon: BarChart3, path: "/dashboard/admin/reports" },
+    { label: "Dashboard", icon: LayoutDashboard, path: ROUTES.ADMIN.DASHBOARD },
+    { label: "Users", icon: Users, path: ROUTES.ADMIN.USERS },
+    { label: "Jobs", icon: Briefcase, path: ROUTES.ADMIN.JOBS },
+    { label: "Events", icon: CalendarDays, path: ROUTES.ADMIN.EVENTS },
+    { label: "Reports", icon: BarChart3, path: ROUTES.ADMIN.REPORTS },
   ],
 };
 
@@ -120,12 +120,12 @@ export default function DashboardLayout() {
     api.post(`/auth/logout`).catch(() => {});
     disconnectSocket();
     dispatch(logout());
-    navigate("/login");
+    navigate(ROUTES.LOGIN);
   };
 
   const handleViewProfile = () => {
     setMenuOpen(false);
-    navigate(`/dashboard/${user?.role}/profile`);
+    navigate(user?.role === ROLES.STUDENT ? ROUTES.STUDENT.PROFILE : ROUTES.ALUMNI.PROFILE);
   };
 
   // Close the account dropdown when clicking anywhere outside it
@@ -226,7 +226,10 @@ export default function DashboardLayout() {
           <div className="flex items-center gap-5 ml-auto">
             <button
               type="button"
-              onClick={() => supportsMessages && navigate(`/dashboard/${user.role}/messages`)}
+              onClick={() =>
+                supportsMessages &&
+                navigate(user.role === ROLES.STUDENT ? ROUTES.STUDENT.MESSAGES : ROUTES.ALUMNI.MESSAGES)
+              }
               className="relative text-gray-500 hover:text-dark transition-colors"
               aria-label={
                 unreadMessageCount

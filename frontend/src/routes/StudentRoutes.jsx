@@ -9,7 +9,7 @@ import Directory from "../pages/dashboard/student/Directory";
 import Jobs from "../pages/dashboard/student/Jobs";
 import Mentorship from "../pages/dashboard/student/Mentorship";
 import AlumniProfileView from "../pages/dashboard/student/AlumniProfileView";
-import { ROLES } from "../consts/const";
+import { ROLES, ROUTES } from "../consts/appConstants";
 
 
 /**
@@ -20,7 +20,7 @@ import { ROLES } from "../consts/const";
 const studentRoutes = (
     <>
         <Route
-            path="/dashboard/student"
+            path={ROUTES.STUDENT.DASHBOARD}
             element={
                 <ProtectedRoute allowedRoles={[ROLES.STUDENT]}>
                 <StudentDashboard />
@@ -28,7 +28,7 @@ const studentRoutes = (
             }
         />
         <Route
-            path="/dashboard/student/profile"
+            path={ROUTES.STUDENT.PROFILE}
             element={
                 <ProtectedRoute allowedRoles={[ROLES.STUDENT]}>
                 <MyProfile />
@@ -36,35 +36,35 @@ const studentRoutes = (
             }
         />
         <Route
-            path="/dashboard/student/profile/edit"
+            path={ROUTES.STUDENT.EDIT_PROFILE}
             element={
                  <ProtectedRoute allowedRoles={[ROLES.STUDENT]}>
                 <EditProfile />
                  </ProtectedRoute>
             }
         />
-        <Route path="/dashboard/student/messages" element={
+        <Route path={ROUTES.STUDENT.MESSAGES} element={
                <ProtectedRoute allowedRoles={[ROLES.STUDENT]}>
             <Messages />
              </ProtectedRoute>
         } />
-        <Route path="/dashboard/student/directory" element={
+        <Route path={ROUTES.STUDENT.DIRECTORY} element={
                <ProtectedRoute allowedRoles={[ROLES.STUDENT]}>
             <Directory />
              </ProtectedRoute>
         } />
 
-        <Route path="/dashboard/student/directory/:id" element={
+        <Route path={ROUTES.STUDENT.DIRECTORY_PROFILE} element={
                <ProtectedRoute allowedRoles={[ROLES.STUDENT]}>
             <AlumniProfileView />
              </ProtectedRoute>
         } />
-        <Route path="/dashboard/student/jobs" element={
+        <Route path={ROUTES.STUDENT.JOBS} element={
                <ProtectedRoute allowedRoles={[ROLES.STUDENT]}>
             <Jobs />
              </ProtectedRoute>
         } />
-        <Route path="/dashboard/student/mentorship" element={
+        <Route path={ROUTES.STUDENT.MENTORSHIP} element={
               <ProtectedRoute allowedRoles={[ROLES.STUDENT]}>
             <Mentorship />
              </ProtectedRoute>

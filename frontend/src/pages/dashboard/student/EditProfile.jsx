@@ -5,6 +5,7 @@ import {
   useUploadAvatarMutation,
   useUploadResumeMutation,
 } from "../../../store/api/studentProfileApi";
+import { ROUTES } from "../../../consts/appConstants";
 
 export default function EditProfile() {
   const { data: profile, isLoading: loading, error: queryError } = useGetMyProfileQuery();
@@ -23,7 +24,7 @@ export default function EditProfile() {
       updateProfile={updateProfile}
       uploadAvatar={uploadAvatar}
       uploadResume={uploadResume}
-      profilePath="/dashboard/student/profile"
+      profilePath={ROUTES.STUDENT.PROFILE}
       includeResumeInSave
       seedOnce
       clearSuccessOnUpload={false}

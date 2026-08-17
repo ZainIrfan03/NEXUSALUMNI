@@ -2,8 +2,14 @@ import React, { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useCreateJobMutation } from "../../../store/api/alumniJobsApi";
 import { Briefcase, ArrowLeft, Loader2 } from "lucide-react";
+import { JOB_TYPES, ROUTES } from "../../../consts/appConstants";
 
-const TYPE_OPTIONS = ["Full-time", "Part-time", "Internship", "Remote"];
+const TYPE_OPTIONS = [
+  JOB_TYPES.FULL_TIME,
+  JOB_TYPES.PART_TIME,
+  JOB_TYPES.INTERNSHIP,
+  JOB_TYPES.REMOTE,
+];
 const DEPARTMENT_OPTIONS = ["Engineering", "Design", "Marketing", "Sales", "Operations", "Other"];
 
 export default function AlumniJobNew() {
@@ -19,7 +25,7 @@ export default function AlumniJobNew() {
     company: "",
     location: "",
     department: "",
-    type: "Full-time",
+    type: JOB_TYPES.FULL_TIME,
     payRange: "",
     description: "",
     ...location.state?.prefill,
@@ -44,7 +50,7 @@ export default function AlumniJobNew() {
 
     try {
       await createJob(form).unwrap();
-      navigate("/dashboard/alumni/jobs");
+      navigate(ROUTES.ALUMNI.JOBS);
     } catch (err) {
       setError(err.data?.message || "Could not post this job. Please try again.");
     }
@@ -54,7 +60,7 @@ export default function AlumniJobNew() {
     <div className="max-w-3xl mx-auto">
       {/* Breadcrumb / back */}
       <button
-        onClick={() => navigate("/dashboard/alumni/jobs")}
+        onClick={() => navigate(ROUTES.ALUMNI.JOBS)}
         className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 mb-4"
       >
         <ArrowLeft size={14} /> Back to My Job Postings
@@ -198,7 +204,7 @@ export default function AlumniJobNew() {
         <div className="flex justify-end gap-3 pt-2">
           <button
             type="button"
-            onClick={() => navigate("/dashboard/alumni/jobs")}
+            onClick={() => navigate(ROUTES.ALUMNI.JOBS)}
             className="text-sm font-medium text-gray-700 border border-gray-200 rounded-lg px-5 py-2.5 hover:bg-gray-50 transition-colors"
           >
             Cancel

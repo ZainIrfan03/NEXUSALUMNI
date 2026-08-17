@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useGetDashboardStatsQuery, useGetRecentActivityQuery } from "../../../store/api/studentDashboardApi";
 import { useGetRecommendedMentorsQuery } from "../../../store/api/studentMentorshipApi";
 import UserAvatar from "../../../components/common/UserAvatar";
+import { ROUTES, UI_LIMITS } from "../../../consts/appConstants";
 import {
   Users,
   Users2,
@@ -49,7 +50,7 @@ export default function StudentDashboard() {
   // way the old inline fetchMentors() mapper did (the shared hook's
   // transformResponse keeps them as separate fields for Mentorship.jsx's
   // own layout).
-  const mentors = (recommendedMentors ?? []).slice(0, 2).map((mentor) => ({
+  const mentors = (recommendedMentors ?? []).slice(0, UI_LIMITS.DASHBOARD_PREVIEW_COUNT).map((mentor) => ({
     name: mentor.name,
     role: [mentor.role, mentor.company].filter(Boolean).join(", "),
     img: mentor.img,
@@ -89,13 +90,13 @@ export default function StudentDashboard() {
 
             <div className="flex gap-3">
               <button
-                onClick={() => navigate("/dashboard/student/mentorship")}
+                onClick={() => navigate(ROUTES.STUDENT.MENTORSHIP)}
                 className="flex items-center gap-2 bg-dark text-white text-sm font-semibold px-5 py-2.5 rounded-xl hover:opacity-90 transition-opacity"
               >
                 Get Started <ArrowRight size={16} />
               </button>
               <button
-                onClick={() => navigate("/dashboard/student/jobs")}
+                onClick={() => navigate(ROUTES.STUDENT.JOBS)}
                 className="bg-white border border-gray-200 text-dark text-sm font-semibold px-5 py-2.5 rounded-xl hover:bg-gray-50 transition-colors"
               >
                 View Jobs
@@ -210,7 +211,7 @@ export default function StudentDashboard() {
                     </div>
                   </div>
                   <button
-                    onClick={() => navigate("/dashboard/student/mentorship")}
+                    onClick={() => navigate(ROUTES.STUDENT.MENTORSHIP)}
                     className="w-full bg-primary text-white text-sm font-medium py-2 rounded-lg hover:opacity-90 transition-opacity"
                   >
                     Connect

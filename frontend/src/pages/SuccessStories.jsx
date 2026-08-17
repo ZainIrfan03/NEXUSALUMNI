@@ -4,6 +4,7 @@ import api from "../api/axios";
 import { getImageUrl } from "../utils/getImageUrl";
 import LoadingSpinner from "../components/common/LoadingSpinner";
 import EmptyState from "../components/common/EmptyState";
+import { UI_LIMITS } from "../consts/appConstants";
 
 
 
@@ -12,7 +13,7 @@ const initialsOf = (name = "") =>
     .split(" ")
     .map((w) => w[0])
     .join("")
-    .slice(0, 2)
+    .slice(0, UI_LIMITS.SUCCESS_STORIES_HERO_COUNT)
     .toUpperCase();
 
 const shortYear = (year) => (year ? `'${String(year).slice(-2)}` : "");
@@ -31,7 +32,10 @@ export default function SuccessStoriesPage() {
 
  
   useEffect(() => {
-    const t = setTimeout(() => setSearch(searchInput.trim()), 400);
+    const t = setTimeout(
+      () => setSearch(searchInput.trim()),
+      UI_LIMITS.SEARCH_DEBOUNCE_MS
+    );
     return () => clearTimeout(t);
   }, [searchInput]);
 
@@ -50,7 +54,14 @@ export default function SuccessStoriesPage() {
     setPage(1);
 
     api
-      .get("/stories", { params: { category: activeCategory, search, page: 1, limit: 6 } })
+      .get("/stories", {
+        params: {
+          category: activeCategory,
+          search,
+          page: 1,
+          limit: UI_LIMITS.SUCCESS_STORIES_PAGE_SIZE,
+        },
+      })
       .then(({ data }) => {
         if (cancelled) return;
         setStories(data.results || []);
@@ -75,7 +86,14 @@ export default function SuccessStoriesPage() {
     const nextPage = page + 1;
     setLoadingMore(true);
     api
-      .get("/stories", { params: { category: activeCategory, search, page: nextPage, limit: 6 } })
+      .get("/stories", {
+        params: {
+          category: activeCategory,
+          search,
+          page: nextPage,
+          limit: UI_LIMITS.SUCCESS_STORIES_PAGE_SIZE,
+        },
+      })
       .then(({ data }) => {
         setStories((prev) => [...prev, ...(data.results || [])]);
         setPage(nextPage);

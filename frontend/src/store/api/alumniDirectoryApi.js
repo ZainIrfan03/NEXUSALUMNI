@@ -1,5 +1,5 @@
 import { baseApi } from "./baseApi";
-import { TAGS } from "../../consts/const";
+import { TAGS } from "../../consts/appConstants";
 
 /**
  * Alumni Directory API — the student directory an alumni browses. Covers:

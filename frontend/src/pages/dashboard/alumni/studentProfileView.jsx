@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useGetStudentByIdQuery } from "../../../store/api/alumniDirectoryApi";
+import { ROUTES } from "../../../consts/appConstants";
 import { useStartConversationMutation } from "../../../store/api/messagesApi";
 import { getImageUrl as fileUrl } from "../../../utils/getImageUrl";
 import LoadingSpinner from "../../../components/common/LoadingSpinner";
@@ -61,7 +62,7 @@ export default function StudentProfileView() {
     setActionError("");
     try {
       const conversation = await startConversation(studentUserId).unwrap();
-      navigate("/dashboard/alumni/messages", {
+      navigate(ROUTES.ALUMNI.MESSAGES, {
         state: { conversationId: conversation._id },
       });
     } catch (err) {

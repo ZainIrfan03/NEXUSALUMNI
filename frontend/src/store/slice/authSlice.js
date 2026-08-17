@@ -1,5 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { LOCAL_STORAGE_USER_KEY } from "../../consts/const";
+import { LOCAL_STORAGE_USER_KEY } from "../../consts/appConstants";
 
 // On app load, try to restore the real session from localStorage
 // (so refreshing the page doesn't log the user out).

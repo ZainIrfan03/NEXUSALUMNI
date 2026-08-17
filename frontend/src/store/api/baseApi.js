@@ -1,6 +1,6 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 
-import { API_BASE_URL, TAGS } from "../../consts/const";
+import { API_BASE_URL, TAGS } from "../../consts/appConstants";
 
 /**
  * Single RTK Query instance for the whole app. Every feature (jobs,

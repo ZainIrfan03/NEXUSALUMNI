@@ -4,6 +4,7 @@ import api from "../../api/axios";
 import { getImageUrl as fileUrl } from "../../utils/getImageUrl";
 import LoadingSpinner from "../common/LoadingSpinner";
 import EmptyState from "../common/EmptyState";
+import { UI_LIMITS } from "../../consts/appConstants";
 
 export default function FeaturedAlumni() {
   const [alumni, setAlumni] = useState([]);
@@ -13,7 +14,7 @@ export default function FeaturedAlumni() {
     let cancelled = false;
 
     api
-      .get("/directory/featured", { params: { limit: 4 } })
+      .get("/directory/featured", { params: { limit: UI_LIMITS.FEATURED_ALUMNI } })
       .then(({ data }) => {
         if (cancelled) return;
         setAlumni(

@@ -4,6 +4,7 @@ import { useDispatch } from "react-redux";
 import api from "../api/axios";
 import { Mail, Lock, Eye, EyeOff, ArrowRight } from "lucide-react";
 import { setCredentials } from "../store/slice/authSlice";
+import { ROLE_HOME_ROUTES } from "../consts/appConstants";
 
 
 export default function Login() {
@@ -31,13 +32,7 @@ export default function Login() {
       dispatch(setCredentials(data));
 
     
-      const roleRoutes = {
-        student: "/dashboard/student",
-        alumni: "/dashboard/alumni",
-        faculty: "/dashboard/faculty",
-        admin: "/dashboard/admin",
-      };
-      navigate(roleRoutes[data.role] || "/");
+      navigate(ROLE_HOME_ROUTES[data.role] || "/");
     } catch (err) {
       setError(err.response?.data?.message || "Something went wrong. Try again.");
     } finally {

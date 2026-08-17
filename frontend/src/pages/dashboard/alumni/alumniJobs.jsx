@@ -6,7 +6,7 @@ import {
   useDeleteMyJobMutation,
   useUpdateApplicationStatusMutation,
 } from "../../../store/api/alumniJobsApi";
- import { APPLICATION_STATUS } from "../../../consts/const";
+ import { APPLICATION_STATUS, ROUTES, UI_LIMITS } from "../../../consts/appConstants";
 import { getImageUrl as fileUrl } from "../../../utils/getImageUrl";
 import LoadingSpinner from "../../../components/common/LoadingSpinner";
 import EmptyState from "../../../components/common/EmptyState";
@@ -26,11 +26,8 @@ import {
   Mail,
 } from "lucide-react";
 
-const PAGE_SIZE = 4;
-
-
 function AvatarStack({ applicants = [], count }) {
-  const shown = applicants.slice(0, 2);
+  const shown = applicants.slice(0, UI_LIMITS.AVATAR_STACK_SIZE);
   const extra = count - shown.length;
   return (
     <div className="flex items-center -space-x-2">
@@ -84,7 +81,7 @@ export default function AlumniJobs() {
     data: jobsData,
     isLoading: loading,
     error: jobsQueryError,
-  } = useGetMyJobsQuery({ page, pageSize: PAGE_SIZE });
+  } = useGetMyJobsQuery({ page, pageSize: UI_LIMITS.JOBS_PAGE_SIZE });
 
   const jobs = jobsData?.jobs || [];
   const totalCount = jobsData?.totalCount || 0;
@@ -152,9 +149,10 @@ export default function AlumniJobs() {
     }
   };
 
-  const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
-  const rangeStart = totalCount === 0 ? 0 : (page - 1) * PAGE_SIZE + 1;
-  const rangeEnd = Math.min(page * PAGE_SIZE, totalCount);
+  const totalPages = Math.max(1, Math.ceil(totalCount / UI_LIMITS.JOBS_PAGE_SIZE));
+  const rangeStart =
+    totalCount === 0 ? 0 : (page - 1) * UI_LIMITS.JOBS_PAGE_SIZE + 1;
+  const rangeEnd = Math.min(page * UI_LIMITS.JOBS_PAGE_SIZE, totalCount);
 
   return (
     <div>
@@ -173,7 +171,7 @@ export default function AlumniJobs() {
           </p>
         </div>
         <button
-          onClick={() => navigate("/dashboard/alumni/jobs/new")}
+          onClick={() => navigate(ROUTES.ALUMNI.NEW_JOB)}
           className="flex items-center gap-2 bg-primary text-white text-sm font-medium px-5 py-2.5 rounded-lg hover:opacity-90"
         >
           <Plus size={16} /> Post New Job

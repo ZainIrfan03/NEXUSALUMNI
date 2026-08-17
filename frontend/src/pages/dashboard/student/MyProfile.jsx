@@ -8,6 +8,7 @@ import {
 } from "../../../store/api/studentProfileApi";
 import { getImageUrl as fileUrl } from "../../../utils/getImageUrl";
 import LoadingSpinner from "../../../components/common/LoadingSpinner";
+import { ROUTES } from "../../../consts/appConstants";
 import {
   Pencil,
   MapPin,
@@ -154,7 +155,7 @@ export default function MyProfile() {
               )}
             </div>
             <button
-              onClick={() => navigate("/dashboard/student/profile/edit")}
+              onClick={() => navigate(ROUTES.STUDENT.EDIT_PROFILE)}
               className="flex items-center gap-2 text-sm font-medium text-white bg-dark rounded-xl px-5 py-2.5 hover:opacity-90 transition-opacity"
             >
               <Pencil size={14} /> Edit Profile

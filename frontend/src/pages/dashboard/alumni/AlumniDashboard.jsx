@@ -8,6 +8,7 @@ import {
 } from "../../../store/api/alumniMentorshipApi";
 import { GraduationCap, Briefcase, Plus, FileEdit, Image, Link2, Loader2 } from "lucide-react";
 import DashboardStatCard from "../../../components/common/DashboardStatCard";
+import { JOB_TYPES, ROUTES } from "../../../consts/appConstants";
 
 function MentorshipRequestCard({ request, onAccept, onDecline }) {
   const studentName = request.student?.fullName || "Unknown student";
@@ -54,7 +55,7 @@ export default function AlumniDashboard() {
   const navigate = useNavigate();
 
   const [actionError, setActionError] = useState("");
-  const [quickPost, setQuickPost] = useState({ type: "Full-time", title: "", location: "" });
+  const [quickPost, setQuickPost] = useState({ type: JOB_TYPES.FULL_TIME, title: "", location: "" });
 
   const {
     data = { studentsMentored: 0, jobsPosted: 0, incomingRequests: [] },
@@ -88,7 +89,7 @@ export default function AlumniDashboard() {
     // This quick-form doesn't collect "company", which the backend
     // requires — so it hands off to the full Post a Job page with
     // whatever's filled in here already, instead of failing on submit.
-    navigate("/dashboard/alumni/jobs/new", { state: { prefill: quickPost } });
+    navigate(ROUTES.ALUMNI.NEW_JOB, { state: { prefill: quickPost } });
   };
 
   const error = actionError || (overviewError && (overviewError.data?.message || "Could not load dashboard data."));
@@ -174,10 +175,12 @@ export default function AlumniDashboard() {
               onChange={(event) => setQuickPost({ ...quickPost, type: event.target.value })}
               className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm"
             >
-              <option>Full-time</option>
-              <option>Internship</option>
-              <option>Part-time</option>
-              <option>Remote</option>
+              {[
+                JOB_TYPES.FULL_TIME,
+                JOB_TYPES.INTERNSHIP,
+                JOB_TYPES.PART_TIME,
+                JOB_TYPES.REMOTE,
+              ].map((type) => <option key={type}>{type}</option>)}
             </select>
           </div>
 

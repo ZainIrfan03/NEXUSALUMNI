@@ -6,7 +6,7 @@ import {
   useSendMentorshipRequestMutation,
 } from "../../../store/api/studentMentorshipApi";
 import { getImageUrl as fileUrl } from "../../../utils/getImageUrl";
-import { MENTORSHIP_STATUS } from "../../../consts/const";
+import { MENTORSHIP_STATUS } from "../../../consts/appConstants";
 import LoadingSpinner from "../../../components/common/LoadingSpinner";
 import { ArrowLeft, MapPin, Briefcase, GraduationCap, Send } from "lucide-react";
 

@@ -7,7 +7,7 @@ import {
   useApplyToJobMutation,
   useToggleSaveJobMutation,
 } from "../../../store/api/studentJobsApi";
-import { LOCAL_STORAGE_USER_KEY } from "../../../consts/const";
+import { JOB_TYPES, LOCAL_STORAGE_USER_KEY } from "../../../consts/appConstants";
 
 import {
   SlidersHorizontal,
@@ -40,7 +40,13 @@ import {
  * In Review / Interview / etc.
  */
 
-const tabs = ["All Jobs", "Full-time", "Internship", "Part-time", "Remote"];
+const tabs = [
+  "All Jobs",
+  JOB_TYPES.FULL_TIME,
+  JOB_TYPES.INTERNSHIP,
+  JOB_TYPES.PART_TIME,
+  JOB_TYPES.REMOTE,
+];
 
 const currentUserId = () => JSON.parse(localStorage.getItem(LOCAL_STORAGE_USER_KEY))?._id;
 
