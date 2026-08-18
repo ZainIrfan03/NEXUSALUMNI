@@ -1,4 +1,3 @@
-import React from "react";
 import { Link2, Share2, Mail, Phone, MapPin } from "lucide-react";
 
 export default function Footer() {

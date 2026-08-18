@@ -1,4 +1,3 @@
-import React from "react";
 import { HeartHandshake, GraduationCap } from "lucide-react";
 
 export default function OurVision() {

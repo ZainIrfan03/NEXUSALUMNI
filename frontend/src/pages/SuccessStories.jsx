@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { ArrowUpRight, ChevronDown, Search } from "lucide-react";
 import api from "../api/axios";
 import { getImageUrl } from "../utils/getImageUrl";
@@ -27,8 +27,11 @@ export default function SuccessStoriesPage() {
   const [stories, setStories] = useState([]);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [loading, setLoading] = useState(true);
+  const [loadedQuery, setLoadedQuery] = useState(null);
   const [loadingMore, setLoadingMore] = useState(false);
+
+  const queryKey = `${activeCategory}\u0000${search}`;
+  const loading = loadedQuery !== queryKey;
 
  
   useEffect(() => {
@@ -50,8 +53,7 @@ export default function SuccessStoriesPage() {
 
   useEffect(() => {
     let cancelled = false;
-    setLoading(true);
-    setPage(1);
+    const requestedQuery = queryKey;
 
     api
       .get("/stories", {
@@ -65,22 +67,23 @@ export default function SuccessStoriesPage() {
       .then(({ data }) => {
         if (cancelled) return;
         setStories(data.results || []);
+        setPage(1);
         setTotalPages(data.totalPages || 1);
+        setLoadedQuery(requestedQuery);
       })
       .catch(() => {
         if (!cancelled) {
           setStories([]);
+          setPage(1);
           setTotalPages(1);
+          setLoadedQuery(requestedQuery);
         }
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
       });
 
     return () => {
       cancelled = true;
     };
-  }, [activeCategory, search]);
+  }, [activeCategory, search, queryKey]);
 
   const loadMore = () => {
     const nextPage = page + 1;

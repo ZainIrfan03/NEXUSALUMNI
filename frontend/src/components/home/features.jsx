@@ -1,4 +1,3 @@
-import React from "react";
 import { TrendingUp, Compass, Briefcase, Users } from "lucide-react";
 
 const features = [

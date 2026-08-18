@@ -57,7 +57,7 @@ export default function MessagesPage() {
     { refetchOnMountOrArgChange: true }
   );
 
-  const [activeId, setActiveId] = useState(null);
+  const [selectedConversationId, setActiveId] = useState(null);
   const [draft, setDraft] = useState("");
   const [typing, setTyping] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -67,6 +67,17 @@ export default function MessagesPage() {
   const menuRef = useRef(null);
   const fileInputRef = useRef(null);
   const imageInputRef = useRef(null);
+
+  // The initial conversation is derived during render, so loading the inbox
+  // does not require an extra setState/render cycle inside an effect.
+  const activeId = conversations.some(
+    (conversation) => conversation._id === selectedConversationId
+  )
+    ? selectedConversationId
+    : conversations.some((conversation) => conversation._id === incomingConversationId)
+      ? incomingConversationId
+      : conversations[0]?._id || null;
+  const activeIdRef = useRef(activeId);
 
   const { data: messages = [], isLoading: loadingMessages } = useGetMessagesQuery(activeId, {
     skip: !activeId,
@@ -78,19 +89,16 @@ export default function MessagesPage() {
   const activeConvo = conversations.find((conversation) => conversation._id === activeId);
   const otherPerson = activeConvo?.participants.find((participant) => participant._id !== user._id);
 
-  // Once the conversation list loads, jump into whichever chat we were
-  // sent here for (e.g. "Message" button from Directory/Mentorship), or
-  // the first one in the inbox.
-  useEffect(() => {
-    if (activeId || conversations.length === 0) return;
-    setActiveId(incomingConversationId || conversations[0]._id);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [conversations]);
-
   useEffect(() => {
     if (!activeId) return;
     markConversationRead(activeId).unwrap().catch(() => {});
   }, [activeId, markConversationRead]);
+
+  // Keep a ref of activeId so the socket listeners below (set up once)
+  // always know which conversation is currently open.
+  useEffect(() => {
+    activeIdRef.current = activeId;
+  }, [activeId]);
 
   // 1. Connect socket once, on mount
   useEffect(() => {
@@ -147,13 +155,6 @@ export default function MessagesPage() {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  // Keep a ref of activeId so the socket listeners above (set up once)
-  // always know which conversation is currently open.
-  const activeIdRef = useRef(activeId);
-  useEffect(() => {
-    activeIdRef.current = activeId;
-  }, [activeId]);
 
   // Close the three-dot menu on outside click
   useEffect(() => {

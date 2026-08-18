@@ -1,4 +1,3 @@
-import React from "react";
 
 /**
  * Shared status pill used for job status, applicant pipeline stage,

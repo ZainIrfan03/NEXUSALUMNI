@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useGetAlumniDirectoryQuery } from "../../../store/api/studentDirectoryApi";
 import { ChevronDown, LayoutGrid, List, ChevronLeft, ChevronRight } from "lucide-react";

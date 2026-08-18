@@ -1,6 +1,5 @@
 import { io } from "socket.io-client";
 import { SOCKET_URL } from "../consts/appConstants";
-import { API_BASE_URL } from "../consts/appConstants";
 /**
  * Single shared socket instance for the whole app.
  * Call connectSocket() once after login; call disconnectSocket() on logout.

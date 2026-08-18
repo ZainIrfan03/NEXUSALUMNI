@@ -1,4 +1,3 @@
-import React from "react";
 
 /**
  * Shared "nothing to show" message for dashboard lists (jobs, applicants,

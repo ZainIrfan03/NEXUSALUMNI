@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getImageUrl as fileUrl } from "../../utils/getImageUrl";
 import { REDIRECT_DELAY_MS } from "../../consts/appConstants";
@@ -62,12 +62,14 @@ export default function ProfileEditPage({
   const [error, setError] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
   const [hasSeeded, setHasSeeded] = useState(false);
+  const [seededProfile, setSeededProfile] = useState(null);
   const displayError = error || (queryError && "Could not load profile.");
 
-  // Seed the editable local state from the fetched profile once it
-  // arrives (and again any time it's refetched after a save elsewhere).
-  useEffect(() => {
-    if (!profile || (seedOnce && hasSeeded)) return;
+  // React permits guarded state adjustment during render when state must track
+  // a changed prop. This avoids a redundant render caused by seeding in an
+  // effect while still preserving the optional "seed only once" behavior.
+  if (profile && profile !== seededProfile && (!seedOnce || !hasSeeded)) {
+    setSeededProfile(profile);
     setForm({
       fullName: profile.user?.fullName || "",
       location: profile.location || "",
@@ -80,7 +82,7 @@ export default function ProfileEditPage({
     setAvatarUrl(profile.avatarUrl || "");
     setIsPublic(profile.isPublic ?? true);
     if (seedOnce) setHasSeeded(true);
-  }, [profile, seedOnce, hasSeeded]);
+  }
 
   const handleChange = (event) => setForm({ ...form, [event.target.name]: event.target.value });
 
