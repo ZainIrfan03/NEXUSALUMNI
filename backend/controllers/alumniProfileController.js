@@ -172,7 +172,7 @@ const uploadAvatarImage = async (req, res) => {
       return res.status(HTTP_STATUS.BAD_REQUEST).json({ message: "No file uploaded" });
     }
 
-    // Publicly reachable path — app.js serves /uploads as a static folder.
+    // Avatars are intentionally public; resumes and chat files are protected.
     const avatarUrl = `/uploads/avatars/${req.file.filename}`;
 
     const alumni = await Alumni.findOneAndUpdate(

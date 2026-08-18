@@ -27,3 +27,16 @@ coverage/
 
 # Build
 dist/
+
+# User-generated runtime files
+uploads/*
+!uploads/.gitkeep
+!uploads/avatars/
+!uploads/resumes/
+!uploads/chat/
+uploads/avatars/*
+uploads/resumes/*
+uploads/chat/*
+!uploads/avatars/.gitkeep
+!uploads/resumes/.gitkeep
+!uploads/chat/.gitkeep

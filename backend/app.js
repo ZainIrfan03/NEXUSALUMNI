@@ -33,6 +33,7 @@ const Conversation = require("./models/Conversation");
 const User = require("./models/User");
 const activityRoutes = require("./routes/activityRoutes");
 const storyRoutes = require("./routes/storyRoutes");
+const uploadRoutes = require("./routes/uploadRoutes");
 const { notFound, errorHandler } = require("./middleware/errorHandler");
 
 connectDB(); // connect to MongoDB before anything else
@@ -45,7 +46,10 @@ const app = express();
 app.use(cors({ origin: FRONTEND_URL, credentials: true }));
 app.use(express.json());  // parse JSON request bodies
 app.use(cookieParser());  // parse cookies into req.cookies
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+// Avatars are intentionally public. Resumes and chat attachments are served
+// by authorization-aware routes; never expose the entire uploads tree.
+app.use("/uploads/avatars", express.static(path.join(__dirname, "uploads", "avatars")));
+app.use("/uploads", uploadRoutes);
 
 // Routes
 app.use("/api/auth", authRoutes);
@@ -85,10 +89,6 @@ const io = new Server(httpServer, {
 });
 app.set("io", io);
 
-// Tracks which socket belongs to which logged-in user, so a message can be
-// emitted straight to that specific user (no rooms/broadcast needed for 1:1 chat).
-const onlineUsers = new Map(); // userId -> socketId
-
 // Runs once per client connection attempt, before "connection" fires.
 // Client must connect with { withCredentials: true } so the browser
 // includes the httpOnly "token" cookie in the handshake request headers
@@ -111,54 +111,77 @@ io.use(async (socket, next) => {
 });
 
 io.on("connection", (socket) => {
-  onlineUsers.set(socket.userId, socket.id);
   socket.join(socket.userId);
   console.log(`User connected: ${socket.userId}`);
 
-  // Client emits this while the other person is typing
-  socket.on(SOCKET_EVENTS.TYPING, async ({ conversationId, toUserId }) => {
-    const isParticipant = await Conversation.exists({
+  const getConversationRecipient = async (conversationId) => {
+    const conversation = await Conversation.findOne({
       _id: conversationId,
       participants: socket.userId,
-    });
-    if (!isParticipant) return; // silently ignore — not this user's conversation
+    }).select("participants");
 
-    const targetSocketId = onlineUsers.get(toUserId);
-    if (targetSocketId) {
-      io.to(targetSocketId).emit(SOCKET_EVENTS.TYPING, { conversationId, fromUserId: socket.userId });
+    if (!conversation || conversation.participants.length !== 2) return null;
+    return conversation.participants.find(
+      (participantId) => participantId.toString() !== socket.userId
+    )?.toString();
+  };
+
+  // Client emits this while the other person is typing
+  socket.on(SOCKET_EVENTS.TYPING, async ({ conversationId } = {}) => {
+    try {
+      const recipientId = await getConversationRecipient(conversationId);
+      if (!recipientId) return;
+      io.to(recipientId).emit(SOCKET_EVENTS.TYPING, {
+        conversationId,
+        fromUserId: socket.userId,
+      });
+    } catch {
+      // Invalid or unauthorized typing events are intentionally ignored.
     }
   });
 
   // Client emits this to send a message
-  socket.on(SOCKET_EVENTS.SEND_MESSAGE, async ({ conversationId, text, toUserId }) => {
+  socket.on(SOCKET_EVENTS.SEND_MESSAGE, async ({ conversationId, text } = {}) => {
     try {
+      if (typeof text !== "string" || !text.trim() || text.length > 4000) {
+        return socket.emit(SOCKET_EVENTS.MESSAGE_ERROR, {
+          message: "Message must contain between 1 and 4000 characters",
+        });
+      }
+
       const conversation = await Conversation.findOne({
         _id: conversationId,
         participants: socket.userId,
       });
 
-      if (!conversation) {
+      if (!conversation || conversation.participants.length !== 2) {
         return socket.emit(SOCKET_EVENTS.MESSAGE_ERROR, {
           message: "Not authorized to send messages in this conversation",
+        });
+      }
+
+      const recipientId = conversation.participants.find(
+        (participantId) => participantId.toString() !== socket.userId
+      )?.toString();
+      if (!recipientId) {
+        return socket.emit(SOCKET_EVENTS.MESSAGE_ERROR, {
+          message: "Conversation recipient not found",
         });
       }
 
       const message = await Message.create({
         conversation: conversationId,
         sender: socket.userId,
-        text,
+        text: text.trim(),
       });
 
       await Conversation.findByIdAndUpdate(conversationId, {
-        lastMessage: text,
+        lastMessage: message.text,
         lastMessageAt: new Date(),
       });
 
-      // Deliver instantly if the recipient is online right now
-      const targetSocketId = onlineUsers.get(toUserId);
-      if (targetSocketId) {
-        io.to(targetSocketId).emit(SOCKET_EVENTS.RECEIVE_MESSAGE, message);
-      }
+      // The recipient comes from the stored conversation, never the client.
+      io.to(recipientId).emit(SOCKET_EVENTS.RECEIVE_MESSAGE, message);
 
       // Echo back to the sender so their UI updates from the same
       // saved document instead of a separate optimistic message
@@ -172,15 +195,26 @@ io.on("connection", (socket) => {
   // regular HTTP request), not the "sendMessage" socket event above — so
   // once the frontend gets the saved message back from that REST call, it
   // emits this event just to relay it live to the other participant.
-  socket.on(SOCKET_EVENTS.FILE_MESSAGE_SENT, ({ message, toUserId }) => {
-    const targetSocketId = onlineUsers.get(toUserId);
-    if (targetSocketId) {
-      io.to(targetSocketId).emit(SOCKET_EVENTS.RECEIVE_MESSAGE, message);
+  socket.on(SOCKET_EVENTS.FILE_MESSAGE_SENT, async ({ messageId } = {}) => {
+    try {
+      // Reload it so clients cannot forge the sender, attachment or contents.
+      const message = await Message.findOne({
+        _id: messageId,
+        sender: socket.userId,
+      });
+      if (!message) return;
+
+      const recipientId = await getConversationRecipient(message.conversation);
+      if (!recipientId) return;
+      io.to(recipientId).emit(SOCKET_EVENTS.RECEIVE_MESSAGE, message);
+    } catch {
+      socket.emit(SOCKET_EVENTS.MESSAGE_ERROR, {
+        message: "Failed to relay attachment message",
+      });
     }
   });
 
   socket.on("disconnect", () => {
-    onlineUsers.delete(socket.userId);
     console.log(`User disconnected: ${socket.userId}`);
   });
 });

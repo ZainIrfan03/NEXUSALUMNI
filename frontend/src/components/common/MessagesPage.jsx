@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useLocation } from "react-router-dom";
 import { getImageUrl as fileUrl } from "../../utils/getImageUrl";
@@ -13,7 +13,7 @@ import {
   useDeleteConversationMutation,
   useMarkConversationReadMutation,
 } from "../../store/api/messagesApi";
- import { SOCKET_URL, SOCKET_EVENTS, TYPING_TIMEOUT_MS } from "../../consts/appConstants"; 
+import { SOCKET_EVENTS, TYPING_TIMEOUT_MS } from "../../consts/appConstants";
 
 import {
   Search,
@@ -177,14 +177,13 @@ export default function MessagesPage() {
     socket.emit(SOCKET_EVENTS.SEND_MESSAGE, {
       conversationId: activeId,
       text: draft,
-      toUserId: otherPerson._id,
     });
     setDraft("");
   };
 
   const handleTyping = () => {
     if (!otherPerson) return;
-    getSocket()?.emit(SOCKET_EVENTS.TYPING, { conversationId: activeId, toUserId: otherPerson._id });
+    getSocket()?.emit(SOCKET_EVENTS.TYPING, { conversationId: activeId });
   };
 
   const handleKeyDown = (event) => {
@@ -209,7 +208,7 @@ export default function MessagesPage() {
 
       // ...and relay it live to the other participant (attachments are
       // saved over REST, not the socket "sendMessage" event).
-      getSocket()?.emit(SOCKET_EVENTS.FILE_MESSAGE_SENT, { message, toUserId: otherPerson._id });
+      getSocket()?.emit(SOCKET_EVENTS.FILE_MESSAGE_SENT, { messageId: message._id });
     } catch (err) {
       setAttachError(err.data?.message || "Upload failed. Try a smaller file.");
     }
