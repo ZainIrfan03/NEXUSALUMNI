@@ -25,9 +25,9 @@ const SOCKET_EVENTS = {
 };
 
 const AUTH_COOKIE_NAME = "token";
-const JWT_PERSISTENT_EXPIRY = "30d";
+const JWT_PERSISTENT_EXPIRY = "5d";
 const JWT_SESSION_EXPIRY = "1d";
-const AUTH_COOKIE_MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000;
+const AUTH_COOKIE_MAX_AGE_MS = 5 * 24 * 60 * 60 * 1000;
 const FRONTEND_URL = process.env.FRONTEND_URL;
 const SERVER_PORT = process.env.PORT || 5000;
 

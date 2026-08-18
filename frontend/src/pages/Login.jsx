@@ -111,7 +111,7 @@ export default function Login() {
               onChange={(event) => setKeepSignedIn(event.target.checked)}
               className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
             />
-            Keep me signed in for 30 days
+            Keep me signed in for 5 days
           </label>
 
           <button
