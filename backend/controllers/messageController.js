@@ -1,10 +1,20 @@
 const fs = require("fs");
+const path = require("path");
 const Conversation = require("../models/Conversation");
 const Message = require("../models/Message");
 const MentorshipRequest = require("../models/MentorshipRequest");
 const Student = require("../models/Student");
 const Alumni = require("../models/Alumni");
-const { HTTP_STATUS } = require("../utils/constants");
+const { HTTP_STATUS, UPLOAD_DIRS } = require("../utils/constants");
+
+const removeFileIfPresent = async (filePath) => {
+  if (!filePath) return;
+  try {
+    await fs.promises.unlink(filePath);
+  } catch (error) {
+    if (error.code !== "ENOENT") throw error;
+  }
+};
 
 // @route GET /api/messages/unread-count
 // Counts unseen messages sent by other users across this user's conversations.
@@ -162,8 +172,25 @@ const deleteConversation = async (req, res) => {
       return res.status(HTTP_STATUS.FORBIDDEN).json({ message: "Not authorized to delete this chat" });
     }
 
+    const attachmentMessages = await Message.find({
+      conversation: conversationId,
+      fileUrl: { $ne: null },
+    }).select("fileUrl");
+
     await Message.deleteMany({ conversation: conversationId });
     await Conversation.findByIdAndDelete(conversationId);
+
+    const attachmentPaths = attachmentMessages
+      .map(({ fileUrl }) => path.join(UPLOAD_DIRS.CHAT, path.basename(fileUrl)))
+      .filter((filePath, index, allPaths) => allPaths.indexOf(filePath) === index);
+    const cleanupResults = await Promise.allSettled(
+      attachmentPaths.map(removeFileIfPresent)
+    );
+    cleanupResults.forEach((result, index) => {
+      if (result.status === "rejected") {
+        console.error(`Failed to delete chat attachment ${attachmentPaths[index]}:`, result.reason);
+      }
+    });
 
     res.json({ message: "Conversation deleted" });
   } catch (error) {
@@ -205,6 +232,7 @@ const getMessages = async (req, res) => {
 // The socket layer (server.js) additionally emits it live to the other participant.
 // Only a participant of this conversation may send into it.
 const sendMessage = async (req, res) => {
+  let messageSaved = false;
   try {
     const { text } = req.body;
     const { conversationId } = req.params;
@@ -219,7 +247,7 @@ const sendMessage = async (req, res) => {
       // controller ran — clean it up so an unauthorized attempt
       // doesn't leave an orphaned file behind.
       if (req.file) {
-        fs.unlink(req.file.path, () => {});
+        await removeFileIfPresent(req.file.path);
       }
       return res.status(HTTP_STATUS.FORBIDDEN).json({
         message: "Not authorized to send messages in this conversation",
@@ -248,6 +276,7 @@ const sendMessage = async (req, res) => {
       fileType,
       fileName,
     });
+    messageSaved = true;
 
     const lastMessagePreview =
       text || (fileType === "image" ? "📷 Photo" : "📎 File");
@@ -259,6 +288,15 @@ const sendMessage = async (req, res) => {
 
     res.status(HTTP_STATUS.CREATED).json(message);
   } catch (error) {
+    // If persistence failed before a Message document was created, no database
+    // record owns the uploaded file and it must be removed.
+    if (req.file?.path && !messageSaved) {
+      try {
+        await removeFileIfPresent(req.file.path);
+      } catch (cleanupError) {
+        console.error(`Failed to clean unsaved chat upload ${req.file.path}:`, cleanupError);
+      }
+    }
     res.status(HTTP_STATUS.SERVER_ERROR).json({ message: "Server error", error: error.message });
   }
 };
