@@ -13,7 +13,6 @@ export default function OurVision() {
         </div>
 
         <div className="grid lg:grid-cols-3 gap-6">
-          {/* Row 1 */}
           <div className="lg:col-span-1 bg-white rounded-2xl p-8 flex flex-col">
             <div className="h-11 w-11 rounded-full bg-blue-50 flex items-center justify-center mb-6">
               <HeartHandshake size={20} className="text-primary" />
@@ -45,7 +44,6 @@ export default function OurVision() {
             </div>
           </div>
 
-          {/* Row 2 */}
           <div className="lg:col-span-2 bg-white rounded-2xl overflow-hidden flex flex-col">
             <img
               src="https://images.unsplash.com/photo-1515187029135-18ee286d815b?w=1000&q=80"

@@ -33,19 +33,6 @@ import {
 } from "lucide-react";
 import { connectSocket, getSocket } from "../../utils/socket";
 
-/**
- * Shared messages page used by Student and Alumni dashboards.
- * Real-time: REST (via RTK Query) loads history, Socket.io delivers live
- * messages. Inbox list + message history both live in the RTK Query
- * cache now — socket events patch that cache directly with
- * `messagesApi.util.updateQueryData` instead of local useState, so a
- * message that arrives while the user is on this page and one loaded
- * from a fresh page visit render through the exact same list.
- * Also supports image/file attachments (multer, via REST) and deleting
- * a whole conversation from the three-dot menu.
- */
-
-
 export default function MessagesPage() {
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
@@ -68,8 +55,6 @@ export default function MessagesPage() {
   const fileInputRef = useRef(null);
   const imageInputRef = useRef(null);
 
-  // The initial conversation is derived during render, so loading the inbox
-  // does not require an extra setState/render cycle inside an effect.
   const activeId = conversations.some(
     (conversation) => conversation._id === selectedConversationId
   )
@@ -94,26 +79,19 @@ export default function MessagesPage() {
     markConversationRead(activeId).unwrap().catch(() => {});
   }, [activeId, markConversationRead]);
 
-  // Keep a ref of activeId so the socket listeners below (set up once)
-  // always know which conversation is currently open.
   useEffect(() => {
     activeIdRef.current = activeId;
   }, [activeId]);
 
-  // 1. Connect socket once, on mount
   useEffect(() => {
     const socket = connectSocket();
 
     const handleReceiveMessage = (msg) => {
-      // Patch the cached message history for that conversation, if we've
-      // fetched it before — if not, there's nothing to patch and the
-      // next visit to that chat fetches it fresh from the backend anyway.
       dispatch(
         messagesApi.util.updateQueryData("getMessages", msg.conversation, (draftMessages) => {
           draftMessages.push(msg);
         })
       );
-      // bump that conversation to the top of the inbox with the new preview
       dispatch(
         messagesApi.util.updateQueryData("getConversations", undefined, (draftConvos) => {
           const convo = draftConvos.find((c) => c._id === msg.conversation);
@@ -153,10 +131,8 @@ export default function MessagesPage() {
       socket.off(SOCKET_EVENTS.MESSAGE_SENT, handleMessageSent);
       socket.off(SOCKET_EVENTS.TYPING, handleTypingEvent);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [dispatch, markConversationRead]);
 
-  // Close the three-dot menu on outside click
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (menuRef.current && !menuRef.current.contains(event.target)) {
@@ -167,7 +143,6 @@ export default function MessagesPage() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Auto-scroll to the latest message
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
@@ -194,10 +169,9 @@ export default function MessagesPage() {
     }
   };
 
-  // ── Attachments (image/file upload via multer) ──────────────────────
   const handleFilePicked = async (event) => {
     const file = event.target.files?.[0];
-    event.target.value = ""; // allow picking the same file again later
+    event.target.value = "";
     if (!file || !activeConvo || !otherPerson) return;
 
     setAttachError("");
@@ -207,15 +181,12 @@ export default function MessagesPage() {
 
       const message = await sendFileMessage({ conversationId: activeId, formData }).unwrap();
 
-      // ...and relay it live to the other participant (attachments are
-      // saved over REST, not the socket "sendMessage" event).
       getSocket()?.emit(SOCKET_EVENTS.FILE_MESSAGE_SENT, { messageId: message._id });
     } catch (err) {
       setAttachError(err.data?.message || "Upload failed. Try a smaller file.");
     }
   };
 
-  // ── Delete chat (three-dot menu) ─────────────────────────────────────
   const handleDeleteChat = async () => {
     if (!activeId) return;
     const confirmed = window.confirm(
@@ -239,7 +210,6 @@ export default function MessagesPage() {
 
   return (
     <div className="flex h-[calc(100vh-105px)] bg-white rounded-2xl overflow-hidden">
-      {/* Inbox list */}
       <div className="w-full sm:w-80 border-r border-gray-100 flex flex-col">
         <div className="flex items-center justify-between px-5 py-4">
           <h1 className="text-xl font-bold text-dark">Inbox</h1>
@@ -292,7 +262,6 @@ export default function MessagesPage() {
         </div>
       </div>
 
-      {/* Chat window */}
       {activeConvo ? (
         <div className="hidden sm:flex flex-1 flex-col">
           <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">

@@ -15,10 +15,6 @@ import {
   MapPin,
 } from "lucide-react";
 
-// Files come back from the backend as relative paths (e.g. "/uploads/avatars/xyz.png"),
-// so build a full URL for <img src> / <a href>. Stale blob: URLs (from old
-// preview-only code) can never be loaded after a refresh, so treat as invalid.
-
 export default function ProfileEditPage({
   profile,
   loading,
@@ -53,7 +49,6 @@ export default function ProfileEditPage({
   const [avatarUrl, setAvatarUrl] = useState("");
   const [isPublic, setIsPublic] = useState(true);
 
-  // Real files picked by the user, uploaded immediately via multer endpoints
   const [avatarFile, setAvatarFile] = useState(null);
   const [avatarPreview, setAvatarPreview] = useState("");
 
@@ -65,9 +60,6 @@ export default function ProfileEditPage({
   const [seededProfile, setSeededProfile] = useState(null);
   const displayError = error || (queryError && "Could not load profile.");
 
-  // React permits guarded state adjustment during render when state must track
-  // a changed prop. This avoids a redundant render caused by seeding in an
-  // effect while still preserving the optional "seed only once" behavior.
   if (profile && profile !== seededProfile && (!seedOnce || !hasSeeded)) {
     setSeededProfile(profile);
     setForm({
@@ -86,7 +78,6 @@ export default function ProfileEditPage({
 
   const handleChange = (event) => setForm({ ...form, [event.target.name]: event.target.value });
 
-  // Generic "add chip on Enter" handler, reused for skills + interests
   const addChip = (event, value, setValue, list, setList) => {
     if (event.key === "Enter" && value.trim()) {
       event.preventDefault();
@@ -97,8 +88,6 @@ export default function ProfileEditPage({
 
   const removeChip = (list, setList, item) => setList(list.filter((entry) => entry !== item));
 
-  // Selecting a file only shows a local preview + upload button.
-  // Nothing is saved to the server until uploadAvatarNow() runs.
   const handleAvatarSelect = (event) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -112,9 +101,9 @@ export default function ProfileEditPage({
     if (clearSuccessOnUpload) setSuccessMsg("");
     try {
       const formData = new FormData();
-      formData.append("avatar", avatarFile); // field name must match uploadAvatar.single("avatar") on backend
+      formData.append("avatar", avatarFile);
       const data = await uploadAvatar(formData).unwrap();
-      setAvatarUrl(data.avatarUrl); // backend returns the full alumni doc
+      setAvatarUrl(data.avatarUrl);
       setAvatarFile(null);
       setAvatarPreview("");
       setSuccessMsg("Profile picture updated.");
@@ -135,7 +124,7 @@ export default function ProfileEditPage({
     if (clearSuccessOnUpload) setSuccessMsg("");
     try {
       const formData = new FormData();
-      formData.append("resume", resumeFile); // field name must match uploadResume.single("resume") on backend
+      formData.append("resume", resumeFile);
       const data = await uploadResume(formData).unwrap();
       setResumeUrl(data.resumeUrl);
       setResumeFile(null);
@@ -145,9 +134,6 @@ export default function ProfileEditPage({
     }
   };
 
-  // Text-only fields. avatarUrl/resumeUrl are intentionally NOT sent here —
-  // they're already saved the moment they're uploaded, and sending stale
-  // local state here would risk overwriting a real path with an old value.
   const handleSave = async () => {
     setError("");
     setSuccessMsg("");
@@ -184,13 +170,11 @@ export default function ProfileEditPage({
 
   return (
     <div>
-      {/* Breadcrumb */}
       <p className="text-sm text-gray-400 mb-2">
         Profile <span className="mx-1">›</span>
         <span className="text-primary font-medium">Edit Profile</span>
       </p>
 
-      {/* Header */}
       <div className="flex flex-wrap items-start justify-between gap-4 mb-6">
         <div>
           <h1 className="text-2xl font-bold text-dark mb-1">Settings & Preferences</h1>
@@ -227,9 +211,7 @@ export default function ProfileEditPage({
       )}
 
       <div className="grid lg:grid-cols-3 gap-6">
-        {/* Left column */}
         <div className="lg:col-span-2 flex flex-col gap-6">
-          {/* Personal Information */}
           <div className="bg-white rounded-2xl p-6">
             <div className="flex items-center gap-2 mb-6">
               <UserCog size={20} className="text-primary" />
@@ -294,7 +276,6 @@ export default function ProfileEditPage({
             </div>
           </div>
 
-          {/* Resume / CV */}
           <div className="bg-white rounded-2xl p-6">
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-2">
@@ -315,7 +296,6 @@ export default function ProfileEditPage({
               <input type="file" accept=".pdf" onChange={handleResumeSelect} className="hidden" />
             </label>
 
-            {/* Newly picked file — not yet uploaded */}
             {resumeFile && (
               <div className="flex items-center gap-2 bg-gray-100 rounded-lg px-4 py-2 text-sm text-dark mt-3">
                 <FileText size={14} />
@@ -334,7 +314,6 @@ export default function ProfileEditPage({
               </div>
             )}
 
-            {/* Already-saved resume on the server */}
             {resumeUrl && !resumeFile && (
               <div className="flex items-center gap-2 bg-gray-100 rounded-lg px-4 py-2 text-sm text-dark mt-3">
                 <FileText size={14} />
@@ -354,9 +333,7 @@ export default function ProfileEditPage({
           </div>
         </div>
 
-        {/* Right column */}
         <div className="flex flex-col gap-6">
-          {/* Profile Picture */}
           <div className="bg-white rounded-2xl p-6 text-center">
             <div className="relative inline-block mb-4">
               {avatarPreview || fileUrl(avatarUrl) ? (
@@ -409,7 +386,6 @@ export default function ProfileEditPage({
             )}
           </div>
 
-          {/* Skills & Interests */}
           <div className="bg-white rounded-2xl p-6">
             <div className="flex items-center gap-2 mb-5">
               <Sparkles size={18} className="text-primary" />
@@ -491,7 +467,6 @@ export default function ProfileEditPage({
             </div>
           </div>
 
-          {/* Visibility */}
           <div className="bg-white rounded-2xl p-5 flex items-center justify-between">
             <div>
               <p className="font-medium text-dark text-sm">Visibility</p>

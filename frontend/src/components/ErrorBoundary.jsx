@@ -1,23 +1,6 @@
 import React from "react";
 import { RefreshCcw, Home } from "lucide-react";
 
-/**
- * Top-level error boundary. Wraps <App /> in main.jsx.
- *
- * React error boundaries MUST be class components — there is no hook
- * equivalent for getDerivedStateFromError / componentDidCatch yet.
- *
- * Without this, an unhandled render error anywhere in the tree (e.g. an
- * undefined property access) unmounts the entire app to a blank white
- * screen with no feedback to the user. This catches that and shows a
- * friendly fallback with a way to recover, instead.
- *
- * Note: error boundaries only catch errors during rendering, in
- * lifecycle methods, and in constructors of the tree below them. They do
- * NOT catch errors inside event handlers, async code, or the boundary
- * itself — those still need their own try/catch (e.g. the axios
- * interceptor already handles API errors separately).
- */
 class ErrorBoundary extends React.Component {
   constructor(props) {
     super(props);
@@ -29,9 +12,6 @@ class ErrorBoundary extends React.Component {
   }
 
   componentDidCatch(error, errorInfo) {
-    // In production this is a good hook to forward to an error-tracking
-    // service (Sentry, LogRocket, etc). For now, log so it's still
-    // visible in the browser console during development.
     console.error("ErrorBoundary caught an error:", error, errorInfo);
   }
 

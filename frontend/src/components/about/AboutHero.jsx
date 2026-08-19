@@ -4,7 +4,6 @@ export default function AboutHero() {
   return (
     <section className="w-full bg-white">
       <div className="mx-auto max-w-7xl px-6 py-20 grid lg:grid-cols-2 gap-14 items-center">
-        {/* Left: text content */}
         <div>
           <h1 className="text-4xl sm:text-5xl font-bold leading-[1.15] text-dark">
             Bridging the gap between{" "}
@@ -23,7 +22,6 @@ export default function AboutHero() {
           </button>
         </div>
 
-        {/* Right: image */}
         <div className="rounded-2xl overflow-hidden">
           <img
             src="https://images.unsplash.com/photo-1552664730-d307ca884978?w=1000&q=80"

@@ -1,19 +1,4 @@
 
-/**
- * Shared status pill used for job status, applicant pipeline stage,
- * mentorship request status, "Applied"/"New" tags, etc.
- * Each page used to define its own color map + repeat the same
- * `<span className="text-xs font-medium rounded-full px-3 py-1.5 ...">`
- * markup — this centralizes both the markup and the color tones.
- *
- * `tone` picks the color scheme; pages keep their own status→tone
- * mapping (e.g. { pending: "warning", accepted: "success" }) since the
- * status vocabulary differs per feature (jobs vs mentorship vs applicants).
- *
- * Usage:
- *   <StatusBadge label="Accepted" tone="success" />
- *   <StatusBadge label="In Review" tone="warning" icon={Clock} />
- */
 const TONE_STYLES = {
   success: "bg-green-50 text-green-600",
   warning: "bg-amber-50 text-amber-600",
