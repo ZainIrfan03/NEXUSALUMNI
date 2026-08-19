@@ -32,11 +32,6 @@ import {
 import { logout } from "../store/slice/authSlice";
 import { connectSocket, disconnectSocket } from "../utils/socket";
 
-/**
- * DashboardLayout — dark sidebar + light topbar (search, notifications, avatar).
- * Wraps every logged-in page. Sidebar links differ per role.
- */
-
 const linksByRole = {
   [ROLES.STUDENT]: [
     { label: "Dashboard", icon: LayoutDashboard, path: ROUTES.STUDENT.DASHBOARD },
@@ -69,8 +64,6 @@ const linksByRole = {
   ],
 };
 
-// Roles that currently have a working Settings page.
-// Add ROLES.ALUMNI here once /dashboard/alumni/settings actually exists.
 const rolesWithSettings = [ROLES.ADMIN];
 
 export default function DashboardLayout() {
@@ -138,14 +131,7 @@ export default function DashboardLayout() {
     };
   }, [supportsMessages, refetchUnreadMessages, dispatch, user?.role]);
 
-  // Pull the real avatar from the role's profile endpoint (User model doesn't
-  // store avatarUrl — it lives on Student/Alumni). Falls back to initials
-  // if the role has no profile endpoint yet or the request fails.
-        // Silent fail is fine here — initials avatar covers it
   const handleLogout = () => {
-    // Best-effort: clears the httpOnly cookie server-side. Local logout still
-    // proceeds even if this fails (e.g. network hiccup) — the user shouldn't
-    // get stuck unable to log out.
     api.post(`/auth/logout`).catch(() => {});
     disconnectSocket();
     dispatch(logout());
@@ -168,7 +154,6 @@ export default function DashboardLayout() {
     navigate(user.role === ROLES.STUDENT ? ROUTES.STUDENT.MESSAGES : ROUTES.ALUMNI.MESSAGES);
   };
 
-  // Close the account dropdown when clicking anywhere outside it
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (menuRef.current && !menuRef.current.contains(event.target)) {
@@ -229,12 +214,10 @@ export default function DashboardLayout() {
 
   return (
     <div className="flex min-h-screen bg-background">
-      {/* Desktop sidebar */}
       <aside className="hidden md:flex md:flex-col md:sticky md:top-0 md:h-screen md:overflow-y-auto w-64 bg-dark p-5">
         {renderSidebarContent()}
       </aside>
 
-      {/* Mobile sidebar (slide-over) */}
       {sidebarOpen && (
         <div className="fixed inset-0 z-50 md:hidden">
           <div className="absolute inset-0 bg-black/40" onClick={() => setSidebarOpen(false)} />
@@ -249,9 +232,7 @@ export default function DashboardLayout() {
 
 
 
-      {/* Main content */}
       <div className="flex-1 flex flex-col">
-        {/* Topbar */}
         <header className="flex items-center gap-4 bg-white border-b border-gray-100 px-6 py-4">
           <button className="md:hidden" onClick={() => setSidebarOpen(true)}>
             <Menu className="text-dark" />
@@ -380,7 +361,6 @@ export default function DashboardLayout() {
           </div>
         </header>
 
-        {/* Page content */}
         <main className="flex-1 p-6">
           <Outlet />
         </main>
