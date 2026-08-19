@@ -1,11 +1,5 @@
 import { io } from "socket.io-client";
 import { SOCKET_URL } from "../consts/appConstants";
-/**
- * Single shared socket instance for the whole app.
- * Call connectSocket() once after login; call disconnectSocket() on logout.
- * Auth is handled by the httpOnly "token" cookie (withCredentials: true) —
- * read by the io.use(...) middleware in the backend's app.js.
- */
 let socket = null;
 
 export const connectSocket = () => {
