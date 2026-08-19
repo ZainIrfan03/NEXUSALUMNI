@@ -1,7 +1,6 @@
 export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL; 
  export const SOCKET_URL = import.meta.env.VITE_SOCKET_URL;
 
-// Must exactly match BACKEND/utils/constants.js -> SOCKET_EVENTS
 export const SOCKET_EVENTS = {
   TYPING: "typing",
   SEND_MESSAGE: "sendMessage",
@@ -13,7 +12,6 @@ export const SOCKET_EVENTS = {
   INTERVIEW_RESPONSE_UPDATED: "interviewResponseUpdated",
 };
 
-// Must exactly match BACKEND/models/User.js -> role enum
 export const ROLES = {
   STUDENT: "student",
   ALUMNI: "alumni",
@@ -97,7 +95,6 @@ export const UI_LIMITS = {
   SEARCH_DEBOUNCE_MS: 400,
 };
  
-// Must exactly match BACKEND/models/MentorshipRequest.js -> status enum
 export const MENTORSHIP_STATUS = {
   PENDING: "pending",
   ACCEPTED: "accepted",
@@ -105,8 +102,6 @@ export const MENTORSHIP_STATUS = {
   COMPLETED: "completed",
 };
 
-// Must exactly match BACKEND/models/Application.js -> status enum
-// (job application pipeline stage, alumni moves applicants through this)
 export const APPLICATION_STATUS = {
   APPLIED: "applied",
   IN_REVIEW: "in_review",
@@ -115,11 +110,6 @@ export const APPLICATION_STATUS = {
   REJECTED: "rejected",
 };
 
-// RTK Query cache tag names. Must exactly match the `tagTypes` array
-// declared in store/api/baseApi.js — every providesTags/invalidatesTags
-// across the *Api.js feature files should reference these instead of
-// raw strings, so a typo becomes a build error instead of a silent
-// cache-invalidation bug.
 export const TAGS = {
   JOBS: "Jobs",
   MY_APPLICATIONS: "MyApplications",
@@ -143,19 +133,12 @@ export const INTERVIEW_RESPONSE = {
   RESCHEDULE_REQUESTED: "reschedule_requested",
 };
 
-// Register.jsx form validation — was duplicated (email regex x2, min
-// length x2, max length x3) inside the same file.
 export const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 export const PASSWORD_MIN_LENGTH = 8;
 export const FULL_NAME_MAX_LENGTH = 15;
 
 export const LOCAL_STORAGE_USER_KEY = "user";
 
-// How long to wait after the last keystroke before clearing the
-// "typing..." indicator in a chat. Must match on both sides of a
-// conversation (Messages.jsx = student, AlumniMessages.jsx = alumni).
 export const TYPING_TIMEOUT_MS = 2000;
 
-// How long to show the "saved" state on a profile edit form before
-// navigating back to the read-only profile view.
 export const REDIRECT_DELAY_MS = 800;
