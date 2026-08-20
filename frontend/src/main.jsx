@@ -16,5 +16,5 @@ createRoot(document.getElementById('root')).render(
         <App />
       </Provider>
     </ErrorBoundary>
-  </StrictMode>,
+  </StrictMode>
 )
