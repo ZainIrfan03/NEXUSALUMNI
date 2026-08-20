@@ -10,6 +10,8 @@ import Login from "./pages/Login";
 import DashboardLayout from "./layouts/DashboardLayout";
 import studentRoutes from "./routes/StudentRoutes";
 import alumniRoutes from "./routes/AlumniRoutes";
+import facultyRoutes from "./routes/FacultyRoutes";
+import adminRoutes from "./routes/AdminRoutes";
 import { ROUTES } from "./consts/appConstants";
 import api from "./api/axios";
 import { logout, setCredentials } from "./store/slice/authSlice";
@@ -56,7 +58,8 @@ function App() {
          <Route element={<DashboardLayout />}>
           {studentRoutes}
           {alumniRoutes}
-          {/* TODO: facultyRoutes and adminRoutes — see backlog */}
+          {facultyRoutes}
+          {adminRoutes}
         </Route>
       </Routes>
     </BrowserRouter>
