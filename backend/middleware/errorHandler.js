@@ -5,12 +5,9 @@
 //   app.use(notFound);       // unmatched routes -> 404 JSON instead of default HTML
 //   app.use(errorHandler);   // any err passed to next(err) -> consistent JSON response
 //
-// Controllers can keep their own try/catch as-is (this doesn't replace that).
-// This is the safety net for everything else: multer errors, mongoose errors,
-// jwt errors, and any async error thrown in middleware that isn't wrapped in
-// try/catch (e.g. the socket.io auth middleware style code, or a future route
-// that forgets one). Without this, an uncaught error in middleware crashes
-// the process instead of sending a graceful response.
+// Express 5 automatically forwards rejected async route handlers here.
+// Controllers therefore only need local try/catch when they must perform
+// controller-specific recovery such as deleting an unpersisted upload.
 
 const multer = require("multer");
 const { HTTP_STATUS } = require("../utils/constants");

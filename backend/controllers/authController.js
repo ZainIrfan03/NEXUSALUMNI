@@ -4,6 +4,7 @@ const mongoose = require("mongoose");
 const User = require("../models/User");
 const Student = require("../models/Student");
 const Alumni = require("../models/Alumni");
+const AppError = require("../utils/AppError");
 const {
   HTTP_STATUS,
   AUTH_COOKIE_NAME,
@@ -72,9 +73,7 @@ const registerUser = async (req, res) => {
     await mongoose.connection.transaction(async (dbSession) => {
       const existingUser = await User.findOne({ email }).session(dbSession);
       if (existingUser) {
-        const duplicateEmailError = new Error("Email already registered");
-        duplicateEmailError.statusCode = HTTP_STATUS.BAD_REQUEST;
-        throw duplicateEmailError;
+        throw new AppError("Email already registered", HTTP_STATUS.BAD_REQUEST);
       }
 
       [user] = await User.create(
@@ -109,43 +108,39 @@ const registerUser = async (req, res) => {
       role: user.role,
     });
   } catch (error) {
-    if (error.statusCode === HTTP_STATUS.BAD_REQUEST || error.code === 11000) {
-      return res
-        .status(HTTP_STATUS.BAD_REQUEST)
-        .json({ message: "Email already registered" });
+    // Preserve the friendly response if two registrations race past the
+    // pre-insert lookup and MongoDB's unique email index rejects one.
+    if (error.code === 11000) {
+      throw new AppError("Email already registered", HTTP_STATUS.BAD_REQUEST);
     }
-    res.status(HTTP_STATUS.SERVER_ERROR).json({ message: "Server error", error: error.message });
+    throw error;
   }
 };
 
 // @route  POST /api/auth/login
 // Logs in any role (student, alumni, faculty, admin) — same User collection.
 const loginUser = async (req, res) => {
-  try {
-    const { email, password, keepSignedIn = false } = req.body;
+  const { email, password, keepSignedIn = false } = req.body;
 
-    const user = await User.findOne({ email });
-    if (!user) {
-      return res.status(HTTP_STATUS.UNAUTHORIZED).json({ message: "Invalid email or password" });
-    }
-
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) {
-      return res.status(HTTP_STATUS.UNAUTHORIZED).json({ message: "Invalid email or password" });
-    }
-
-    const token = generateToken(user._id, user.role, keepSignedIn);
-    setLoginTokenCookie(res, token, keepSignedIn);
-
-    res.json({
-      _id: user._id,
-      fullName: user.fullName,
-      email: user.email,
-      role: user.role,
-    });
-  } catch (error) {
-    res.status(HTTP_STATUS.SERVER_ERROR).json({ message: "Server error", error: error.message });
+  const user = await User.findOne({ email });
+  if (!user) {
+    return res.status(HTTP_STATUS.UNAUTHORIZED).json({ message: "Invalid email or password" });
   }
+
+  const isMatch = await bcrypt.compare(password, user.password);
+  if (!isMatch) {
+    return res.status(HTTP_STATUS.UNAUTHORIZED).json({ message: "Invalid email or password" });
+  }
+
+  const token = generateToken(user._id, user.role, keepSignedIn);
+  setLoginTokenCookie(res, token, keepSignedIn);
+
+  res.json({
+    _id: user._id,
+    fullName: user.fullName,
+    email: user.email,
+    role: user.role,
+  });
 };
 
 // @route  POST /api/auth/logout
@@ -163,21 +158,17 @@ const logoutUser = (req, res) => {
 // @route GET /api/auth/me
 // Verifies the JWT cookie and returns fresh identity data from the database.
 const getCurrentUser = async (req, res) => {
-  try {
-    const user = await User.findById(req.user.id).select("fullName email role");
-    if (!user) {
-      return res.status(HTTP_STATUS.UNAUTHORIZED).json({ message: "Session user not found" });
-    }
-
-    res.json({
-      _id: user._id,
-      fullName: user.fullName,
-      email: user.email,
-      role: user.role,
-    });
-  } catch (error) {
-    res.status(HTTP_STATUS.SERVER_ERROR).json({ message: "Server error", error: error.message });
+  const user = await User.findById(req.user.id).select("fullName email role");
+  if (!user) {
+    return res.status(HTTP_STATUS.UNAUTHORIZED).json({ message: "Session user not found" });
   }
+
+  res.json({
+    _id: user._id,
+    fullName: user.fullName,
+    email: user.email,
+    role: user.role,
+  });
 };
 
 module.exports = { registerUser, loginUser, logoutUser, getCurrentUser };

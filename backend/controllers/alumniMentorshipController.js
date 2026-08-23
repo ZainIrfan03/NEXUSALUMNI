@@ -39,67 +39,55 @@ const formatMentee = async (reqDoc) => {
 // @route  GET /api/alumni/mentorship
 // Returns active mentee count, pending requests, and the current mentees table.
 const getMentorshipOverview = async (req, res) => {
-  try {
-    const alumniUserId = req.user.id;
+  const alumniUserId = req.user.id;
 
-    const [pendingDocs, acceptedDocs] = await Promise.all([
-      MentorshipRequest.find({ alumni: alumniUserId, status: "pending" })
-        .populate("student", "fullName")
-        .sort({ createdAt: -1 }),
-      MentorshipRequest.find({ alumni: alumniUserId, status: "accepted" })
-        .populate("student", "fullName")
-        .sort({ updatedAt: -1 }),
-    ]);
+  const [pendingDocs, acceptedDocs] = await Promise.all([
+    MentorshipRequest.find({ alumni: alumniUserId, status: "pending" })
+      .populate("student", "fullName")
+      .sort({ createdAt: -1 }),
+    MentorshipRequest.find({ alumni: alumniUserId, status: "accepted" })
+      .populate("student", "fullName")
+      .sort({ updatedAt: -1 }),
+  ]);
 
-    const requests = await Promise.all(pendingDocs.map(formatRequest));
-    const mentees = await Promise.all(acceptedDocs.map(formatMentee));
+  const requests = await Promise.all(pendingDocs.map(formatRequest));
+  const mentees = await Promise.all(acceptedDocs.map(formatMentee));
 
-    res.json({
-      activeMenteesCount: mentees.length,
-      requests,
-      mentees,
-    });
-  } catch (error) {
-    res.status(HTTP_STATUS.SERVER_ERROR).json({ message: "Server error", error: error.message });
-  }
+  res.json({
+    activeMenteesCount: mentees.length,
+    requests,
+    mentees,
+  });
 };
 
 // @route  POST /api/alumni/mentorship/requests/:id/accept
 const acceptRequest = async (req, res) => {
-  try {
-    const request = await MentorshipRequest.findOneAndUpdate(
-      { _id: req.params.id, alumni: req.user.id },
-      { status: "accepted" },
-      { new: true }
-    );
+  const request = await MentorshipRequest.findOneAndUpdate(
+    { _id: req.params.id, alumni: req.user.id },
+    { status: "accepted" },
+    { new: true }
+  );
 
-    if (!request) {
-      return res.status(HTTP_STATUS.NOT_FOUND).json({ message: "Request not found" });
-    }
-
-    res.json(request);
-  } catch (error) {
-    res.status(HTTP_STATUS.SERVER_ERROR).json({ message: "Server error", error: error.message });
+  if (!request) {
+    return res.status(HTTP_STATUS.NOT_FOUND).json({ message: "Request not found" });
   }
+
+  res.json(request);
 };
 
 // @route  POST /api/alumni/mentorship/requests/:id/reject
 const rejectRequest = async (req, res) => {
-  try {
-    const request = await MentorshipRequest.findOneAndUpdate(
-      { _id: req.params.id, alumni: req.user.id },
-      { status: "declined" },
-      { new: true }
-    );
+  const request = await MentorshipRequest.findOneAndUpdate(
+    { _id: req.params.id, alumni: req.user.id },
+    { status: "declined" },
+    { new: true }
+  );
 
-    if (!request) {
-      return res.status(HTTP_STATUS.NOT_FOUND).json({ message: "Request not found" });
-    }
-
-    res.json(request);
-  } catch (error) {
-    res.status(HTTP_STATUS.SERVER_ERROR).json({ message: "Server error", error: error.message });
+  if (!request) {
+    return res.status(HTTP_STATUS.NOT_FOUND).json({ message: "Request not found" });
   }
+
+  res.json(request);
 };
 
 module.exports = { getMentorshipOverview, acceptRequest, rejectRequest };
