@@ -53,7 +53,11 @@ export const studentJobsApi = baseApi.injectEndpoints({
         url: `/jobs/${jobId}/save`,
         method: "POST",
       }),
-      invalidatesTags: (result, error, jobId) => [{ type: TAGS.JOBS, id: jobId }],
+      invalidatesTags: (result, error, jobId) => [
+        { type: TAGS.JOBS, id: jobId },
+        // The student dashboard's savedJobs counter changes on save/unsave.
+        TAGS.STUDENT_DASHBOARD,
+      ],
     }),
 
     respondToInterview: builder.mutation({

@@ -46,6 +46,8 @@ export const alumniJobsApi = baseApi.injectEndpoints({
         { type: TAGS.JOBS, id: jobId },
         { type: TAGS.JOBS, id: "ALUMNI_LIST" },
         { type: TAGS.JOBS, id: "LIST" }, // deleting a posting should drop it off the student board too
+        // The alumni dashboard's jobsPosted counter decreases after deletion.
+        TAGS.ALUMNI_DASHBOARD,
       ],
     }),
 
@@ -87,6 +89,8 @@ export const alumniJobsApi = baseApi.injectEndpoints({
       invalidatesTags: [
         { type: TAGS.JOBS, id: "ALUMNI_LIST" },
         { type: TAGS.JOBS, id: "LIST" }, // new posting should show up on the student board immediately
+        // The alumni dashboard's jobsPosted counter increases after creation.
+        TAGS.ALUMNI_DASHBOARD,
       ],
     }),
   }),
