@@ -31,7 +31,9 @@ const getStudentDirectory = async (req, res) => {
     const skillList = skills ? skills.split(",").filter(Boolean) : [];
     const yearList = years ? years.split(",").filter(Boolean) : [];
 
-    const filter = {};
+    // Only profiles that opted into directory visibility may be listed.
+    // This must be enforced by the API, not just hidden by the frontend.
+    const filter = { isPublic: true };
     if (department && department !== "all") {
       filter.department = department;
     }
@@ -101,10 +103,12 @@ const getStudentDirectory = async (req, res) => {
 // their accepted mentees, not any student in the directory).
 const getStudentById = async (req, res) => {
   try {
-    const student = await Student.findById(req.params.id).populate(
-      "user",
-      "fullName email"
-    );
+    // Match the directory list's privacy rule so direct profile URLs do not
+    // expose a student who has made their profile private.
+    const student = await Student.findOne({
+      _id: req.params.id,
+      isPublic: true,
+    }).populate("user", "fullName email");
 
     if (!student) {
       return res.status(HTTP_STATUS.NOT_FOUND).json({ message: "Student not found" });

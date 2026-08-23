@@ -32,7 +32,10 @@ const getAlumniDirectory = async (req, res) => {
   try {
     const { fromYear, toYear, page = 1, limit = 6 } = req.query;
 
-    const filter = {};
+    // Directory results must respect the profile owner's privacy setting.
+    // Keep this restriction server-side because frontend filtering can be
+    // bypassed by calling the API directly.
+    const filter = { isPublic: true };
     if (fromYear || toYear) {
       filter.graduationYear = {};
       if (fromYear) filter.graduationYear.$gte = fromYear;
@@ -69,10 +72,12 @@ const getAlumniDirectory = async (req, res) => {
 // :id is the Alumni document's own _id (same id used in the directory list).
 const getAlumniById = async (req, res) => {
   try {
-    const alumni = await Alumni.findById(req.params.id).populate(
-      "user",
-      "fullName email"
-    );
+    // Use the same privacy rule as the list endpoint so a private profile
+    // cannot be opened by guessing or reusing its document id.
+    const alumni = await Alumni.findOne({
+      _id: req.params.id,
+      isPublic: true,
+    }).populate("user", "fullName email");
 
     if (!alumni) {
       return res.status(HTTP_STATUS.NOT_FOUND).json({ message: "Alumni not found" });
