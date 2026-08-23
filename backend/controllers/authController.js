@@ -1,5 +1,6 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const mongoose = require("mongoose");
 const User = require("../models/User");
 const Student = require("../models/Student");
 const Alumni = require("../models/Alumni");
@@ -61,34 +62,45 @@ const registerUser = async (req, res) => {
       });
     }
 
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      return res.status(HTTP_STATUS.BAD_REQUEST).json({ message: "Email already registered" });
-    }
-
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    // 1. Create the base User (auth-only fields)
-    const user = await User.create({
-      fullName,
-      email,
-      password: hashedPassword,
-      role,
-    });
+    let user;
 
-    // 2. Create the role-specific profile, linked via `user: user._id`
-    if (role === "student") {
-      if (!department || !session || !rollNumber) {
-        return res.status(HTTP_STATUS.BAD_REQUEST).json({ message: "Missing student fields" });
+    // User + role profile are one unit of work. If either insert fails, MongoDB
+    // rolls both back so an account can never exist without its profile.
+    await mongoose.connection.transaction(async (dbSession) => {
+      const existingUser = await User.findOne({ email }).session(dbSession);
+      if (existingUser) {
+        const duplicateEmailError = new Error("Email already registered");
+        duplicateEmailError.statusCode = HTTP_STATUS.BAD_REQUEST;
+        throw duplicateEmailError;
       }
-      await Student.create({ user: user._id, department, session, rollNumber });
-    } else if (role === "alumni") {
-      if (!graduationYear) {
-        return res.status(HTTP_STATUS.BAD_REQUEST).json({ message: "Missing alumni fields" });
+
+      [user] = await User.create(
+        [
+          {
+            fullName,
+            email,
+            password: hashedPassword,
+            role,
+          },
+        ],
+        { session: dbSession }
+      );
+
+      if (role === ROLES.STUDENT) {
+        await Student.create(
+          [{ user: user._id, department, session, rollNumber }],
+          { session: dbSession }
+        );
+      } else {
+        await Alumni.create(
+          [{ user: user._id, graduationYear, company, jobTitle }],
+          { session: dbSession }
+        );
       }
-      await Alumni.create({ user: user._id, graduationYear, company, jobTitle });
-    }
+    });
 
     res.status(HTTP_STATUS.CREATED).json({
       _id: user._id,
@@ -97,6 +109,11 @@ const registerUser = async (req, res) => {
       role: user.role,
     });
   } catch (error) {
+    if (error.statusCode === HTTP_STATUS.BAD_REQUEST || error.code === 11000) {
+      return res
+        .status(HTTP_STATUS.BAD_REQUEST)
+        .json({ message: "Email already registered" });
+    }
     res.status(HTTP_STATUS.SERVER_ERROR).json({ message: "Server error", error: error.message });
   }
 };
