@@ -1,43 +1,19 @@
-import { useEffect, useState } from "react";
 import { ArrowRight } from "lucide-react";
-import api from "../../api/axios";
 import { getImageUrl as fileUrl } from "../../utils/getImageUrl";
 import LoadingSpinner from "../common/LoadingSpinner";
 import EmptyState from "../common/EmptyState";
 import { UI_LIMITS } from "../../consts/appConstants";
+import { useGetFeaturedAlumniQuery } from "../../store/api/publicApi";
 
 export default function FeaturedAlumni() {
-  const [alumni, setAlumni] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    api
-      .get("/directory/featured", { params: { limit: UI_LIMITS.FEATURED_ALUMNI } })
-      .then(({ data }) => {
-        if (cancelled) return;
-        setAlumni(
-          (data.results || []).map((a) => ({
-            id: a._id,
-            name: a.user?.fullName || "Alumni Member",
-            role: a.jobTitle,
-            company: a.company,
-            img: fileUrl(a.avatarUrl),
-          }))
-        );
-      })
-      .catch(() => {
-        if (!cancelled) setAlumni([]);
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  const { data, isLoading } = useGetFeaturedAlumniQuery(UI_LIMITS.FEATURED_ALUMNI);
+  const alumni = (data?.results || []).map((a) => ({
+    id: a._id,
+    name: a.user?.fullName || "Alumni Member",
+    role: a.jobTitle,
+    company: a.company,
+    img: fileUrl(a.avatarUrl),
+  }));
 
   return (
     <section className="w-full bg-background">
@@ -55,7 +31,7 @@ export default function FeaturedAlumni() {
           </a>
         </div>
 
-        {loading ? (
+        {isLoading ? (
           <LoadingSpinner label="Loading featured alumni..." />
         ) : alumni.length === 0 ? (
           <EmptyState message="No featured alumni to show yet." />

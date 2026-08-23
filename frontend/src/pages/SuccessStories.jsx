@@ -1,10 +1,13 @@
 import { useEffect, useState } from "react";
 import { ArrowUpRight, ChevronDown, Search } from "lucide-react";
-import api from "../api/axios";
 import { getImageUrl } from "../utils/getImageUrl";
 import LoadingSpinner from "../components/common/LoadingSpinner";
 import EmptyState from "../components/common/EmptyState";
 import { UI_LIMITS } from "../consts/appConstants";
+import {
+  useGetStoryCategoriesQuery,
+  useLazyGetSuccessStoriesQuery,
+} from "../store/api/publicApi";
 
 
 
@@ -19,7 +22,9 @@ const initialsOf = (name = "") =>
 const shortYear = (year) => (year ? `'${String(year).slice(-2)}` : "");
 
 export default function SuccessStoriesPage() {
-  const [categories, setCategories] = useState(["All Categories"]);
+  const { data: categoryData } = useGetStoryCategoriesQuery();
+  const [fetchStories] = useLazyGetSuccessStoriesQuery();
+  const categories = ["All Categories", ...(categoryData?.categories || [])];
   const [activeCategory, setActiveCategory] = useState("All Categories");
   const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
@@ -44,27 +49,17 @@ export default function SuccessStoriesPage() {
 
   
   useEffect(() => {
-    api
-      .get("/stories/categories")
-      .then(({ data }) => setCategories(["All Categories", ...(data.categories || [])]))
-      .catch(() => setCategories(["All Categories"]));
-  }, []);
-
-
-  useEffect(() => {
     let cancelled = false;
     const requestedQuery = queryKey;
 
-    api
-      .get("/stories", {
-        params: {
-          category: activeCategory,
-          search,
-          page: 1,
-          limit: UI_LIMITS.SUCCESS_STORIES_PAGE_SIZE,
-        },
-      })
-      .then(({ data }) => {
+    fetchStories({
+      category: activeCategory,
+      search,
+      page: 1,
+      limit: UI_LIMITS.SUCCESS_STORIES_PAGE_SIZE,
+    })
+      .unwrap()
+      .then((data) => {
         if (cancelled) return;
         setStories(data.results || []);
         setPage(1);
@@ -83,21 +78,19 @@ export default function SuccessStoriesPage() {
     return () => {
       cancelled = true;
     };
-  }, [activeCategory, search, queryKey]);
+  }, [activeCategory, fetchStories, search, queryKey]);
 
   const loadMore = () => {
     const nextPage = page + 1;
     setLoadingMore(true);
-    api
-      .get("/stories", {
-        params: {
-          category: activeCategory,
-          search,
-          page: nextPage,
-          limit: UI_LIMITS.SUCCESS_STORIES_PAGE_SIZE,
-        },
-      })
-      .then(({ data }) => {
+    fetchStories({
+      category: activeCategory,
+      search,
+      page: nextPage,
+      limit: UI_LIMITS.SUCCESS_STORIES_PAGE_SIZE,
+    })
+      .unwrap()
+      .then((data) => {
         setStories((prev) => [...prev, ...(data.results || [])]);
         setPage(nextPage);
         setTotalPages(data.totalPages || 1);

@@ -11,32 +11,21 @@ import DashboardLayout from "./layouts/DashboardLayout";
 import studentRoutes from "./routes/StudentRoutes";
 import alumniRoutes from "./routes/AlumniRoutes";
 import { ROUTES } from "./consts/appConstants";
-import api from "./api/axios";
 import { logout, setCredentials } from "./store/slice/authSlice";
+import { useGetCurrentUserQuery } from "./store/api/authApi";
 import LoadingSpinner from "./components/common/LoadingSpinner";
 
 
 function App() {
   const dispatch = useDispatch();
   const { authChecked } = useSelector((state) => state.auth);
+  const session = useGetCurrentUserQuery(undefined, { skip: authChecked });
 
   useEffect(() => {
-    if (authChecked) return undefined;
-
-    let active = true;
-    api
-      .get("/auth/me")
-      .then(({ data }) => {
-        if (active) dispatch(setCredentials(data));
-      })
-      .catch(() => {
-        if (active) dispatch(logout());
-      });
-
-    return () => {
-      active = false;
-    };
-  }, [authChecked, dispatch]);
+    if (authChecked) return;
+    if (session.isSuccess) dispatch(setCredentials(session.data));
+    if (session.isError) dispatch(logout());
+  }, [authChecked, dispatch, session.data, session.isError, session.isSuccess]);
 
   if (!authChecked) {
     return <LoadingSpinner label="Verifying session..." className="min-h-screen" />;

@@ -1,20 +1,20 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
-import api from "../api/axios";
 import { Mail, Lock, Eye, EyeOff, ArrowRight } from "lucide-react";
 import { setCredentials } from "../store/slice/authSlice";
+import { useLoginMutation } from "../store/api/authApi";
 import { ROLE_HOME_ROUTES } from "../consts/appConstants";
 
 
 export default function Login() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const [login, { isLoading }] = useLoginMutation();
   const [showPassword, setShowPassword] = useState(false);
   const [form, setForm] = useState({ email: "", password: "" });
   const [keepSignedIn, setKeepSignedIn] = useState(false);
   const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
 
   const handleChange = (event) => {
     setForm({ ...form, [event.target.name]: event.target.value });
@@ -23,20 +23,13 @@ export default function Login() {
   const handleSubmit = async (event) => {
     event.preventDefault();
     setError("");
-    setLoading(true);
 
     try {
-      const { data } = await api.post(`/auth/login`, { ...form, keepSignedIn })
-
-      
+      const data = await login({ ...form, keepSignedIn }).unwrap();
       dispatch(setCredentials(data));
-
-    
       navigate(ROLE_HOME_ROUTES[data.role] || "/");
     } catch (err) {
-      setError(err.response?.data?.message || "Something went wrong. Try again.");
-    } finally {
-      setLoading(false);
+      setError(err.data?.message || "Something went wrong. Try again.");
     }
   };
 
@@ -116,10 +109,10 @@ export default function Login() {
 
           <button
             type="submit"
-            disabled={loading}
+            disabled={isLoading}
             className="w-full bg-primary text-white text-sm font-semibold py-3 rounded-xl flex items-center justify-center gap-2 hover:opacity-90 transition-opacity disabled:opacity-60"
           >
-            {loading ? "Signing In..." : "Sign In"} <ArrowRight size={16} />
+            {isLoading ? "Signing In..." : "Sign In"} <ArrowRight size={16} />
           </button>
         </form>
 

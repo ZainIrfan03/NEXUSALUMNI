@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import api from "../api/axios";
+import { useRegisterMutation } from "../store/api/authApi";
 import { ROLES, EMAIL_REGEX, PASSWORD_MIN_LENGTH, FULL_NAME_MAX_LENGTH } from "../consts/appConstants";
 
 
 export default function Register() {
   const navigate = useNavigate();
+  const [register, { isLoading }] = useRegisterMutation();
 
   const [role, setRole] = useState(ROLES.STUDENT);
   const [form, setForm] = useState({
@@ -22,7 +23,6 @@ export default function Register() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
   const [fieldErrors, setFieldErrors] = useState({});
-  const [loading, setLoading] = useState(false);
 
 
   const handleChange = (event) => {
@@ -144,22 +144,18 @@ export default function Register() {
       return;
     }
 
-    setLoading(true);
-
     try {
-      await api.post(`/auth/register`, {
+      await register({
         role,
         ...form,
-      });
+      }).unwrap();
 
       
       navigate("/login", {
         state: { message: "Account created! Please log in to continue." },
       });
     } catch (err) {
-      setError(err.response?.data?.message || "Registration failed. Try again.");
-    } finally {
-      setLoading(false);
+      setError(err.data?.message || "Registration failed. Try again.");
     }
 };
 
@@ -389,10 +385,10 @@ export default function Register() {
 
           <button
             type="submit"
-            disabled={loading}
+            disabled={isLoading}
             className="w-full bg-primary text-white text-sm font-semibold py-3 rounded-xl hover:opacity-90 transition-opacity disabled:opacity-60"
           >
-            {loading ? "Registering..." : `Register as ${role === ROLES.STUDENT ? "Student" : "Alumni"}`}
+            {isLoading ? "Registering..." : `Register as ${role === ROLES.STUDENT ? "Student" : "Alumni"}`}
           </button>
         </form>
       </div>

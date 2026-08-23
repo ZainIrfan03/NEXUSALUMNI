@@ -10,7 +10,8 @@ const rawBaseQuery = fetchBaseQuery({
 
 const baseQueryWithAuth = async (args, api, extraOptions) => {
   const result = await rawBaseQuery(args, api, extraOptions);
-  if (result.error?.status === 401) {
+  // Invalid login credentials are a form error, not an expired active session.
+  if (result.error?.status === 401 && api.endpoint !== "login") {
     api.dispatch(logout());
   }
   return result;
@@ -24,7 +25,7 @@ const baseQueryWithAuth = async (args, api, extraOptions) => {
  * (`baseApi.reducerPath`) and one middleware to register in store.js,
  * no matter how many feature files exist.
  *
- * Auth: the backend uses an httpOnly cookie (see api/axios.js), so
+ * Auth: the backend uses an httpOnly cookie, so
  * `credentials: "include"` is all that's needed here — no manual
  * Authorization header to attach or keep in sync.
  */
