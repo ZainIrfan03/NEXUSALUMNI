@@ -8,40 +8,39 @@ import {
 import { getImageUrl as fileUrl } from "../../../utils/getImageUrl";
 import { MENTORSHIP_STATUS } from "../../../consts/appConstants";
 import LoadingSpinner from "../../../components/common/LoadingSpinner";
-import { ArrowLeft, MapPin, Briefcase, GraduationCap, Send } from "lucide-react";
-
-
-
-
-
-
-
-
+import {
+  ArrowLeft,
+  MapPin,
+  Briefcase,
+  GraduationCap,
+  Send,
+} from "lucide-react";
 
 export default function AlumniProfileView() {
   const { id } = useParams();
   const navigate = useNavigate();
 
-  const { data: alumni, isLoading: loading, error: profileQueryError } = useGetAlumniByIdQuery(id);
-
-  
-  
-  
-  const alumniUserId = alumni?.user?._id;
   const {
-    data: myRequests,
-    isLoading: checkingRequest,
-  } = useGetMyRequestsQuery(undefined, { skip: !alumniUserId });
+    data: alumni,
+    isLoading: loading,
+    error: profileQueryError,
+  } = useGetAlumniByIdQuery(id);
+
+  const alumniUserId = alumni?.user?._id;
+  const { data: myRequests, isLoading: checkingRequest } =
+    useGetMyRequestsQuery(undefined, { skip: !alumniUserId });
 
   const existingRequest = myRequests?.find(
-    (request) => request.alumni?._id?.toString() === alumniUserId?.toString()
+    (request) => request.alumni?._id?.toString() === alumniUserId?.toString(),
   );
-  const requestStatus = existingRequest?.status || null; 
+  const requestStatus = existingRequest?.status || null;
 
-  const [sendMentorshipRequest, { isLoading: requesting }] = useSendMentorshipRequestMutation();
+  const [sendMentorshipRequest, { isLoading: requesting }] =
+    useSendMentorshipRequestMutation();
   const [actionError, setActionError] = useState("");
 
-  const error = actionError || (profileQueryError && "Could not load this profile.");
+  const error =
+    actionError || (profileQueryError && "Could not load this profile.");
 
   const handleRequestMentorship = async () => {
     setActionError("");
@@ -53,9 +52,7 @@ export default function AlumniProfileView() {
   };
 
   if (loading) {
-    return (
-      <LoadingSpinner label="Loading profile..." className="py-20" />
-    );
+    return <LoadingSpinner label="Loading profile..." className="py-20" />;
   }
 
   if (error && !alumni) {
@@ -97,7 +94,6 @@ export default function AlumniProfileView() {
         </div>
       )}
 
-      
       <div className="bg-white rounded-2xl overflow-hidden mb-6">
         <div className="h-28 bg-gradient-to-r from-primary to-dark" />
         <div className="px-6 pb-6">
@@ -118,7 +114,9 @@ export default function AlumniProfileView() {
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
               <div className="flex items-center gap-2 flex-wrap">
-                <h1 className="text-2xl font-bold text-dark">{user?.fullName || "—"}</h1>
+                <h1 className="text-2xl font-bold text-dark">
+                  {user?.fullName || "—"}
+                </h1>
                 {graduationYear && (
                   <span className="text-xs font-medium text-primary bg-gray-100 rounded-full px-2.5 py-1">
                     Class of {graduationYear}
@@ -135,35 +133,40 @@ export default function AlumniProfileView() {
               )}
             </div>
 
-            {openToMentorship && !checkingRequest && requestStatus !== MENTORSHIP_STATUS.ACCEPTED && (
-              <button
-                onClick={handleRequestMentorship}
-                disabled={requesting || requestStatus === MENTORSHIP_STATUS.PENDING || requestStatus === MENTORSHIP_STATUS.COMPLETED}
-                className="flex items-center gap-2 text-sm font-medium text-white bg-dark rounded-xl px-5 py-2.5 hover:opacity-90 transition-opacity disabled:opacity-50"
-              >
-                {requesting ? (
-                  "Sending..."
-                ) : requestStatus === MENTORSHIP_STATUS.PENDING ? (
-                  "Request Sent"
-                ) : requestStatus === MENTORSHIP_STATUS.COMPLETED ? (
-                  "Completed"
-                ) : requestStatus === MENTORSHIP_STATUS.DECLINED ? (
-                  <>
-                    <Send size={14} /> Send Request Again
-                  </>
-                ) : (
-                  <>
-                    <Send size={14} /> Request Mentorship
-                  </>
-                )}
-              </button>
-            )}
+            {openToMentorship &&
+              !checkingRequest &&
+              requestStatus !== MENTORSHIP_STATUS.ACCEPTED && (
+                <button
+                  onClick={handleRequestMentorship}
+                  disabled={
+                    requesting ||
+                    requestStatus === MENTORSHIP_STATUS.PENDING ||
+                    requestStatus === MENTORSHIP_STATUS.COMPLETED
+                  }
+                  className="flex items-center gap-2 text-sm font-medium text-white bg-dark rounded-xl px-5 py-2.5 hover:opacity-90 transition-opacity disabled:opacity-50"
+                >
+                  {requesting ? (
+                    "Sending..."
+                  ) : requestStatus === MENTORSHIP_STATUS.PENDING ? (
+                    "Request Sent"
+                  ) : requestStatus === MENTORSHIP_STATUS.COMPLETED ? (
+                    "Completed"
+                  ) : requestStatus === MENTORSHIP_STATUS.DECLINED ? (
+                    <>
+                      <Send size={14} /> Send Request Again
+                    </>
+                  ) : (
+                    <>
+                      <Send size={14} /> Request Mentorship
+                    </>
+                  )}
+                </button>
+              )}
           </div>
         </div>
       </div>
 
       <div className="grid lg:grid-cols-3 gap-6">
-        
         <div className="lg:col-span-2 flex flex-col gap-6">
           <div className="bg-white rounded-2xl p-6">
             <h2 className="text-lg font-semibold text-dark mb-3">Bio</h2>
@@ -179,14 +182,19 @@ export default function AlumniProfileView() {
             )}
             <div className="flex flex-col divide-y divide-gray-100">
               {experience.map((exp) => (
-                <div key={exp._id} className="flex gap-3 py-4 first:pt-0 last:pb-0">
+                <div
+                  key={exp._id}
+                  className="flex gap-3 py-4 first:pt-0 last:pb-0"
+                >
                   <div className="h-10 w-10 rounded-lg bg-gray-100 flex items-center justify-center shrink-0">
                     <Briefcase size={16} className="text-gray-500" />
                   </div>
                   <div className="flex-1">
                     <div className="flex items-start justify-between gap-2">
                       <div>
-                        <p className="font-semibold text-dark text-sm">{exp.title}</p>
+                        <p className="font-semibold text-dark text-sm">
+                          {exp.title}
+                        </p>
                         <p className="text-primary text-sm">{exp.company}</p>
                       </div>
                       {exp.current ? (
@@ -202,7 +210,9 @@ export default function AlumniProfileView() {
                       )}
                     </div>
                     {exp.description && (
-                      <p className="text-sm text-gray-500 mt-1">{exp.description}</p>
+                      <p className="text-sm text-gray-500 mt-1">
+                        {exp.description}
+                      </p>
                     )}
                   </div>
                 </div>
@@ -211,14 +221,16 @@ export default function AlumniProfileView() {
           </div>
         </div>
 
-        
         <div className="flex flex-col gap-6">
           <div className="bg-white rounded-2xl p-6">
             <h2 className="text-lg font-semibold text-dark mb-3">Skills</h2>
             <div className="flex flex-wrap gap-2 mb-4">
               {skills.length ? (
                 skills.map((skill) => (
-                  <span key={skill} className="text-xs font-medium text-dark bg-gray-100 rounded-full px-3 py-1.5">
+                  <span
+                    key={skill}
+                    className="text-xs font-medium text-dark bg-gray-100 rounded-full px-3 py-1.5"
+                  >
                     {skill}
                   </span>
                 ))
@@ -227,16 +239,23 @@ export default function AlumniProfileView() {
               )}
             </div>
 
-            <h3 className="text-sm font-semibold text-dark mb-2">Willing to mentor in</h3>
+            <h3 className="text-sm font-semibold text-dark mb-2">
+              Willing to mentor in
+            </h3>
             <div className="flex flex-wrap gap-2">
               {interests.length ? (
                 interests.map((interest) => (
-                  <span key={interest} className="text-xs font-medium text-dark bg-gray-100 rounded-full px-3 py-1.5">
+                  <span
+                    key={interest}
+                    className="text-xs font-medium text-dark bg-gray-100 rounded-full px-3 py-1.5"
+                  >
                     {interest}
                   </span>
                 ))
               ) : (
-                <p className="text-sm text-gray-400">No mentorship areas added yet.</p>
+                <p className="text-sm text-gray-400">
+                  No mentorship areas added yet.
+                </p>
               )}
             </div>
           </div>
@@ -253,9 +272,13 @@ export default function AlumniProfileView() {
                     <GraduationCap size={16} className="text-gray-500" />
                   </div>
                   <div>
-                    <p className="font-semibold text-dark text-sm">{edu.school}</p>
+                    <p className="font-semibold text-dark text-sm">
+                      {edu.school}
+                    </p>
                     <p className="text-sm text-gray-500">{edu.degree}</p>
-                    {edu.year && <p className="text-xs text-gray-400">{edu.year}</p>}
+                    {edu.year && (
+                      <p className="text-xs text-gray-400">{edu.year}</p>
+                    )}
                   </div>
                 </div>
               ))}

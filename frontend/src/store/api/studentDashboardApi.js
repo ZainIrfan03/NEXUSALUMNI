@@ -1,20 +1,6 @@
 import { baseApi } from "./baseApi";
 import { TAGS } from "../../consts/appConstants";
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 export const studentDashboardApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     getDashboardStats: builder.query({
@@ -29,4 +15,5 @@ export const studentDashboardApi = baseApi.injectEndpoints({
   }),
 });
 
-export const { useGetDashboardStatsQuery, useGetRecentActivityQuery } = studentDashboardApi;
+export const { useGetDashboardStatsQuery, useGetRecentActivityQuery } =
+  studentDashboardApi;

@@ -39,7 +39,14 @@ import {
 } from "lucide-react";
 
 const TYPE_TABS = ["All Jobs", ...Object.values(JOB_TYPES)];
-const DEPARTMENTS = ["Engineering", "Design", "Marketing", "Sales", "Operations", "Other"];
+const DEPARTMENTS = [
+  "Engineering",
+  "Design",
+  "Marketing",
+  "Sales",
+  "Operations",
+  "Other",
+];
 const STATUS_TONES = {
   [APPLICATION_STATUS.APPLIED]: "neutral",
   [APPLICATION_STATUS.IN_REVIEW]: "warning",
@@ -93,7 +100,8 @@ export default function Jobs() {
     isLoading: loadingJobs,
     error: jobsError,
   } = useGetJobsQuery(queryParams, { skip: view === "applications" });
-  const { data: applicationData, isLoading: loadingApplications } = useGetMyApplicationsQuery();
+  const { data: applicationData, isLoading: loadingApplications } =
+    useGetMyApplicationsQuery();
   const [applyToJob] = useApplyToJobMutation();
   const [toggleSaveJob] = useToggleSaveJobMutation();
   const [respondToInterview] = useRespondToInterviewMutation();
@@ -103,7 +111,10 @@ export default function Jobs() {
   const applications = applicationData?.applications || [];
   const stats = applicationData?.stats || {};
   const selectedJob = jobs.find((job) => job._id === selectedJobId) || null;
-  const error = actionError || jobsError?.data?.message || (jobsError ? "Failed to load jobs" : "");
+  const error =
+    actionError ||
+    jobsError?.data?.message ||
+    (jobsError ? "Failed to load jobs" : "");
 
   const resetPage = () => setPage(1);
   const selectView = (nextView) => {
@@ -164,7 +175,9 @@ export default function Jobs() {
     try {
       await respondToInterview({ applicationId, response }).unwrap();
     } catch (err) {
-      setActionError(err?.data?.message || "Could not update your interview response");
+      setActionError(
+        err?.data?.message || "Could not update your interview response",
+      );
     } finally {
       setRespondingApplicationId(null);
     }
@@ -182,7 +195,9 @@ export default function Jobs() {
       <div className="flex flex-wrap items-start justify-between gap-4 mb-6">
         <div>
           <h1 className="text-2xl font-bold text-primary">Job Opportunities</h1>
-          <p className="text-gray-500 mt-1">Discover roles and track every application in one place.</p>
+          <p className="text-gray-500 mt-1">
+            Discover roles and track every application in one place.
+          </p>
         </div>
         <button
           onClick={() => navigate(ROUTES.STUDENT.EDIT_PROFILE)}
@@ -192,7 +207,11 @@ export default function Jobs() {
         </button>
       </div>
 
-      <div className="flex flex-wrap gap-2 mb-5" role="tablist" aria-label="Job sections">
+      <div
+        className="flex flex-wrap gap-2 mb-5"
+        role="tablist"
+        aria-label="Job sections"
+      >
         {[
           ["browse", "Browse Jobs"],
           ["saved", "Saved Jobs"],
@@ -204,7 +223,9 @@ export default function Jobs() {
             aria-selected={view === key}
             onClick={() => selectView(key)}
             className={`rounded-full px-4 py-2 text-sm font-semibold ${
-              view === key ? "bg-dark text-white" : "bg-white text-gray-500 hover:bg-gray-100"
+              view === key
+                ? "bg-dark text-white"
+                : "bg-white text-gray-500 hover:bg-gray-100"
             }`}
           >
             {label}
@@ -216,7 +237,10 @@ export default function Jobs() {
         <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-red-600 bg-red-50 border border-red-100 rounded-xl px-4 py-3 mb-5">
           <span>{error}</span>
           {resumeRequired && (
-            <button onClick={() => navigate(ROUTES.STUDENT.EDIT_PROFILE)} className="font-semibold underline">
+            <button
+              onClick={() => navigate(ROUTES.STUDENT.EDIT_PROFILE)}
+              className="font-semibold underline"
+            >
               Upload resume
             </button>
           )}
@@ -227,7 +251,9 @@ export default function Jobs() {
         <section className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
           <div className="px-5 py-4 border-b border-gray-100">
             <h2 className="font-semibold text-dark">Application History</h2>
-            <p className="text-sm text-gray-500">Your latest status appears here automatically.</p>
+            <p className="text-sm text-gray-500">
+              Your latest status appears here automatically.
+            </p>
           </div>
           {loadingApplications ? (
             <LoadingSpinner label="Loading applications..." />
@@ -236,68 +262,102 @@ export default function Jobs() {
           ) : (
             <div className="divide-y divide-gray-100">
               {applications.map((application) => (
-                <article key={application._id} className="p-5 flex flex-wrap items-center justify-between gap-4">
+                <article
+                  key={application._id}
+                  className="p-5 flex flex-wrap items-center justify-between gap-4"
+                >
                   <div>
-                    <h3 className="font-semibold text-dark">{application.job.title}</h3>
+                    <h3 className="font-semibold text-dark">
+                      {application.job.title}
+                    </h3>
                     <p className="text-sm text-gray-500 mt-1">
                       {application.job.company} · {application.job.location}
                     </p>
                     <p className="text-xs text-gray-400 mt-1">
-                      Applied {new Date(application.appliedAt).toLocaleDateString()}
+                      Applied{" "}
+                      {new Date(application.appliedAt).toLocaleDateString()}
                     </p>
-                    {application.interview && application.status === APPLICATION_STATUS.INTERVIEW && (
-                      <div className="mt-3 bg-blue-50 border border-blue-100 rounded-xl p-3 text-sm">
-                        <p className="font-semibold text-primary flex items-center gap-2">
-                          <CalendarDays size={15} /> Interview scheduled
-                        </p>
-                        <p className="text-gray-700 mt-1">
-                          {new Date(application.interview.scheduledAt).toLocaleString([], {
-                            dateStyle: "full",
-                            timeStyle: "short",
-                          })}
-                        </p>
-                        <p className="text-xs text-gray-500 mt-1">
-                          {application.interview.durationMinutes} minutes · {application.interview.timezone}
-                        </p>
-                        {application.interview.instructions && (
-                          <p className="text-xs text-gray-600 mt-2">{application.interview.instructions}</p>
-                        )}
-                        <div className="flex flex-wrap gap-2 mt-3">
-                          <a
-                            href={application.interview.meetingUrl}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="inline-flex items-center gap-1.5 bg-primary text-white rounded-lg px-3 py-2 text-xs font-semibold"
-                          >
-                            <Video size={13} /> Join Interview
-                          </a>
-                          {application.interview.response !== INTERVIEW_RESPONSE.CONFIRMED && (
-                            <button
-                              disabled={respondingApplicationId === application._id}
-                              onClick={() => handleInterviewResponse(application._id, INTERVIEW_RESPONSE.CONFIRMED)}
-                              className="border border-green-200 text-green-700 bg-white rounded-lg px-3 py-2 text-xs font-semibold disabled:opacity-50"
-                            >
-                              Confirm
-                            </button>
+                    {application.interview &&
+                      application.status === APPLICATION_STATUS.INTERVIEW && (
+                        <div className="mt-3 bg-blue-50 border border-blue-100 rounded-xl p-3 text-sm">
+                          <p className="font-semibold text-primary flex items-center gap-2">
+                            <CalendarDays size={15} /> Interview scheduled
+                          </p>
+                          <p className="text-gray-700 mt-1">
+                            {new Date(
+                              application.interview.scheduledAt,
+                            ).toLocaleString([], {
+                              dateStyle: "full",
+                              timeStyle: "short",
+                            })}
+                          </p>
+                          <p className="text-xs text-gray-500 mt-1">
+                            {application.interview.durationMinutes} minutes ·{" "}
+                            {application.interview.timezone}
+                          </p>
+                          {application.interview.instructions && (
+                            <p className="text-xs text-gray-600 mt-2">
+                              {application.interview.instructions}
+                            </p>
                           )}
-                          {application.interview.response !== INTERVIEW_RESPONSE.RESCHEDULE_REQUESTED && (
-                            <button
-                              disabled={respondingApplicationId === application._id}
-                              onClick={() => handleInterviewResponse(application._id, INTERVIEW_RESPONSE.RESCHEDULE_REQUESTED)}
-                              className="border border-amber-200 text-amber-700 bg-white rounded-lg px-3 py-2 text-xs font-semibold disabled:opacity-50"
+                          <div className="flex flex-wrap gap-2 mt-3">
+                            <a
+                              href={application.interview.meetingUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="inline-flex items-center gap-1.5 bg-primary text-white rounded-lg px-3 py-2 text-xs font-semibold"
                             >
-                              Request Reschedule
-                            </button>
-                          )}
+                              <Video size={13} /> Join Interview
+                            </a>
+                            {application.interview.response !==
+                              INTERVIEW_RESPONSE.CONFIRMED && (
+                              <button
+                                disabled={
+                                  respondingApplicationId === application._id
+                                }
+                                onClick={() =>
+                                  handleInterviewResponse(
+                                    application._id,
+                                    INTERVIEW_RESPONSE.CONFIRMED,
+                                  )
+                                }
+                                className="border border-green-200 text-green-700 bg-white rounded-lg px-3 py-2 text-xs font-semibold disabled:opacity-50"
+                              >
+                                Confirm
+                              </button>
+                            )}
+                            {application.interview.response !==
+                              INTERVIEW_RESPONSE.RESCHEDULE_REQUESTED && (
+                              <button
+                                disabled={
+                                  respondingApplicationId === application._id
+                                }
+                                onClick={() =>
+                                  handleInterviewResponse(
+                                    application._id,
+                                    INTERVIEW_RESPONSE.RESCHEDULE_REQUESTED,
+                                  )
+                                }
+                                className="border border-amber-200 text-amber-700 bg-white rounded-lg px-3 py-2 text-xs font-semibold disabled:opacity-50"
+                              >
+                                Request Reschedule
+                              </button>
+                            )}
+                          </div>
+                          <p className="text-xs text-gray-500 mt-2 capitalize">
+                            Response:{" "}
+                            {application.interview.response.replaceAll(
+                              "_",
+                              " ",
+                            )}
+                          </p>
                         </div>
-                        <p className="text-xs text-gray-500 mt-2 capitalize">
-                          Response: {application.interview.response.replaceAll("_", " ")}
-                        </p>
-                      </div>
-                    )}
+                      )}
                   </div>
                   <StatusBadge
-                    label={STATUS_LABELS[application.status] || application.status}
+                    label={
+                      STATUS_LABELS[application.status] || application.status
+                    }
                     tone={STATUS_TONES[application.status] || "neutral"}
                   />
                 </article>
@@ -310,7 +370,10 @@ export default function Jobs() {
           <div>
             <form onSubmit={submitSearch} className="flex gap-2 mb-4">
               <label className="relative flex-1">
-                <Search size={17} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                <Search
+                  size={17}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+                />
                 <span className="sr-only">Search jobs</span>
                 <input
                   value={searchInput}
@@ -319,7 +382,10 @@ export default function Jobs() {
                   className="w-full bg-white border border-gray-200 rounded-xl pl-10 pr-4 py-3 text-sm outline-none focus:border-primary"
                 />
               </label>
-              <button type="submit" className="bg-primary text-white rounded-xl px-5 text-sm font-semibold">
+              <button
+                type="submit"
+                className="bg-primary text-white rounded-xl px-5 text-sm font-semibold"
+              >
                 Search
               </button>
               <button
@@ -336,24 +402,62 @@ export default function Jobs() {
               <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3 bg-white border border-gray-100 rounded-xl p-4 mb-4">
                 <input
                   value={location}
-                  onChange={(event) => { setLocation(event.target.value); resetPage(); }}
+                  onChange={(event) => {
+                    setLocation(event.target.value);
+                    resetPage();
+                  }}
                   placeholder="Location"
                   className="border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-primary"
                 />
-                <select value={department} onChange={(event) => { setDepartment(event.target.value); resetPage(); }} className="border border-gray-200 rounded-lg px-3 py-2 text-sm">
+                <select
+                  value={department}
+                  onChange={(event) => {
+                    setDepartment(event.target.value);
+                    resetPage();
+                  }}
+                  className="border border-gray-200 rounded-lg px-3 py-2 text-sm"
+                >
                   <option value="">All departments</option>
-                  {DEPARTMENTS.map((item) => <option key={item} value={item}>{item}</option>)}
+                  {DEPARTMENTS.map((item) => (
+                    <option key={item} value={item}>
+                      {item}
+                    </option>
+                  ))}
                 </select>
-                <select value={experienceLevel} onChange={(event) => { setExperienceLevel(event.target.value); resetPage(); }} className="border border-gray-200 rounded-lg px-3 py-2 text-sm">
+                <select
+                  value={experienceLevel}
+                  onChange={(event) => {
+                    setExperienceLevel(event.target.value);
+                    resetPage();
+                  }}
+                  className="border border-gray-200 rounded-lg px-3 py-2 text-sm"
+                >
                   <option value="">All experience levels</option>
-                  {Object.values(EXPERIENCE_LEVELS).map((item) => <option key={item} value={item}>{item}</option>)}
+                  {Object.values(EXPERIENCE_LEVELS).map((item) => (
+                    <option key={item} value={item}>
+                      {item}
+                    </option>
+                  ))}
                 </select>
-                <select value={sort} onChange={(event) => { setSort(event.target.value); resetPage(); }} className="border border-gray-200 rounded-lg px-3 py-2 text-sm">
+                <select
+                  value={sort}
+                  onChange={(event) => {
+                    setSort(event.target.value);
+                    resetPage();
+                  }}
+                  className="border border-gray-200 rounded-lg px-3 py-2 text-sm"
+                >
                   <option value="newest">Newest first</option>
                   <option value="oldest">Oldest first</option>
                   <option value="deadline">Deadline soon</option>
                 </select>
-                <button onClick={clearFilters} type="button" className="text-left text-sm font-medium text-primary">Clear all filters</button>
+                <button
+                  onClick={clearFilters}
+                  type="button"
+                  className="text-left text-sm font-medium text-primary"
+                >
+                  Clear all filters
+                </button>
               </div>
             )}
 
@@ -361,9 +465,14 @@ export default function Jobs() {
               {TYPE_TABS.map((type) => (
                 <button
                   key={type}
-                  onClick={() => { setActiveType(type); resetPage(); }}
+                  onClick={() => {
+                    setActiveType(type);
+                    resetPage();
+                  }}
                   className={`text-sm font-medium px-3.5 py-2 rounded-full ${
-                    activeType === type ? "bg-primary text-white" : "bg-gray-100 text-gray-500"
+                    activeType === type
+                      ? "bg-primary text-white"
+                      : "bg-gray-100 text-gray-500"
                   }`}
                 >
                   {type}
@@ -374,41 +483,89 @@ export default function Jobs() {
             {loadingJobs ? (
               <LoadingSpinner label="Loading jobs..." />
             ) : jobs.length === 0 ? (
-              <EmptyState message={view === "saved" ? "You have no saved jobs matching these filters." : "No active jobs match these filters."} />
+              <EmptyState
+                message={
+                  view === "saved"
+                    ? "You have no saved jobs matching these filters."
+                    : "No active jobs match these filters."
+                }
+              />
             ) : (
               <div className="grid sm:grid-cols-2 gap-5">
                 {jobs.map((job) => {
-                  const isNew = renderTime - new Date(job.createdAt).getTime() < 3 * 24 * 60 * 60 * 1000;
+                  const isNew =
+                    renderTime - new Date(job.createdAt).getTime() <
+                    3 * 24 * 60 * 60 * 1000;
                   return (
-                    <article key={job._id} className="bg-white border border-gray-100 rounded-2xl p-5 flex flex-col">
+                    <article
+                      key={job._id}
+                      className="bg-white border border-gray-100 rounded-2xl p-5 flex flex-col"
+                    >
                       <div className="flex items-start justify-between gap-3 mb-4">
-                        <span className="h-11 w-11 rounded-xl bg-blue-50 flex items-center justify-center text-primary"><Briefcase size={18} /></span>
+                        <span className="h-11 w-11 rounded-xl bg-blue-50 flex items-center justify-center text-primary">
+                          <Briefcase size={18} />
+                        </span>
                         <div className="flex items-center gap-2">
                           {job.hasApplied ? (
-                            <span className="text-[10px] font-semibold rounded-full px-2.5 py-1 bg-green-50 text-green-600">APPLIED</span>
+                            <span className="text-[10px] font-semibold rounded-full px-2.5 py-1 bg-green-50 text-green-600">
+                              APPLIED
+                            </span>
                           ) : isNew ? (
-                            <span className="text-[10px] font-semibold rounded-full px-2.5 py-1 bg-gray-100 text-gray-500">NEW</span>
+                            <span className="text-[10px] font-semibold rounded-full px-2.5 py-1 bg-gray-100 text-gray-500">
+                              NEW
+                            </span>
                           ) : null}
                           <button
                             onClick={() => handleToggleSave(job._id)}
                             disabled={savingJobId === job._id}
-                            aria-label={job.hasSaved ? "Remove from saved jobs" : "Save job"}
+                            aria-label={
+                              job.hasSaved
+                                ? "Remove from saved jobs"
+                                : "Save job"
+                            }
                           >
-                            <Bookmark size={18} className={job.hasSaved ? "fill-primary text-primary" : "text-gray-300"} />
+                            <Bookmark
+                              size={18}
+                              className={
+                                job.hasSaved
+                                  ? "fill-primary text-primary"
+                                  : "text-gray-300"
+                              }
+                            />
                           </button>
                         </div>
                       </div>
-                      <button onClick={() => setSelectedJobId(job._id)} className="text-left">
-                        <h2 className="font-bold text-dark text-lg hover:text-primary">{job.title}</h2>
+                      <button
+                        onClick={() => setSelectedJobId(job._id)}
+                        className="text-left"
+                      >
+                        <h2 className="font-bold text-dark text-lg hover:text-primary">
+                          {job.title}
+                        </h2>
                       </button>
-                      <p className="text-sm text-gray-500 mt-1">{job.company} · {job.location}</p>
+                      <p className="text-sm text-gray-500 mt-1">
+                        {job.company} · {job.location}
+                      </p>
                       <div className="flex flex-wrap gap-3 text-xs text-gray-500 my-4">
-                        <span className="flex items-center gap-1"><Briefcase size={13} /> {job.type}</span>
+                        <span className="flex items-center gap-1">
+                          <Briefcase size={13} /> {job.type}
+                        </span>
                         <span>{job.experienceLevel}</span>
-                        {job.payRange && <span className="flex items-center gap-1"><DollarSign size={13} /> {job.payRange}</span>}
+                        {job.payRange && (
+                          <span className="flex items-center gap-1">
+                            <DollarSign size={13} /> {job.payRange}
+                          </span>
+                        )}
                       </div>
-                      {job.deadline && <p className="text-xs text-gray-400 mb-4">Apply by {new Date(job.deadline).toLocaleDateString()}</p>}
-                      <button onClick={() => setSelectedJobId(job._id)} className={`mt-auto w-full text-sm font-semibold py-2.5 rounded-xl ${job.hasApplied ? "bg-green-50 text-green-600" : "bg-dark text-white"}`}>
+                      {job.deadline && (
+                        <p className="text-xs text-gray-400 mb-4">
+                          Apply by {new Date(job.deadline).toLocaleDateString()}
+                        </p>
+                      )}
+                      <button
+                        onClick={() => setSelectedJobId(job._id)}
+                        className={`mt-auto w-full text-sm font-semibold py-2.5 rounded-xl ${job.hasApplied ? "bg-green-50 text-green-600" : "bg-dark text-white"}`}
+                      >
                         {job.hasApplied ? "Applied" : "View & Apply"}
                       </button>
                     </article>
@@ -418,67 +575,151 @@ export default function Jobs() {
             )}
 
             {(jobsData?.totalPages || 1) > 1 && (
-              <nav className="flex items-center justify-center gap-3 mt-7" aria-label="Jobs pagination">
-                <button onClick={() => setPage((value) => Math.max(1, value - 1))} disabled={page === 1} className="h-9 w-9 bg-white rounded-lg disabled:opacity-40 flex items-center justify-center"><ChevronLeft size={17} /></button>
-                <span className="text-sm text-gray-500">Page {page} of {jobsData.totalPages}</span>
-                <button onClick={() => setPage((value) => Math.min(jobsData.totalPages, value + 1))} disabled={page === jobsData.totalPages} className="h-9 w-9 bg-white rounded-lg disabled:opacity-40 flex items-center justify-center"><ChevronRight size={17} /></button>
+              <nav
+                className="flex items-center justify-center gap-3 mt-7"
+                aria-label="Jobs pagination"
+              >
+                <button
+                  onClick={() => setPage((value) => Math.max(1, value - 1))}
+                  disabled={page === 1}
+                  className="h-9 w-9 bg-white rounded-lg disabled:opacity-40 flex items-center justify-center"
+                >
+                  <ChevronLeft size={17} />
+                </button>
+                <span className="text-sm text-gray-500">
+                  Page {page} of {jobsData.totalPages}
+                </span>
+                <button
+                  onClick={() =>
+                    setPage((value) => Math.min(jobsData.totalPages, value + 1))
+                  }
+                  disabled={page === jobsData.totalPages}
+                  className="h-9 w-9 bg-white rounded-lg disabled:opacity-40 flex items-center justify-center"
+                >
+                  <ChevronRight size={17} />
+                </button>
               </nav>
             )}
           </div>
 
           <aside className="bg-primary rounded-2xl p-5 h-fit">
-            <h2 className="text-white font-semibold text-lg mb-4">Application Tracking</h2>
+            <h2 className="text-white font-semibold text-lg mb-4">
+              Application Tracking
+            </h2>
             <div className="space-y-2">
               {tracking.map(({ label, value, icon: Icon }) => (
-                <div key={label} className="flex items-center justify-between bg-white/10 rounded-xl px-4 py-3">
-                  <span className="flex items-center gap-2 text-sm text-white/90"><Icon size={15} /> {label}</span>
+                <div
+                  key={label}
+                  className="flex items-center justify-between bg-white/10 rounded-xl px-4 py-3"
+                >
+                  <span className="flex items-center gap-2 text-sm text-white/90">
+                    <Icon size={15} /> {label}
+                  </span>
                   <strong className="text-white">{value}</strong>
                 </div>
               ))}
             </div>
-            {(stats.rejected || 0) > 0 && <p className="text-xs text-white/60 mt-3">Rejected: {stats.rejected}</p>}
+            {(stats.rejected || 0) > 0 && (
+              <p className="text-xs text-white/60 mt-3">
+                Rejected: {stats.rejected}
+              </p>
+            )}
           </aside>
         </div>
       )}
 
       {selectedJob && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4" onClick={() => setSelectedJobId(null)}>
-          <div role="dialog" aria-modal="true" aria-labelledby="job-title" className="bg-white rounded-2xl max-w-xl w-full max-h-[88vh] overflow-y-auto" onClick={(event) => event.stopPropagation()}>
+        <div
+          className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4"
+          onClick={() => setSelectedJobId(null)}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="job-title"
+            className="bg-white rounded-2xl max-w-xl w-full max-h-[88vh] overflow-y-auto"
+            onClick={(event) => event.stopPropagation()}
+          >
             <div className="flex items-start justify-between px-6 pt-6">
-              <span className="h-12 w-12 rounded-xl bg-blue-50 flex items-center justify-center text-primary"><Briefcase size={20} /></span>
-              <button onClick={() => setSelectedJobId(null)} aria-label="Close job details" className="text-gray-400"><X size={20} /></button>
+              <span className="h-12 w-12 rounded-xl bg-blue-50 flex items-center justify-center text-primary">
+                <Briefcase size={20} />
+              </span>
+              <button
+                onClick={() => setSelectedJobId(null)}
+                aria-label="Close job details"
+                className="text-gray-400"
+              >
+                <X size={20} />
+              </button>
             </div>
             <div className="px-6 pt-4 pb-5">
-              <h2 id="job-title" className="text-xl font-bold text-dark">{selectedJob.title}</h2>
-              <p className="text-sm text-gray-500 mt-1">{selectedJob.company}{selectedJob.postedBy?.fullName ? ` · Posted by ${selectedJob.postedBy.fullName}` : ""}</p>
+              <h2 id="job-title" className="text-xl font-bold text-dark">
+                {selectedJob.title}
+              </h2>
+              <p className="text-sm text-gray-500 mt-1">
+                {selectedJob.company}
+                {selectedJob.postedBy?.fullName
+                  ? ` · Posted by ${selectedJob.postedBy.fullName}`
+                  : ""}
+              </p>
               <div className="flex flex-wrap gap-4 text-sm text-gray-500 mt-4">
-                <span className="flex items-center gap-1"><MapPin size={14} /> {selectedJob.location}</span>
-                <span className="flex items-center gap-1"><Briefcase size={14} /> {selectedJob.type}</span>
+                <span className="flex items-center gap-1">
+                  <MapPin size={14} /> {selectedJob.location}
+                </span>
+                <span className="flex items-center gap-1">
+                  <Briefcase size={14} /> {selectedJob.type}
+                </span>
                 <span>{selectedJob.experienceLevel}</span>
-                {selectedJob.payRange && <span className="flex items-center gap-1"><DollarSign size={14} /> {selectedJob.payRange}</span>}
-                {selectedJob.deadline && <span className="flex items-center gap-1"><CalendarDays size={14} /> Apply by {new Date(selectedJob.deadline).toLocaleDateString()}</span>}
+                {selectedJob.payRange && (
+                  <span className="flex items-center gap-1">
+                    <DollarSign size={14} /> {selectedJob.payRange}
+                  </span>
+                )}
+                {selectedJob.deadline && (
+                  <span className="flex items-center gap-1">
+                    <CalendarDays size={14} /> Apply by{" "}
+                    {new Date(selectedJob.deadline).toLocaleDateString()}
+                  </span>
+                )}
               </div>
               <section className="mt-5">
-                <h3 className="text-sm font-semibold text-dark mb-2">Job Description</h3>
-                <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-line">{selectedJob.description || "No description provided."}</p>
+                <h3 className="text-sm font-semibold text-dark mb-2">
+                  Job Description
+                </h3>
+                <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-line">
+                  {selectedJob.description || "No description provided."}
+                </p>
               </section>
               {selectedJob.requirements?.length > 0 && (
                 <section className="mt-5">
-                  <h3 className="text-sm font-semibold text-dark mb-2">Requirements</h3>
+                  <h3 className="text-sm font-semibold text-dark mb-2">
+                    Requirements
+                  </h3>
                   <ul className="list-disc pl-5 space-y-1 text-sm text-gray-600">
-                    {selectedJob.requirements.map((requirement) => <li key={requirement}>{requirement}</li>)}
+                    {selectedJob.requirements.map((requirement) => (
+                      <li key={requirement}>{requirement}</li>
+                    ))}
                   </ul>
                 </section>
               )}
             </div>
             <div className="px-6 py-5 border-t border-gray-100">
-              <p className="flex items-center gap-2 text-xs text-gray-500 mb-3"><FileText size={14} /> Your currently uploaded resume will be submitted.</p>
+              <p className="flex items-center gap-2 text-xs text-gray-500 mb-3">
+                <FileText size={14} /> Your currently uploaded resume will be
+                submitted.
+              </p>
               <button
                 onClick={() => handleApply(selectedJob._id)}
-                disabled={selectedJob.hasApplied || applyingJobId === selectedJob._id}
+                disabled={
+                  selectedJob.hasApplied || applyingJobId === selectedJob._id
+                }
                 className={`w-full text-sm font-semibold py-3 rounded-xl disabled:opacity-60 ${selectedJob.hasApplied ? "bg-green-50 text-green-600" : "bg-primary text-white"}`}
               >
-                {selectedJob.hasApplied ? "Application submitted" : applyingJobId === selectedJob._id ? "Submitting..." : "Submit Application"}
+                {selectedJob.hasApplied
+                  ? "Application submitted"
+                  : applyingJobId === selectedJob._id
+                    ? "Submitting..."
+                    : "Submit Application"}
               </button>
             </div>
           </div>

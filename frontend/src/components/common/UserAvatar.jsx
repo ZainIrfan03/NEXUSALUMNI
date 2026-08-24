@@ -1,6 +1,11 @@
 import { useState } from "react";
 
-export default function UserAvatar({ name = "User", src, className = "h-10 w-10", imageClassName = "" }) {
+export default function UserAvatar({
+  name = "User",
+  src,
+  className = "h-10 w-10",
+  imageClassName = "",
+}) {
   const [failedSrc, setFailedSrc] = useState("");
 
   if (src && src !== failedSrc) {
@@ -14,12 +19,13 @@ export default function UserAvatar({ name = "User", src, className = "h-10 w-10"
     );
   }
 
-  const initials = name
-    .trim()
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((part) => part.charAt(0).toUpperCase())
-    .join("") || "?";
+  const initials =
+    name
+      .trim()
+      .split(/\s+/)
+      .slice(0, 2)
+      .map((part) => part.charAt(0).toUpperCase())
+      .join("") || "?";
 
   return (
     <div

@@ -1,4 +1,10 @@
-export default function DashboardStatCard({ label, value, note, icon: Icon, variant = "overview" }) {
+export default function DashboardStatCard({
+  label,
+  value,
+  note,
+  icon: Icon,
+  variant = "overview",
+}) {
   if (variant === "jobs") {
     return (
       <div className="bg-white rounded-xl border border-gray-200 p-5 flex flex-col gap-2">
@@ -6,7 +12,9 @@ export default function DashboardStatCard({ label, value, note, icon: Icon, vari
           <span className="w-9 h-9 rounded-lg bg-blue-50 text-primary flex items-center justify-center">
             <Icon size={18} />
           </span>
-          {note && <span className="text-sm font-medium text-primary">{note}</span>}
+          {note && (
+            <span className="text-sm font-medium text-primary">{note}</span>
+          )}
         </div>
         <span className="text-3xl font-bold text-gray-900">{value}</span>
         <span className="text-sm text-gray-500">{label}</span>

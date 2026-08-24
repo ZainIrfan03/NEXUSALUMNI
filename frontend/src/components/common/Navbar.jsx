@@ -21,7 +21,6 @@ export default function Navbar() {
         : "text-gray-600 border-transparent hover:text-primary"
     }`;
 
-
   const mobileLinkClass = ({ isActive }) =>
     isActive ? "text-primary" : "text-gray-600";
 
@@ -33,14 +32,18 @@ export default function Navbar() {
         <div className="hidden md:flex items-center gap-10 ml-auto">
           <nav className="flex items-center gap-8 text-sm font-medium">
             {links.map(({ label, path }) => (
-              <NavLink key={path} to={path} end={path === "/"} className={linkClass}>
+              <NavLink
+                key={path}
+                to={path}
+                end={path === "/"}
+                className={linkClass}
+              >
                 {label}
               </NavLink>
             ))}
           </nav>
 
           <div className="flex items-center gap-3">
-            
             {!onLoginPage && (
               <NavLink
                 to="/login"
@@ -49,7 +52,7 @@ export default function Navbar() {
                 Login
               </NavLink>
             )}
-           
+
             {!onRegisterPage && (
               <NavLink
                 to="/register"
@@ -66,7 +69,11 @@ export default function Navbar() {
           onClick={() => setMobileOpen(!mobileOpen)}
           aria-label="Toggle menu"
         >
-          {mobileOpen ? <X className="text-dark" /> : <Menu className="text-dark" />}
+          {mobileOpen ? (
+            <X className="text-dark" />
+          ) : (
+            <Menu className="text-dark" />
+          )}
         </button>
       </div>
 

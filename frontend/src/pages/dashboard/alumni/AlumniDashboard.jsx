@@ -6,7 +6,15 @@ import {
   useAcceptMentorshipRequestMutation,
   useRejectMentorshipRequestMutation,
 } from "../../../store/api/alumniMentorshipApi";
-import { GraduationCap, Briefcase, Plus, FileEdit, Image, Link2, Loader2 } from "lucide-react";
+import {
+  GraduationCap,
+  Briefcase,
+  Plus,
+  FileEdit,
+  Image,
+  Link2,
+  Loader2,
+} from "lucide-react";
 import DashboardStatCard from "../../../components/common/DashboardStatCard";
 import { JOB_TYPES, ROUTES } from "../../../consts/appConstants";
 
@@ -28,7 +36,9 @@ function MentorshipRequestCard({ request, onAccept, onDecline }) {
         <div>
           <p className="font-semibold text-gray-900">{studentName}</p>
           {request.message && (
-            <p className="text-sm text-gray-500 line-clamp-1">{request.message}</p>
+            <p className="text-sm text-gray-500 line-clamp-1">
+              {request.message}
+            </p>
           )}
         </div>
       </div>
@@ -55,7 +65,11 @@ export default function AlumniDashboard() {
   const navigate = useNavigate();
 
   const [actionError, setActionError] = useState("");
-  const [quickPost, setQuickPost] = useState({ type: JOB_TYPES.FULL_TIME, title: "", location: "" });
+  const [quickPost, setQuickPost] = useState({
+    type: JOB_TYPES.FULL_TIME,
+    title: "",
+    location: "",
+  });
 
   const {
     data = { studentsMentored: 0, jobsPosted: 0, incomingRequests: [] },
@@ -86,18 +100,18 @@ export default function AlumniDashboard() {
 
   const handlePostOpportunity = (event) => {
     event.preventDefault();
-    
-    
-    
+
     navigate(ROUTES.ALUMNI.NEW_JOB, { state: { prefill: quickPost } });
   };
 
-  const error = actionError || (overviewError && (overviewError.data?.message || "Could not load dashboard data."));
+  const error =
+    actionError ||
+    (overviewError &&
+      (overviewError.data?.message || "Could not load dashboard data."));
   const { studentsMentored, jobsPosted, incomingRequests } = data;
 
   return (
     <div className="p-8 max-w-6xl mx-auto flex flex-col gap-8">
-      
       <div>
         <h1 className="text-3xl font-bold text-gray-900">
           Welcome back, {user?.fullName || "there"}
@@ -113,11 +127,19 @@ export default function AlumniDashboard() {
         </div>
       )}
 
-      
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="flex flex-col gap-6">
-          <DashboardStatCard label="Students Mentored" value={studentsMentored} icon={GraduationCap} />
-          <DashboardStatCard label="Jobs Posted" value={jobsPosted} note="Total listings" icon={Briefcase} />
+          <DashboardStatCard
+            label="Students Mentored"
+            value={studentsMentored}
+            icon={GraduationCap}
+          />
+          <DashboardStatCard
+            label="Jobs Posted"
+            value={jobsPosted}
+            note="Total listings"
+            icon={Briefcase}
+          />
         </div>
 
         <div className="lg:col-span-2 bg-white rounded-xl border border-gray-200 p-6">
@@ -136,7 +158,9 @@ export default function AlumniDashboard() {
               Loading...
             </div>
           ) : incomingRequests.length === 0 ? (
-            <p className="text-sm text-gray-400 py-6">No pending mentorship requests.</p>
+            <p className="text-sm text-gray-400 py-6">
+              No pending mentorship requests.
+            </p>
           ) : (
             <div className="flex flex-col gap-3">
               {incomingRequests.map((req) => (
@@ -152,9 +176,7 @@ export default function AlumniDashboard() {
         </div>
       </div>
 
-      
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        
         <form
           onSubmit={handlePostOpportunity}
           className="bg-white rounded-xl border border-gray-200 p-6 flex flex-col gap-4"
@@ -163,7 +185,9 @@ export default function AlumniDashboard() {
             <span className="w-8 h-8 rounded-full bg-blue-50 text-primary flex items-center justify-center">
               <Plus size={16} />
             </span>
-            <h2 className="text-lg font-bold text-gray-900">Post Opportunity</h2>
+            <h2 className="text-lg font-bold text-gray-900">
+              Post Opportunity
+            </h2>
           </div>
 
           <div>
@@ -172,7 +196,9 @@ export default function AlumniDashboard() {
             </label>
             <select
               value={quickPost.type}
-              onChange={(event) => setQuickPost({ ...quickPost, type: event.target.value })}
+              onChange={(event) =>
+                setQuickPost({ ...quickPost, type: event.target.value })
+              }
               className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm"
             >
               {[
@@ -180,16 +206,22 @@ export default function AlumniDashboard() {
                 JOB_TYPES.INTERNSHIP,
                 JOB_TYPES.PART_TIME,
                 JOB_TYPES.REMOTE,
-              ].map((type) => <option key={type}>{type}</option>)}
+              ].map((type) => (
+                <option key={type}>{type}</option>
+              ))}
             </select>
           </div>
 
           <div>
-            <label className="text-sm font-medium text-gray-700">Job Title</label>
+            <label className="text-sm font-medium text-gray-700">
+              Job Title
+            </label>
             <input
               type="text"
               value={quickPost.title}
-              onChange={(event) => setQuickPost({ ...quickPost, title: event.target.value })}
+              onChange={(event) =>
+                setQuickPost({ ...quickPost, title: event.target.value })
+              }
               placeholder="e.g. Senior Data Analyst"
               className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm"
             />
@@ -197,17 +229,23 @@ export default function AlumniDashboard() {
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="text-sm font-medium text-gray-700">Location</label>
+              <label className="text-sm font-medium text-gray-700">
+                Location
+              </label>
               <input
                 type="text"
                 value={quickPost.location}
-                onChange={(event) => setQuickPost({ ...quickPost, location: event.target.value })}
+                onChange={(event) =>
+                  setQuickPost({ ...quickPost, location: event.target.value })
+                }
                 placeholder="City or Remote"
                 className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm"
               />
             </div>
             <div>
-              <label className="text-sm font-medium text-gray-700">Deadline</label>
+              <label className="text-sm font-medium text-gray-700">
+                Deadline
+              </label>
               <input
                 type="date"
                 className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm"
@@ -224,13 +262,14 @@ export default function AlumniDashboard() {
           </button>
         </form>
 
-        
         <div className="bg-white rounded-xl border border-gray-200 p-6 flex flex-col gap-4">
           <div className="flex items-center gap-2">
             <span className="w-8 h-8 rounded-full bg-blue-50 text-primary flex items-center justify-center">
               <FileEdit size={16} />
             </span>
-            <h2 className="text-lg font-bold text-gray-900">Share Success Story</h2>
+            <h2 className="text-lg font-bold text-gray-900">
+              Share Success Story
+            </h2>
           </div>
 
           <input

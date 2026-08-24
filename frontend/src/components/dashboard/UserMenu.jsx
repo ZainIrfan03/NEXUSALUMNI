@@ -15,7 +15,9 @@ export default function UserMenu({
     <>
       <button onClick={onToggle} className="flex items-center gap-3">
         <div className="text-right">
-          <p className="text-sm font-semibold text-dark leading-tight">{displayName}</p>
+          <p className="text-sm font-semibold text-dark leading-tight">
+            {displayName}
+          </p>
           <p className="text-xs text-gray-400 capitalize">{role}</p>
         </div>
         <UserAvatar

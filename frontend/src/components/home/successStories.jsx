@@ -31,7 +31,11 @@ export default function SuccessStories() {
               key={s.name}
               className="bg-white border border-gray-100 rounded-2xl p-8 flex flex-col"
             >
-              <Quote size={22} className="text-primary/30 mb-4" fill="currentColor" />
+              <Quote
+                size={22}
+                className="text-primary/30 mb-4"
+                fill="currentColor"
+              />
               <p className="text-sm text-gray-600 leading-relaxed mb-8">
                 "{s.quote}"
               </p>

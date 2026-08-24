@@ -3,7 +3,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import PublicLayout from "./layouts/PublicLayout";
 import Home from "./pages/Home";
-import About from "./pages/About"
+import About from "./pages/About";
 import SuccessStoriesPage from "./pages/SuccessStories";
 import Register from "./pages/Register";
 import Login from "./pages/Login";
@@ -14,7 +14,6 @@ import { ROUTES } from "./consts/appConstants";
 import { logout, setCredentials } from "./store/slice/authSlice";
 import { useGetCurrentUserQuery } from "./store/api/authApi";
 import LoadingSpinner from "./components/common/LoadingSpinner";
-
 
 function App() {
   const dispatch = useDispatch();
@@ -28,24 +27,27 @@ function App() {
   }, [authChecked, dispatch, session.data, session.isError, session.isSuccess]);
 
   if (!authChecked) {
-    return <LoadingSpinner label="Verifying session..." className="min-h-screen" />;
+    return (
+      <LoadingSpinner label="Verifying session..." className="min-h-screen" />
+    );
   }
 
   return (
     <BrowserRouter>
       <Routes>
-        
         <Route element={<PublicLayout />}>
           <Route path={ROUTES.HOME} element={<Home />} />
           <Route path={ROUTES.ABOUT} element={<About />} />
-          <Route path={ROUTES.SUCCESS_STORIES} element={<SuccessStoriesPage />} />
+          <Route
+            path={ROUTES.SUCCESS_STORIES}
+            element={<SuccessStoriesPage />}
+          />
           <Route path={ROUTES.LOGIN} element={<Login />} />
           <Route path={ROUTES.REGISTER} element={<Register />} />
         </Route>
-         <Route element={<DashboardLayout />}>
+        <Route element={<DashboardLayout />}>
           {studentRoutes}
           {alumniRoutes}
-
         </Route>
       </Routes>
     </BrowserRouter>

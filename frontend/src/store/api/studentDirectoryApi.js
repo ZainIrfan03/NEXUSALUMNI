@@ -2,15 +2,6 @@ import { baseApi } from "./baseApi";
 import { TAGS } from "../../consts/appConstants";
 import { getImageUrl as fileUrl } from "../../utils/getImageUrl";
 
-
-
-
-
-
-
-
-
-
 export const studentDirectoryApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     getAlumniDirectory: builder.query({
@@ -22,7 +13,9 @@ export const studentDirectoryApi = baseApi.injectEndpoints({
         results: data.results.map((alumnus) => ({
           id: alumnus._id,
           name: alumnus.user?.fullName || "Unknown",
-          title: [alumnus.jobTitle, alumnus.company].filter(Boolean).join(" @ "),
+          title: [alumnus.jobTitle, alumnus.company]
+            .filter(Boolean)
+            .join(" @ "),
           year: `Class of ${alumnus.graduationYear}`,
           tag: null,
           img: fileUrl(alumnus.avatarUrl),
@@ -33,7 +26,10 @@ export const studentDirectoryApi = baseApi.injectEndpoints({
       providesTags: (result) =>
         result
           ? [
-              ...result.results.map((alumnus) => ({ type: TAGS.ALUMNI_DIRECTORY, id: alumnus.id })),
+              ...result.results.map((alumnus) => ({
+                type: TAGS.ALUMNI_DIRECTORY,
+                id: alumnus.id,
+              })),
               { type: TAGS.ALUMNI_DIRECTORY, id: "LIST" },
             ]
           : [{ type: TAGS.ALUMNI_DIRECTORY, id: "LIST" }],
@@ -41,9 +37,12 @@ export const studentDirectoryApi = baseApi.injectEndpoints({
 
     getAlumniById: builder.query({
       query: (id) => `/directory/${id}`,
-      providesTags: (result, error, id) => [{ type: TAGS.ALUMNI_DIRECTORY, id }],
+      providesTags: (result, error, id) => [
+        { type: TAGS.ALUMNI_DIRECTORY, id },
+      ],
     }),
   }),
 });
 
-export const { useGetAlumniDirectoryQuery, useGetAlumniByIdQuery } = studentDirectoryApi;
+export const { useGetAlumniDirectoryQuery, useGetAlumniByIdQuery } =
+  studentDirectoryApi;

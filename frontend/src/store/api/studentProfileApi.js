@@ -1,26 +1,6 @@
 import { baseApi } from "./baseApi";
 import { TAGS } from "../../consts/appConstants";
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 export const studentProfileApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     getMyProfile: builder.query({

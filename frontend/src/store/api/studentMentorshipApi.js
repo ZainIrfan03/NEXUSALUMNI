@@ -2,20 +2,6 @@ import { baseApi } from "./baseApi";
 import { TAGS } from "../../consts/appConstants";
 import { getImageUrl as fileUrl } from "../../utils/getImageUrl";
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 export const studentMentorshipApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     getRecommendedMentors: builder.query({
@@ -23,7 +9,7 @@ export const studentMentorshipApi = baseApi.injectEndpoints({
       providesTags: [TAGS.RECOMMENDED_MENTORS],
       transformResponse: (alumniList) =>
         alumniList.map((alumnus) => ({
-          alumniUserId: alumnus.user?._id, 
+          alumniUserId: alumnus.user?._id,
           alumniDocId: alumnus._id,
           name: alumnus.user?.fullName || "Unknown",
           role: alumnus.jobTitle || "Alumni",
@@ -31,7 +17,7 @@ export const studentMentorshipApi = baseApi.injectEndpoints({
           badges: alumnus.graduationYear
             ? [`Alumni '${String(alumnus.graduationYear).slice(-2)}`]
             : [],
-          desc: "", 
+          desc: "",
           img: fileUrl(alumnus.avatarUrl),
         })),
     }),
@@ -42,8 +28,6 @@ export const studentMentorshipApi = baseApi.injectEndpoints({
     }),
 
     sendMentorshipRequest: builder.mutation({
-      
-      
       query: ({ alumniDocId }) => ({
         url: "/mentorship/request",
         method: "POST",

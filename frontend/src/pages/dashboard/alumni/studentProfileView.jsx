@@ -14,10 +14,6 @@ import {
   Send,
 } from "lucide-react";
 
-
-
-
-
 const DEPARTMENT_LABELS = {
   cs: "Computer Science",
   business: "Business",
@@ -25,37 +21,27 @@ const DEPARTMENT_LABELS = {
   design: "Design",
 };
 
-
-
 const getGraduationYear = (session) => {
   if (!session) return null;
   const parts = session.split("-");
   return parts[parts.length - 1].trim();
 };
 
-
-
-
-
-
-
-
-
-
-
-
 export default function StudentProfileView() {
   const { id } = useParams();
   const navigate = useNavigate();
 
-  const { data: student, isLoading: loading, error: queryError } = useGetStudentByIdQuery(id);
-  const [startConversation, { isLoading: messaging }] = useStartConversationMutation();
+  const {
+    data: student,
+    isLoading: loading,
+    error: queryError,
+  } = useGetStudentByIdQuery(id);
+  const [startConversation, { isLoading: messaging }] =
+    useStartConversationMutation();
   const [actionError, setActionError] = useState("");
 
   const error = actionError || (queryError && "Could not load this profile.");
 
-  
-  
   const handleMessage = async () => {
     const studentUserId = student?.user?._id;
     if (!studentUserId) return;
@@ -71,9 +57,7 @@ export default function StudentProfileView() {
   };
 
   if (loading) {
-    return (
-      <LoadingSpinner label="Loading profile..." className="py-20" />
-    );
+    return <LoadingSpinner label="Loading profile..." className="py-20" />;
   }
 
   if (error && !student) {
@@ -119,7 +103,6 @@ export default function StudentProfileView() {
         </div>
       )}
 
-      
       <div className="bg-white rounded-2xl overflow-hidden mb-6">
         <div className="h-28 bg-gradient-to-r from-primary to-dark" />
         <div className="px-6 pb-6">
@@ -140,7 +123,9 @@ export default function StudentProfileView() {
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
               <div className="flex items-center gap-2 flex-wrap">
-                <h1 className="text-2xl font-bold text-dark">{user?.fullName || "—"}</h1>
+                <h1 className="text-2xl font-bold text-dark">
+                  {user?.fullName || "—"}
+                </h1>
                 {graduationYear && (
                   <span className="text-xs font-medium text-primary bg-gray-100 rounded-full px-2.5 py-1">
                     Class of {graduationYear}
@@ -157,14 +142,15 @@ export default function StudentProfileView() {
               )}
             </div>
 
-            
             {isMentee && (
               <button
                 onClick={handleMessage}
                 disabled={messaging}
                 className="flex items-center gap-2 text-sm font-medium text-white bg-dark rounded-xl px-5 py-2.5 hover:opacity-90 transition-opacity disabled:opacity-50"
               >
-                {messaging ? "Opening chat..." : (
+                {messaging ? (
+                  "Opening chat..."
+                ) : (
                   <>
                     <Send size={14} /> Message
                   </>
@@ -176,7 +162,6 @@ export default function StudentProfileView() {
       </div>
 
       <div className="grid lg:grid-cols-3 gap-6">
-        
         <div className="lg:col-span-2 flex flex-col gap-6">
           <div className="bg-white rounded-2xl p-6">
             <h2 className="text-lg font-semibold text-dark mb-3">Bio</h2>
@@ -186,7 +171,9 @@ export default function StudentProfileView() {
           </div>
 
           <div className="bg-white rounded-2xl p-6">
-            <h2 className="text-lg font-semibold text-dark mb-3">Resume / CV</h2>
+            <h2 className="text-lg font-semibold text-dark mb-3">
+              Resume / CV
+            </h2>
             {fileUrl(resumeUrl) ? (
               <a
                 href={fileUrl(resumeUrl)}
@@ -209,14 +196,19 @@ export default function StudentProfileView() {
             )}
             <div className="flex flex-col divide-y divide-gray-100">
               {experience.map((exp) => (
-                <div key={exp._id} className="flex gap-3 py-4 first:pt-0 last:pb-0">
+                <div
+                  key={exp._id}
+                  className="flex gap-3 py-4 first:pt-0 last:pb-0"
+                >
                   <div className="h-10 w-10 rounded-lg bg-gray-100 flex items-center justify-center shrink-0">
                     <Briefcase size={16} className="text-gray-500" />
                   </div>
                   <div className="flex-1">
                     <div className="flex items-start justify-between gap-2">
                       <div>
-                        <p className="font-semibold text-dark text-sm">{exp.title}</p>
+                        <p className="font-semibold text-dark text-sm">
+                          {exp.title}
+                        </p>
                         <p className="text-primary text-sm">{exp.company}</p>
                       </div>
                       {exp.current ? (
@@ -232,7 +224,9 @@ export default function StudentProfileView() {
                       )}
                     </div>
                     {exp.description && (
-                      <p className="text-sm text-gray-500 mt-1">{exp.description}</p>
+                      <p className="text-sm text-gray-500 mt-1">
+                        {exp.description}
+                      </p>
                     )}
                   </div>
                 </div>
@@ -241,14 +235,16 @@ export default function StudentProfileView() {
           </div>
         </div>
 
-        
         <div className="flex flex-col gap-6">
           <div className="bg-white rounded-2xl p-6">
             <h2 className="text-lg font-semibold text-dark mb-3">Skills</h2>
             <div className="flex flex-wrap gap-2 mb-4">
               {skills.length ? (
                 skills.map((skill) => (
-                  <span key={skill} className="text-xs font-medium text-dark bg-gray-100 rounded-full px-3 py-1.5">
+                  <span
+                    key={skill}
+                    className="text-xs font-medium text-dark bg-gray-100 rounded-full px-3 py-1.5"
+                  >
                     {skill}
                   </span>
                 ))
@@ -257,11 +253,16 @@ export default function StudentProfileView() {
               )}
             </div>
 
-            <h3 className="text-sm font-semibold text-dark mb-2">Areas of Interest</h3>
+            <h3 className="text-sm font-semibold text-dark mb-2">
+              Areas of Interest
+            </h3>
             <div className="flex flex-wrap gap-2">
               {interests.length ? (
                 interests.map((interest) => (
-                  <span key={interest} className="text-xs font-medium text-dark bg-gray-100 rounded-full px-3 py-1.5">
+                  <span
+                    key={interest}
+                    className="text-xs font-medium text-dark bg-gray-100 rounded-full px-3 py-1.5"
+                  >
                     {interest}
                   </span>
                 ))
@@ -283,9 +284,13 @@ export default function StudentProfileView() {
                     <GraduationCap size={16} className="text-gray-500" />
                   </div>
                   <div>
-                    <p className="font-semibold text-dark text-sm">{edu.school}</p>
+                    <p className="font-semibold text-dark text-sm">
+                      {edu.school}
+                    </p>
                     <p className="text-sm text-gray-500">{edu.degree}</p>
-                    {edu.year && <p className="text-xs text-gray-400">{edu.year}</p>}
+                    {edu.year && (
+                      <p className="text-xs text-gray-400">{edu.year}</p>
+                    )}
                   </div>
                 </div>
               ))}
@@ -294,7 +299,9 @@ export default function StudentProfileView() {
 
           {openToNetworking && (
             <div className="bg-dark rounded-2xl p-5 text-white">
-              <p className="text-xs uppercase tracking-wide text-gray-300 mb-2">Networking</p>
+              <p className="text-xs uppercase tracking-wide text-gray-300 mb-2">
+                Networking
+              </p>
               <p className="font-semibold">
                 Open to mentorship and new collaboration opportunities.
               </p>

@@ -22,7 +22,11 @@ export default function DashboardHeader({ onOpenSidebar }) {
 
   const handleViewProfile = () => {
     setMenuOpen(false);
-    navigate(user?.role === ROLES.STUDENT ? ROUTES.STUDENT.PROFILE : ROUTES.ALUMNI.PROFILE);
+    navigate(
+      user?.role === ROLES.STUDENT
+        ? ROUTES.STUDENT.PROFILE
+        : ROUTES.ALUMNI.PROFILE,
+    );
   };
 
   const openInterviewNotifications = () => {
@@ -33,7 +37,11 @@ export default function DashboardHeader({ onOpenSidebar }) {
 
   const openMessageNotifications = () => {
     setNotificationsOpen(false);
-    navigate(user?.role === ROLES.STUDENT ? ROUTES.STUDENT.MESSAGES : ROUTES.ALUMNI.MESSAGES);
+    navigate(
+      user?.role === ROLES.STUDENT
+        ? ROUTES.STUDENT.MESSAGES
+        : ROUTES.ALUMNI.MESSAGES,
+    );
   };
 
   useEffect(() => {
@@ -41,7 +49,10 @@ export default function DashboardHeader({ onOpenSidebar }) {
       if (menuRef.current && !menuRef.current.contains(event.target)) {
         setMenuOpen(false);
       }
-      if (notificationsRef.current && !notificationsRef.current.contains(event.target)) {
+      if (
+        notificationsRef.current &&
+        !notificationsRef.current.contains(event.target)
+      ) {
         setNotificationsOpen(false);
       }
     };
@@ -97,7 +108,10 @@ export default function DashboardHeader({ onOpenSidebar }) {
           )}
         </div>
 
-        <div className="hidden sm:flex items-center gap-3 relative" ref={menuRef}>
+        <div
+          className="hidden sm:flex items-center gap-3 relative"
+          ref={menuRef}
+        >
           <UserMenu
             avatarUrl={avatarUrl}
             displayName={displayName}

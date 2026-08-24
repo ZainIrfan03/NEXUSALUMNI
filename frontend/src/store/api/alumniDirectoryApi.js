@@ -11,7 +11,10 @@ export const alumniDirectoryApi = baseApi.injectEndpoints({
       providesTags: (result) =>
         result
           ? [
-              ...result.students.map((student) => ({ type: TAGS.STUDENT_DIRECTORY, id: student._id })),
+              ...result.students.map((student) => ({
+                type: TAGS.STUDENT_DIRECTORY,
+                id: student._id,
+              })),
               { type: TAGS.STUDENT_DIRECTORY, id: "LIST" },
             ]
           : [{ type: TAGS.STUDENT_DIRECTORY, id: "LIST" }],
@@ -19,9 +22,12 @@ export const alumniDirectoryApi = baseApi.injectEndpoints({
 
     getStudentById: builder.query({
       query: (id) => `/alumni/directory/${id}`,
-      providesTags: (result, error, id) => [{ type: TAGS.STUDENT_DIRECTORY, id }],
+      providesTags: (result, error, id) => [
+        { type: TAGS.STUDENT_DIRECTORY, id },
+      ],
     }),
   }),
 });
 
-export const { useGetStudentDirectoryQuery, useGetStudentByIdQuery } = alumniDirectoryApi;
+export const { useGetStudentDirectoryQuery, useGetStudentByIdQuery } =
+  alumniDirectoryApi;

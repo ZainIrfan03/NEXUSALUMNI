@@ -1,8 +1,12 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useRegisterMutation } from "../store/api/authApi";
-import { ROLES, EMAIL_REGEX, PASSWORD_MIN_LENGTH, FULL_NAME_MAX_LENGTH } from "../consts/appConstants";
-
+import {
+  ROLES,
+  EMAIL_REGEX,
+  PASSWORD_MIN_LENGTH,
+  FULL_NAME_MAX_LENGTH,
+} from "../consts/appConstants";
 
 export default function Register() {
   const navigate = useNavigate();
@@ -23,7 +27,6 @@ export default function Register() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
   const [fieldErrors, setFieldErrors] = useState({});
-
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -57,7 +60,6 @@ export default function Register() {
           delete next.password;
         }
 
-       
         if (confirmPassword) {
           next.confirmPassword =
             confirmPassword === value ? undefined : "Passwords do not match.";
@@ -69,7 +71,6 @@ export default function Register() {
     });
   };
 
- 
   const handleConfirmPasswordChange = (event) => {
     const value = event.target.value;
     setConfirmPassword(value);
@@ -85,7 +86,6 @@ export default function Register() {
     });
   };
 
-  
   const validate = () => {
     const errors = {};
 
@@ -105,7 +105,10 @@ export default function Register() {
       errors.password = "Password is required.";
     } else if (form.password.length < PASSWORD_MIN_LENGTH) {
       errors.password = `Password must be at least ${PASSWORD_MIN_LENGTH} characters.`;
-    } else if (!/[A-Za-z]/.test(form.password) || !/[0-9]/.test(form.password)) {
+    } else if (
+      !/[A-Za-z]/.test(form.password) ||
+      !/[0-9]/.test(form.password)
+    ) {
       errors.password = "Password must include both letters and numbers.";
     }
 
@@ -118,7 +121,8 @@ export default function Register() {
     if (role === ROLES.STUDENT) {
       if (!form.department) errors.department = "Select a department.";
       if (!form.session.trim()) errors.session = "Session is required.";
-      if (!form.rollNumber.trim()) errors.rollNumber = "Roll number is required.";
+      if (!form.rollNumber.trim())
+        errors.rollNumber = "Roll number is required.";
     }
 
     if (role === ROLES.ALUMNI) {
@@ -150,14 +154,13 @@ export default function Register() {
         ...form,
       }).unwrap();
 
-      
       navigate("/login", {
         state: { message: "Account created! Please log in to continue." },
       });
     } catch (err) {
       setError(err.data?.message || "Registration failed. Try again.");
     }
-};
+  };
 
   return (
     <section className="w-full bg-background min-h-[calc(100vh-73px)] flex items-center justify-center py-12">
@@ -175,13 +178,14 @@ export default function Register() {
           </div>
         )}
 
-        
         <div className="flex bg-gray-100 rounded-xl p-1 mb-6">
           <button
             type="button"
             onClick={() => setRole(ROLES.STUDENT)}
             className={`flex-1 text-sm font-medium py-2 rounded-lg transition-colors ${
-              role === ROLES.STUDENT ? "bg-white text-primary shadow-sm" : "text-gray-500"
+              role === ROLES.STUDENT
+                ? "bg-white text-primary shadow-sm"
+                : "text-gray-500"
             }`}
           >
             Student
@@ -190,7 +194,9 @@ export default function Register() {
             type="button"
             onClick={() => setRole(ROLES.ALUMNI)}
             className={`flex-1 text-sm font-medium py-2 rounded-lg transition-colors ${
-              role === ROLES.ALUMNI ? "bg-white text-primary shadow-sm" : "text-gray-500"
+              role === ROLES.ALUMNI
+                ? "bg-white text-primary shadow-sm"
+                : "text-gray-500"
             }`}
           >
             Alumni
@@ -198,9 +204,10 @@ export default function Register() {
         </div>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-         
           <div>
-            <label className="block text-sm font-medium text-dark mb-1.5">Full Name</label>
+            <label className="block text-sm font-medium text-dark mb-1.5">
+              Full Name
+            </label>
             <input
               type="text"
               name="fullName"
@@ -212,7 +219,9 @@ export default function Register() {
               required
             />
             {fieldErrors.fullName && (
-              <p className="text-red-500 text-xs mt-1">{fieldErrors.fullName}</p>
+              <p className="text-red-500 text-xs mt-1">
+                {fieldErrors.fullName}
+              </p>
             )}
           </div>
 
@@ -225,7 +234,11 @@ export default function Register() {
               name="email"
               value={form.email}
               onChange={handleChange}
-              placeholder={role === ROLES.STUDENT ? "student@university.edu" : "you@email.com"}
+              placeholder={
+                role === ROLES.STUDENT
+                  ? "student@university.edu"
+                  : "you@email.com"
+              }
               className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-primary transition-colors"
               required
             />
@@ -235,7 +248,9 @@ export default function Register() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-dark mb-1.5">Password</label>
+            <label className="block text-sm font-medium text-dark mb-1.5">
+              Password
+            </label>
             <input
               type="password"
               name="password"
@@ -246,12 +261,16 @@ export default function Register() {
               required
             />
             {fieldErrors.password && (
-              <p className="text-red-500 text-xs mt-1">{fieldErrors.password}</p>
+              <p className="text-red-500 text-xs mt-1">
+                {fieldErrors.password}
+              </p>
             )}
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-dark mb-1.5">Confirm Password</label>
+            <label className="block text-sm font-medium text-dark mb-1.5">
+              Confirm Password
+            </label>
             <input
               type="password"
               name="confirmPassword"
@@ -262,7 +281,9 @@ export default function Register() {
               required
             />
             {fieldErrors.confirmPassword && (
-              <p className="text-red-500 text-xs mt-1">{fieldErrors.confirmPassword}</p>
+              <p className="text-red-500 text-xs mt-1">
+                {fieldErrors.confirmPassword}
+              </p>
             )}
           </div>
 
@@ -270,7 +291,9 @@ export default function Register() {
             <>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-dark mb-1.5">Department</label>
+                  <label className="block text-sm font-medium text-dark mb-1.5">
+                    Department
+                  </label>
                   <select
                     name="department"
                     value={form.department}
@@ -285,11 +308,15 @@ export default function Register() {
                     <option value="design">Design</option>
                   </select>
                   {fieldErrors.department && (
-                    <p className="text-red-500 text-xs mt-1">{fieldErrors.department}</p>
+                    <p className="text-red-500 text-xs mt-1">
+                      {fieldErrors.department}
+                    </p>
                   )}
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-dark mb-1.5">Session</label>
+                  <label className="block text-sm font-medium text-dark mb-1.5">
+                    Session
+                  </label>
                   <input
                     type="text"
                     name="session"
@@ -300,13 +327,17 @@ export default function Register() {
                     required
                   />
                   {fieldErrors.session && (
-                    <p className="text-red-500 text-xs mt-1">{fieldErrors.session}</p>
+                    <p className="text-red-500 text-xs mt-1">
+                      {fieldErrors.session}
+                    </p>
                   )}
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-dark mb-1.5">Roll Number</label>
+                <label className="block text-sm font-medium text-dark mb-1.5">
+                  Roll Number
+                </label>
                 <input
                   type="text"
                   name="rollNumber"
@@ -317,7 +348,9 @@ export default function Register() {
                   required
                 />
                 {fieldErrors.rollNumber && (
-                  <p className="text-red-500 text-xs mt-1">{fieldErrors.rollNumber}</p>
+                  <p className="text-red-500 text-xs mt-1">
+                    {fieldErrors.rollNumber}
+                  </p>
                 )}
               </div>
             </>
@@ -327,7 +360,9 @@ export default function Register() {
             <>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-dark mb-1.5">Graduation Year</label>
+                  <label className="block text-sm font-medium text-dark mb-1.5">
+                    Graduation Year
+                  </label>
                   <input
                     type="text"
                     name="graduationYear"
@@ -338,11 +373,15 @@ export default function Register() {
                     required
                   />
                   {fieldErrors.graduationYear && (
-                    <p className="text-red-500 text-xs mt-1">{fieldErrors.graduationYear}</p>
+                    <p className="text-red-500 text-xs mt-1">
+                      {fieldErrors.graduationYear}
+                    </p>
                   )}
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-dark mb-1.5">Job Title</label>
+                  <label className="block text-sm font-medium text-dark mb-1.5">
+                    Job Title
+                  </label>
                   <input
                     type="text"
                     name="jobTitle"
@@ -353,13 +392,17 @@ export default function Register() {
                     required
                   />
                   {fieldErrors.jobTitle && (
-                    <p className="text-red-500 text-xs mt-1">{fieldErrors.jobTitle}</p>
+                    <p className="text-red-500 text-xs mt-1">
+                      {fieldErrors.jobTitle}
+                    </p>
                   )}
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-dark mb-1.5">Current Company</label>
+                <label className="block text-sm font-medium text-dark mb-1.5">
+                  Current Company
+                </label>
                 <input
                   type="text"
                   name="company"
@@ -370,7 +413,9 @@ export default function Register() {
                   required
                 />
                 {fieldErrors.company && (
-                  <p className="text-red-500 text-xs mt-1">{fieldErrors.company}</p>
+                  <p className="text-red-500 text-xs mt-1">
+                    {fieldErrors.company}
+                  </p>
                 )}
               </div>
             </>
@@ -388,7 +433,9 @@ export default function Register() {
             disabled={isLoading}
             className="w-full bg-primary text-white text-sm font-semibold py-3 rounded-xl hover:opacity-90 transition-opacity disabled:opacity-60"
           >
-            {isLoading ? "Registering..." : `Register as ${role === ROLES.STUDENT ? "Student" : "Alumni"}`}
+            {isLoading
+              ? "Registering..."
+              : `Register as ${role === ROLES.STUDENT ? "Student" : "Alumni"}`}
           </button>
         </form>
       </div>

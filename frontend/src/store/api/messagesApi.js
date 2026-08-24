@@ -1,22 +1,6 @@
 import { baseApi } from "./baseApi";
 import { TAGS } from "../../consts/appConstants";
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 export const messagesApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     startConversation: builder.mutation({
@@ -51,7 +35,9 @@ export const messagesApi = baseApi.injectEndpoints({
 
     getMessages: builder.query({
       query: (conversationId) => `/messages/${conversationId}`,
-      providesTags: (result, error, conversationId) => [{ type: TAGS.MESSAGES, id: conversationId }],
+      providesTags: (result, error, conversationId) => [
+        { type: TAGS.MESSAGES, id: conversationId },
+      ],
     }),
 
     sendFileMessage: builder.mutation({

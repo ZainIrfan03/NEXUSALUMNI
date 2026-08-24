@@ -1,18 +1,15 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useGetAlumniDirectoryQuery } from "../../../store/api/studentDirectoryApi";
-import { ChevronDown, LayoutGrid, List, ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  ChevronDown,
+  LayoutGrid,
+  List,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 import LoadingSpinner from "../../../components/common/LoadingSpinner";
 import { ROUTES, UI_LIMITS } from "../../../consts/appConstants";
-
-
-
-
-
-
-
-
-
 
 const departments = ["Engineering", "Marketing", "Product"];
 
@@ -34,7 +31,7 @@ function AlumniAvatar({ name, img, size = "h-20 w-20" }) {
 
 export default function Directory() {
   const navigate = useNavigate();
-  const [viewMode, setViewMode] = useState("grid"); 
+  const [viewMode, setViewMode] = useState("grid");
   const [selectedDepts, setSelectedDepts] = useState([]);
   const [filters, setFilters] = useState({
     industry: "All Industries",
@@ -44,9 +41,11 @@ export default function Directory() {
   });
   const [activePage, setActivePage] = useState(1);
 
-  
-  
-  const { data, isLoading: loading, error: queryError } = useGetAlumniDirectoryQuery({
+  const {
+    data,
+    isLoading: loading,
+    error: queryError,
+  } = useGetAlumniDirectoryQuery({
     page: activePage,
     limit: UI_LIMITS.DIRECTORY_PAGE_SIZE,
     fromYear: filters.fromYear || undefined,
@@ -60,13 +59,20 @@ export default function Directory() {
 
   const toggleDept = (dept) => {
     setSelectedDepts((prev) =>
-      prev.includes(dept) ? prev.filter((selected) => selected !== dept) : [...prev, dept]
+      prev.includes(dept)
+        ? prev.filter((selected) => selected !== dept)
+        : [...prev, dept],
     );
   };
 
   const clearFilters = () => {
     setSelectedDepts([]);
-    setFilters({ industry: "All Industries", fromYear: "", toYear: "", location: "" });
+    setFilters({
+      industry: "All Industries",
+      fromYear: "",
+      toYear: "",
+      location: "",
+    });
   };
 
   const handleViewProfile = (id) => {
@@ -75,18 +81,21 @@ export default function Directory() {
 
   return (
     <div className="grid lg:grid-cols-[280px_1fr] gap-6">
-      
       <aside className="flex flex-col gap-5">
         <div className="bg-white rounded-2xl p-5">
           <p className="text-xs font-semibold tracking-wider text-gray-400 mb-4">
             ADVANCED FILTERS
           </p>
 
-          <label className="block text-sm font-medium text-dark mb-1.5">Industry</label>
+          <label className="block text-sm font-medium text-dark mb-1.5">
+            Industry
+          </label>
           <div className="relative mb-5">
             <select
               value={filters.industry}
-              onChange={(event) => setFilters({ ...filters, industry: event.target.value })}
+              onChange={(event) =>
+                setFilters({ ...filters, industry: event.target.value })
+              }
               className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none appearance-none focus:border-primary transition-colors"
             >
               <option>All Industries</option>
@@ -95,13 +104,19 @@ export default function Directory() {
               <option>Healthcare</option>
               <option>Law</option>
             </select>
-            <ChevronDown size={15} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+            <ChevronDown
+              size={15}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
+            />
           </div>
 
           <p className="text-sm font-medium text-dark mb-2">Department</p>
           <div className="flex flex-col gap-2 mb-5">
             {departments.map((dept) => (
-              <label key={dept} className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
+              <label
+                key={dept}
+                className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer"
+              >
                 <input
                   type="checkbox"
                   checked={selectedDepts.includes(dept)}
@@ -119,7 +134,9 @@ export default function Directory() {
               type="text"
               placeholder="From"
               value={filters.fromYear}
-              onChange={(event) => setFilters({ ...filters, fromYear: event.target.value })}
+              onChange={(event) =>
+                setFilters({ ...filters, fromYear: event.target.value })
+              }
               className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-primary transition-colors"
             />
             <span className="text-sm text-gray-400 shrink-0">to</span>
@@ -127,7 +144,9 @@ export default function Directory() {
               type="text"
               placeholder="To"
               value={filters.toYear}
-              onChange={(event) => setFilters({ ...filters, toYear: event.target.value })}
+              onChange={(event) =>
+                setFilters({ ...filters, toYear: event.target.value })
+              }
               className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-primary transition-colors"
             />
           </div>
@@ -137,7 +156,9 @@ export default function Directory() {
             type="text"
             placeholder="e.g. San Francisco, NY"
             value={filters.location}
-            onChange={(event) => setFilters({ ...filters, location: event.target.value })}
+            onChange={(event) =>
+              setFilters({ ...filters, location: event.target.value })
+            }
             className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-primary transition-colors mb-5"
           />
 
@@ -152,7 +173,6 @@ export default function Directory() {
           </button>
         </div>
 
-        
         <div className="bg-primary rounded-2xl p-5 text-white">
           <p className="text-xs font-semibold tracking-wider text-white/70 mb-2">
             DIRECTORY INSIGHTS
@@ -172,13 +192,14 @@ export default function Directory() {
         </div>
       </aside>
 
-      
       <div>
         <div className="flex items-end justify-between mb-6 flex-wrap gap-3">
           <div>
             <h1 className="text-2xl font-bold text-dark mb-1">Directory</h1>
             <p className="text-sm text-gray-500">
-              {loading ? "Loading..." : `Showing ${totalResults} professional matches`}
+              {loading
+                ? "Loading..."
+                : `Showing ${totalResults} professional matches`}
             </p>
           </div>
           <div className="flex gap-1 bg-white border border-gray-200 rounded-xl p-1">
@@ -202,72 +223,88 @@ export default function Directory() {
         </div>
 
         {error && (
-          <p className="text-sm text-red-500 bg-red-50 rounded-xl px-4 py-3 mb-4">{error}</p>
+          <p className="text-sm text-red-500 bg-red-50 rounded-xl px-4 py-3 mb-4">
+            {error}
+          </p>
         )}
 
         {loading ? (
           <LoadingSpinner label="Loading alumni..." className="py-20" />
         ) : (
-        <div
-          className={
-            viewMode === "grid"
-              ? "grid sm:grid-cols-2 lg:grid-cols-3 gap-6"
-              : "flex flex-col gap-4"
-          }
-        >
-          {alumniData.map((alumnus) => (
-            <div
-              key={alumnus.id}
-              className={`bg-white rounded-2xl p-6 flex flex-col items-center text-center ${
-                viewMode === "list" ? "sm:flex-row sm:text-left sm:gap-5 sm:items-center" : ""
-              }`}
-            >
-              <AlumniAvatar name={alumnus.name} img={alumnus.img} />
-              <div className={viewMode === "list" ? "flex-1" : ""}>
-                <h3 className="font-semibold text-primary">{alumnus.name}</h3>
-                <p className="text-sm text-gray-600 mt-1">{alumnus.title}</p>
-                <div className={`flex gap-2 mt-3 mb-4 ${viewMode === "list" ? "" : "justify-center"}`}>
-                  <span className="text-xs font-medium text-primary bg-blue-50 rounded-full px-3 py-1">
-                    {alumnus.year}
-                  </span>
-                  {alumnus.tag && (
-                    <span className="text-xs font-medium text-gray-400 bg-gray-100 rounded-full px-3 py-1">
-                      {alumnus.tag}
-                    </span>
-                  )}
-                </div>
-              </div>
-              <button
-                onClick={() => handleViewProfile(alumnus.id)}
-                className="w-full sm:w-auto border border-primary text-primary text-sm font-semibold px-6 py-2.5 rounded-xl hover:bg-primary hover:text-white transition-colors shrink-0"
+          <div
+            className={
+              viewMode === "grid"
+                ? "grid sm:grid-cols-2 lg:grid-cols-3 gap-6"
+                : "flex flex-col gap-4"
+            }
+          >
+            {alumniData.map((alumnus) => (
+              <div
+                key={alumnus.id}
+                className={`bg-white rounded-2xl p-6 flex flex-col items-center text-center ${
+                  viewMode === "list"
+                    ? "sm:flex-row sm:text-left sm:gap-5 sm:items-center"
+                    : ""
+                }`}
               >
-                View Profile
-              </button>
-            </div>
-          ))}
-        </div>
+                <AlumniAvatar name={alumnus.name} img={alumnus.img} />
+                <div className={viewMode === "list" ? "flex-1" : ""}>
+                  <h3 className="font-semibold text-primary">{alumnus.name}</h3>
+                  <p className="text-sm text-gray-600 mt-1">{alumnus.title}</p>
+                  <div
+                    className={`flex gap-2 mt-3 mb-4 ${viewMode === "list" ? "" : "justify-center"}`}
+                  >
+                    <span className="text-xs font-medium text-primary bg-blue-50 rounded-full px-3 py-1">
+                      {alumnus.year}
+                    </span>
+                    {alumnus.tag && (
+                      <span className="text-xs font-medium text-gray-400 bg-gray-100 rounded-full px-3 py-1">
+                        {alumnus.tag}
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <button
+                  onClick={() => handleViewProfile(alumnus.id)}
+                  className="w-full sm:w-auto border border-primary text-primary text-sm font-semibold px-6 py-2.5 rounded-xl hover:bg-primary hover:text-white transition-colors shrink-0"
+                >
+                  View Profile
+                </button>
+              </div>
+            ))}
+          </div>
         )}
-        
+
         <div className="flex items-center justify-center gap-2 mt-10">
           <button
-            onClick={() => setActivePage((currentPage) => Math.max(1, currentPage - 1))}
+            onClick={() =>
+              setActivePage((currentPage) => Math.max(1, currentPage - 1))
+            }
             className="h-9 w-9 rounded-lg border border-gray-200 flex items-center justify-center text-gray-400 hover:text-primary"
           >
             <ChevronLeft size={15} />
           </button>
-          {Array.from({ length: totalPages }, (_, index) => index + 1).map((pageNumber) => (
-            <button
-              key={pageNumber}
-              onClick={() => setActivePage(pageNumber)}
-              className={`h-9 w-9 rounded-lg text-sm font-medium transition-colors ${
-                activePage === pageNumber ? "bg-dark text-white" : "border border-gray-200 text-gray-600"
-              }`}
-            >
-              {pageNumber}
-            </button>
-          ))}
+          {Array.from({ length: totalPages }, (_, index) => index + 1).map(
+            (pageNumber) => (
+              <button
+                key={pageNumber}
+                onClick={() => setActivePage(pageNumber)}
+                className={`h-9 w-9 rounded-lg text-sm font-medium transition-colors ${
+                  activePage === pageNumber
+                    ? "bg-dark text-white"
+                    : "border border-gray-200 text-gray-600"
+                }`}
+              >
+                {pageNumber}
+              </button>
+            ),
+          )}
           <button
-            onClick={() => setActivePage((currentPage) => Math.min(totalPages, currentPage + 1))}
+            onClick={() =>
+              setActivePage((currentPage) =>
+                Math.min(totalPages, currentPage + 1),
+              )
+            }
             className="h-9 w-9 rounded-lg border border-gray-200 flex items-center justify-center text-gray-400 hover:text-primary"
           >
             <ChevronRight size={15} />

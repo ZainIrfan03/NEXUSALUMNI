@@ -1,22 +1,6 @@
 import { baseApi } from "./baseApi";
 import { TAGS } from "../../consts/appConstants";
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 export const studentJobsApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     getJobs: builder.query({
@@ -40,8 +24,7 @@ export const studentJobsApi = baseApi.injectEndpoints({
         url: `/jobs/${jobId}/apply`,
         method: "POST",
       }),
-      
-      
+
       invalidatesTags: (result, error, jobId) => [
         { type: TAGS.JOBS, id: jobId },
         TAGS.MY_APPLICATIONS,
@@ -55,7 +38,7 @@ export const studentJobsApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: (result, error, jobId) => [
         { type: TAGS.JOBS, id: jobId },
-        
+
         TAGS.STUDENT_DASHBOARD,
       ],
     }),

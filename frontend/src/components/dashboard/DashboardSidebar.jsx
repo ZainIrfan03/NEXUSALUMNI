@@ -9,7 +9,9 @@ import useLogout from "../../hooks/useLogout";
 
 const linkClass = ({ isActive }) =>
   `flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-colors ${
-    isActive ? "bg-white/10 text-white" : "text-gray-400 hover:bg-white/5 hover:text-white"
+    isActive
+      ? "bg-white/10 text-white"
+      : "text-gray-400 hover:bg-white/5 hover:text-white"
   }`;
 
 function SidebarContent({ onNavigate }) {
@@ -27,7 +29,13 @@ function SidebarContent({ onNavigate }) {
 
       <nav className="flex flex-col gap-1 flex-1">
         {links.map(({ label, icon: Icon, path }) => (
-          <NavLink key={path} to={path} end className={linkClass} onClick={onNavigate}>
+          <NavLink
+            key={path}
+            to={path}
+            end
+            className={linkClass}
+            onClick={onNavigate}
+          >
             <Icon size={18} />
             {label}
           </NavLink>

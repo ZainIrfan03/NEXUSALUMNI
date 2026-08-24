@@ -7,7 +7,12 @@ import {
   useUpdateApplicationStatusMutation,
   useScheduleInterviewMutation,
 } from "../../../store/api/alumniJobsApi";
- import { APPLICATION_STATUS, ROUTES, SOCKET_EVENTS, UI_LIMITS } from "../../../consts/appConstants";
+import {
+  APPLICATION_STATUS,
+  ROUTES,
+  SOCKET_EVENTS,
+  UI_LIMITS,
+} from "../../../consts/appConstants";
 import { connectSocket } from "../../../utils/socket";
 import { getImageUrl as fileUrl } from "../../../utils/getImageUrl";
 import LoadingSpinner from "../../../components/common/LoadingSpinner";
@@ -42,7 +47,9 @@ const emptyInterviewForm = () => ({
 const toLocalDateTimeInput = (value) => {
   if (!value) return "";
   const date = new Date(value);
-  return new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+  return new Date(date.getTime() - date.getTimezoneOffset() * 60000)
+    .toISOString()
+    .slice(0, 16);
 };
 
 function AvatarStack({ applicants = [], count }) {
@@ -73,7 +80,6 @@ const JOB_STATUS_TONES = {
   Closed: "neutral",
   Draft: "warning",
 };
-
 
 const APPLICANT_STATUS_TONES = {
   [APPLICATION_STATUS.APPLIED]: "neutral",
@@ -112,9 +118,6 @@ export default function AlumniJobs() {
     fillRate: 0,
   };
 
-  
-  
-  
   const [applicantsJobId, setApplicantsJobId] = useState(null);
   const [updatingId, setUpdatingId] = useState(null);
   const [interviewTarget, setInterviewTarget] = useState(null);
@@ -130,11 +133,13 @@ export default function AlumniJobs() {
 
   const applicants = applicantsData?.applicants || [];
   const applicantsJobTitle =
-    applicantsData?.job?.title ?? jobs.find((job) => job._id === applicantsJobId)?.title;
+    applicantsData?.job?.title ??
+    jobs.find((job) => job._id === applicantsJobId)?.title;
 
   const [deleteMyJob] = useDeleteMyJobMutation();
   const [updateApplicationStatus] = useUpdateApplicationStatusMutation();
-  const [scheduleInterview, { isLoading: schedulingInterview }] = useScheduleInterviewMutation();
+  const [scheduleInterview, { isLoading: schedulingInterview }] =
+    useScheduleInterviewMutation();
 
   useEffect(() => {
     if (!applicantsJobId) return undefined;
@@ -143,7 +148,8 @@ export default function AlumniJobs() {
       if (String(jobId) === String(applicantsJobId)) refetchApplicants();
     };
     socket.on(SOCKET_EVENTS.INTERVIEW_RESPONSE_UPDATED, handleResponse);
-    return () => socket.off(SOCKET_EVENTS.INTERVIEW_RESPONSE_UPDATED, handleResponse);
+    return () =>
+      socket.off(SOCKET_EVENTS.INTERVIEW_RESPONSE_UPDATED, handleResponse);
   }, [applicantsJobId, refetchApplicants]);
 
   const error =
@@ -173,10 +179,6 @@ export default function AlumniJobs() {
     }
   };
 
-  
-  
-  
-  
   const handleStatusChange = async (applicant, status) => {
     if (status === APPLICATION_STATUS.INTERVIEW) {
       setScheduleError("");
@@ -184,13 +186,15 @@ export default function AlumniJobs() {
       setInterviewForm(
         applicant.interview
           ? {
-              scheduledAt: toLocalDateTimeInput(applicant.interview.scheduledAt),
+              scheduledAt: toLocalDateTimeInput(
+                applicant.interview.scheduledAt,
+              ),
               timezone: applicant.interview.timezone,
               durationMinutes: applicant.interview.durationMinutes,
               meetingUrl: applicant.interview.meetingUrl,
               instructions: applicant.interview.instructions || "",
             }
-          : emptyInterviewForm()
+          : emptyInterviewForm(),
       );
       return;
     }
@@ -198,7 +202,11 @@ export default function AlumniJobs() {
     setActionError("");
     setUpdatingId(applicant.applicationId);
     try {
-      await updateApplicationStatus({ applicationId: applicant.applicationId, status, jobId: applicantsJobId }).unwrap();
+      await updateApplicationStatus({
+        applicationId: applicant.applicationId,
+        status,
+        jobId: applicantsJobId,
+      }).unwrap();
     } catch (err) {
       setActionError(err.data?.message || "Could not update this application.");
     } finally {
@@ -219,11 +227,16 @@ export default function AlumniJobs() {
       }).unwrap();
       setInterviewTarget(null);
     } catch (err) {
-      setScheduleError(err.data?.message || "Could not schedule the interview.");
+      setScheduleError(
+        err.data?.message || "Could not schedule the interview.",
+      );
     }
   };
 
-  const totalPages = Math.max(1, Math.ceil(totalCount / UI_LIMITS.JOBS_PAGE_SIZE));
+  const totalPages = Math.max(
+    1,
+    Math.ceil(totalCount / UI_LIMITS.JOBS_PAGE_SIZE),
+  );
   const rangeStart =
     totalCount === 0 ? 0 : (page - 1) * UI_LIMITS.JOBS_PAGE_SIZE + 1;
   const rangeEnd = Math.min(page * UI_LIMITS.JOBS_PAGE_SIZE, totalCount);
@@ -236,12 +249,12 @@ export default function AlumniJobs() {
         </div>
       )}
 
-      
       <div className="flex flex-wrap items-start justify-between gap-4 mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">My Job Postings</h1>
           <p className="text-gray-500 mt-1">
-            Manage your active recruitment and review incoming alumni applications.
+            Manage your active recruitment and review incoming alumni
+            applications.
           </p>
         </div>
         <button
@@ -252,7 +265,6 @@ export default function AlumniJobs() {
         </button>
       </div>
 
-      
       <div className="grid sm:grid-cols-3 gap-5 mb-8">
         <DashboardStatCard
           variant="jobs"
@@ -264,14 +276,20 @@ export default function AlumniJobs() {
         <DashboardStatCard
           variant="jobs"
           icon={Users}
-          note={stats.unreadApplicants ? `${stats.unreadApplicants} unread` : null}
+          note={
+            stats.unreadApplicants ? `${stats.unreadApplicants} unread` : null
+          }
           value={stats.totalApplicants}
           label="Total Applicants"
         />
-        <DashboardStatCard variant="jobs" icon={TrendingUp} value={`${stats.fillRate}%`} label="Fill Rate" />
+        <DashboardStatCard
+          variant="jobs"
+          icon={TrendingUp}
+          value={`${stats.fillRate}%`}
+          label="Fill Rate"
+        />
       </div>
 
-      
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
         <table className="w-full text-left">
           <thead>
@@ -286,8 +304,14 @@ export default function AlumniJobs() {
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan={5} className="px-5 py-10 text-center text-gray-400">
-                  <LoadingSpinner label="Loading postings..." className="py-0" />
+                <td
+                  colSpan={5}
+                  className="px-5 py-10 text-center text-gray-400"
+                >
+                  <LoadingSpinner
+                    label="Loading postings..."
+                    className="py-0"
+                  />
                 </td>
               </tr>
             ) : jobs.length === 0 ? (
@@ -307,11 +331,15 @@ export default function AlumniJobs() {
                       >
                         {job.title}
                       </p>
-                      <p className={`text-sm ${isClosed ? "text-gray-300" : "text-gray-500"}`}>
+                      <p
+                        className={`text-sm ${isClosed ? "text-gray-300" : "text-gray-500"}`}
+                      >
                         {job.department} • {job.location}
                       </p>
                     </td>
-                    <td className="px-5 py-4 text-sm text-gray-500">{job.datePosted}</td>
+                    <td className="px-5 py-4 text-sm text-gray-500">
+                      {job.datePosted}
+                    </td>
                     <td className="px-5 py-4">
                       <button
                         onClick={() => openApplicants(job)}
@@ -320,7 +348,10 @@ export default function AlumniJobs() {
                       >
                         {job.applicantCount > 1 ? (
                           <>
-                            <AvatarStack applicants={job.applicants} count={job.applicantCount} />
+                            <AvatarStack
+                              applicants={job.applicants}
+                              count={job.applicantCount}
+                            />
                             <span className="text-sm text-gray-700 hover:text-primary hover:underline">
                               {job.applicantCount} Applicants
                             </span>
@@ -333,7 +364,8 @@ export default function AlumniJobs() {
                                 : "text-gray-400"
                             }`}
                           >
-                            {job.applicantCount} Applicant{job.applicantCount === 1 ? "" : "s"}
+                            {job.applicantCount} Applicant
+                            {job.applicantCount === 1 ? "" : "s"}
                           </span>
                         )}
                       </button>
@@ -376,25 +408,34 @@ export default function AlumniJobs() {
           </p>
           <div className="flex items-center gap-1.5">
             <button
-              onClick={() => setPage((currentPage) => Math.max(1, currentPage - 1))}
+              onClick={() =>
+                setPage((currentPage) => Math.max(1, currentPage - 1))
+              }
               disabled={page === 1}
               className="h-8 w-8 rounded-lg flex items-center justify-center text-gray-400 disabled:opacity-40"
             >
               ‹
             </button>
-            {Array.from({ length: Math.min(totalPages, 3) }, (_, index) => index + 1).map((pageNumber) => (
+            {Array.from(
+              { length: Math.min(totalPages, 3) },
+              (_, index) => index + 1,
+            ).map((pageNumber) => (
               <button
                 key={pageNumber}
                 onClick={() => setPage(pageNumber)}
                 className={`h-8 w-8 rounded-lg text-sm font-medium ${
-                  page === pageNumber ? "bg-dark text-white" : "text-gray-600 hover:bg-gray-100"
+                  page === pageNumber
+                    ? "bg-dark text-white"
+                    : "text-gray-600 hover:bg-gray-100"
                 }`}
               >
                 {pageNumber}
               </button>
             ))}
             <button
-              onClick={() => setPage((currentPage) => Math.min(totalPages, currentPage + 1))}
+              onClick={() =>
+                setPage((currentPage) => Math.min(totalPages, currentPage + 1))
+              }
               disabled={page === totalPages}
               className="h-8 w-8 rounded-lg flex items-center justify-center text-gray-400 disabled:opacity-40"
             >
@@ -404,15 +445,16 @@ export default function AlumniJobs() {
         </div>
       </div>
 
-      
       <div className="grid md:grid-cols-2 gap-5 mt-6">
         <div className="bg-blue-50 rounded-xl p-5 flex gap-3">
           <Lightbulb size={20} className="text-primary shrink-0 mt-0.5" />
           <div>
-            <h3 className="font-semibold text-gray-900">Boost Your Visibility</h3>
+            <h3 className="font-semibold text-gray-900">
+              Boost Your Visibility
+            </h3>
             <p className="text-sm text-gray-600 mt-1">
-              Job posts shared directly with your alumni network see 40% higher quality
-              applications on average.
+              Job posts shared directly with your alumni network see 40% higher
+              quality applications on average.
             </p>
             <button className="text-sm font-medium text-primary hover:underline mt-2">
               Learn how to boost →
@@ -423,10 +465,12 @@ export default function AlumniJobs() {
         <div className="bg-gray-100 rounded-xl p-5 flex gap-3">
           <Sparkles size={20} className="text-gray-700 shrink-0 mt-0.5" />
           <div>
-            <h3 className="font-semibold text-gray-900">AI Job Description Tool</h3>
+            <h3 className="font-semibold text-gray-900">
+              AI Job Description Tool
+            </h3>
             <p className="text-sm text-gray-600 mt-1">
-              Use our new AI assistant to draft a compelling job description based on your
-              alumni requirements.
+              Use our new AI assistant to draft a compelling job description
+              based on your alumni requirements.
             </p>
             <button className="text-sm font-medium text-gray-700 hover:underline mt-2">
               Try AI Drafting →
@@ -435,7 +479,6 @@ export default function AlumniJobs() {
         </div>
       </div>
 
-      
       {applicantsJobId && (
         <div
           className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4"
@@ -460,7 +503,10 @@ export default function AlumniJobs() {
 
             <div className="flex-1 overflow-y-auto px-6 py-4">
               {loadingApplicants ? (
-                <LoadingSpinner label="Loading applicants..." className="py-10" />
+                <LoadingSpinner
+                  label="Loading applicants..."
+                  className="py-10"
+                />
               ) : applicants.length === 0 ? (
                 <EmptyState message="No one has applied to this job yet." />
               ) : (
@@ -486,17 +532,27 @@ export default function AlumniJobs() {
                         className="h-11 w-11"
                       />
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold text-dark truncate">{applicant.fullName}</p>
+                        <p className="text-sm font-semibold text-dark truncate">
+                          {applicant.fullName}
+                        </p>
                         <p className="text-xs text-gray-500 truncate flex items-center gap-1 mt-0.5">
                           <Mail size={11} /> {applicant.email}
                         </p>
                         <p className="text-xs text-gray-400 mt-0.5">
-                          {[applicant.department, applicant.session].filter(Boolean).join(" • ")}
-                          {applicant.department || applicant.session ? " • " : ""}
-                          Applied {new Date(applicant.appliedAt).toLocaleDateString("en-US", {
-                            month: "short",
-                            day: "numeric",
-                          })}
+                          {[applicant.department, applicant.session]
+                            .filter(Boolean)
+                            .join(" • ")}
+                          {applicant.department || applicant.session
+                            ? " • "
+                            : ""}
+                          Applied{" "}
+                          {new Date(applicant.appliedAt).toLocaleDateString(
+                            "en-US",
+                            {
+                              month: "short",
+                              day: "numeric",
+                            },
+                          )}
                         </p>
                         {applicant.resumeUrl && (
                           <a
@@ -510,40 +566,65 @@ export default function AlumniJobs() {
                             <FileText size={11} /> View submitted resume
                           </a>
                         )}
-                        {applicant.interview && applicant.status === APPLICATION_STATUS.INTERVIEW && (
-                          <div className="mt-2 text-xs text-blue-700 bg-blue-50 rounded-lg px-2.5 py-2">
-                            <p className="font-medium flex items-center gap-1">
-                              <CalendarDays size={12} />
-                              {new Date(applicant.interview.scheduledAt).toLocaleString([], {
-                                dateStyle: "medium",
-                                timeStyle: "short",
-                              })}
-                            </p>
-                            <p className="mt-1 capitalize">
-                              Student response: {applicant.interview.response.replaceAll("_", " ")}
-                            </p>
-                          </div>
-                        )}
+                        {applicant.interview &&
+                          applicant.status === APPLICATION_STATUS.INTERVIEW && (
+                            <div className="mt-2 text-xs text-blue-700 bg-blue-50 rounded-lg px-2.5 py-2">
+                              <p className="font-medium flex items-center gap-1">
+                                <CalendarDays size={12} />
+                                {new Date(
+                                  applicant.interview.scheduledAt,
+                                ).toLocaleString([], {
+                                  dateStyle: "medium",
+                                  timeStyle: "short",
+                                })}
+                              </p>
+                              <p className="mt-1 capitalize">
+                                Student response:{" "}
+                                {applicant.interview.response.replaceAll(
+                                  "_",
+                                  " ",
+                                )}
+                              </p>
+                            </div>
+                          )}
                       </div>
 
                       <div className="flex items-center gap-2 shrink-0">
                         <StatusBadge
-                          label={APPLICANT_STATUS_LABELS[applicant.status] || applicant.status}
-                          tone={APPLICANT_STATUS_TONES[applicant.status] || "neutral"}
+                          label={
+                            APPLICANT_STATUS_LABELS[applicant.status] ||
+                            applicant.status
+                          }
+                          tone={
+                            APPLICANT_STATUS_TONES[applicant.status] ||
+                            "neutral"
+                          }
                         />
                         <select
                           value={applicant.status}
                           disabled={updatingId === applicant.applicationId}
-                          onChange={(event) => handleStatusChange(applicant, event.target.value)}
+                          onChange={(event) =>
+                            handleStatusChange(applicant, event.target.value)
+                          }
                           onClick={(event) => event.stopPropagation()}
                           onKeyDown={(event) => event.stopPropagation()}
                           className="text-xs border border-gray-200 rounded-lg px-2 py-1.5 text-gray-600 disabled:opacity-50"
                         >
-                          <option value={APPLICATION_STATUS.APPLIED}>Applied</option>
-                          <option value={APPLICATION_STATUS.IN_REVIEW}>Move to Review</option>
-                          <option value={APPLICATION_STATUS.INTERVIEW}>Schedule Interview</option>
-                          <option value={APPLICATION_STATUS.ACCEPTED}>Accept</option>
-                          <option value={APPLICATION_STATUS.REJECTED}>Reject</option>
+                          <option value={APPLICATION_STATUS.APPLIED}>
+                            Applied
+                          </option>
+                          <option value={APPLICATION_STATUS.IN_REVIEW}>
+                            Move to Review
+                          </option>
+                          <option value={APPLICATION_STATUS.INTERVIEW}>
+                            Schedule Interview
+                          </option>
+                          <option value={APPLICATION_STATUS.ACCEPTED}>
+                            Accept
+                          </option>
+                          <option value={APPLICATION_STATUS.REJECTED}>
+                            Reject
+                          </option>
                         </select>
                       </div>
                     </div>
@@ -570,7 +651,11 @@ export default function AlumniJobs() {
                   {interviewTarget.fullName} · {applicantsJobTitle}
                 </p>
               </div>
-              <button type="button" onClick={() => setInterviewTarget(null)} aria-label="Close schedule form">
+              <button
+                type="button"
+                onClick={() => setInterviewTarget(null)}
+                aria-label="Close schedule form"
+              >
                 <X size={19} className="text-gray-400" />
               </button>
             </div>
@@ -587,7 +672,12 @@ export default function AlumniJobs() {
                   type="datetime-local"
                   required
                   value={interviewForm.scheduledAt}
-                  onChange={(event) => setInterviewForm({ ...interviewForm, scheduledAt: event.target.value })}
+                  onChange={(event) =>
+                    setInterviewForm({
+                      ...interviewForm,
+                      scheduledAt: event.target.value,
+                    })
+                  }
                   className="mt-1.5 w-full border border-gray-200 rounded-lg px-3 py-2.5 font-normal outline-none focus:border-primary"
                 />
               </label>
@@ -597,7 +687,12 @@ export default function AlumniJobs() {
                   type="text"
                   required
                   value={interviewForm.timezone}
-                  onChange={(event) => setInterviewForm({ ...interviewForm, timezone: event.target.value })}
+                  onChange={(event) =>
+                    setInterviewForm({
+                      ...interviewForm,
+                      timezone: event.target.value,
+                    })
+                  }
                   className="mt-1.5 w-full border border-gray-200 rounded-lg px-3 py-2.5 font-normal outline-none focus:border-primary"
                 />
               </label>
@@ -605,7 +700,12 @@ export default function AlumniJobs() {
                 Duration
                 <select
                   value={interviewForm.durationMinutes}
-                  onChange={(event) => setInterviewForm({ ...interviewForm, durationMinutes: event.target.value })}
+                  onChange={(event) =>
+                    setInterviewForm({
+                      ...interviewForm,
+                      durationMinutes: event.target.value,
+                    })
+                  }
                   className="mt-1.5 w-full border border-gray-200 rounded-lg px-3 py-2.5 font-normal"
                 >
                   <option value={30}>30 minutes</option>
@@ -621,7 +721,12 @@ export default function AlumniJobs() {
                   required
                   placeholder="https://meet.google.com/..."
                   value={interviewForm.meetingUrl}
-                  onChange={(event) => setInterviewForm({ ...interviewForm, meetingUrl: event.target.value })}
+                  onChange={(event) =>
+                    setInterviewForm({
+                      ...interviewForm,
+                      meetingUrl: event.target.value,
+                    })
+                  }
                   className="mt-1.5 w-full border border-gray-200 rounded-lg px-3 py-2.5 font-normal outline-none focus:border-primary"
                 />
               </label>
@@ -631,7 +736,12 @@ export default function AlumniJobs() {
                   rows={3}
                   maxLength={1000}
                   value={interviewForm.instructions}
-                  onChange={(event) => setInterviewForm({ ...interviewForm, instructions: event.target.value })}
+                  onChange={(event) =>
+                    setInterviewForm({
+                      ...interviewForm,
+                      instructions: event.target.value,
+                    })
+                  }
                   placeholder="Please join 5 minutes early..."
                   className="mt-1.5 w-full border border-gray-200 rounded-lg px-3 py-2.5 font-normal resize-none outline-none focus:border-primary"
                 />
@@ -639,11 +749,20 @@ export default function AlumniJobs() {
             </div>
 
             <div className="flex justify-end gap-3 px-6 py-4 border-t border-gray-100">
-              <button type="button" onClick={() => setInterviewTarget(null)} className="px-4 py-2.5 text-sm font-medium text-gray-600">
+              <button
+                type="button"
+                onClick={() => setInterviewTarget(null)}
+                className="px-4 py-2.5 text-sm font-medium text-gray-600"
+              >
                 Cancel
               </button>
-              <button disabled={schedulingInterview} className="px-5 py-2.5 rounded-lg bg-primary text-white text-sm font-semibold disabled:opacity-60">
-                {schedulingInterview ? "Scheduling..." : "Schedule & Notify Student"}
+              <button
+                disabled={schedulingInterview}
+                className="px-5 py-2.5 rounded-lg bg-primary text-white text-sm font-semibold disabled:opacity-60"
+              >
+                {schedulingInterview
+                  ? "Scheduling..."
+                  : "Schedule & Notify Student"}
               </button>
             </div>
           </form>

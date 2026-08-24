@@ -30,7 +30,9 @@ export default function NotificationsMenu({
               <CalendarDays size={16} />
             </span>
             <span>
-              <strong className="block text-sm text-dark">Interview scheduled</strong>
+              <strong className="block text-sm text-dark">
+                Interview scheduled
+              </strong>
               <span className="block text-xs text-gray-500 mt-0.5">
                 {interviewNotice.jobTitle}
               </span>
@@ -52,10 +54,13 @@ export default function NotificationsMenu({
                 Interview: {application.job.title}
               </strong>
               <span className="block text-xs text-gray-500 mt-0.5">
-                {new Date(application.interview.scheduledAt).toLocaleString([], {
-                  dateStyle: "medium",
-                  timeStyle: "short",
-                })}
+                {new Date(application.interview.scheduledAt).toLocaleString(
+                  [],
+                  {
+                    dateStyle: "medium",
+                    timeStyle: "short",
+                  },
+                )}
               </span>
               <span className="block text-[11px] capitalize text-primary mt-1">
                 {application.interview.response.replaceAll("_", " ")}
@@ -73,7 +78,9 @@ export default function NotificationsMenu({
               <Mail size={16} />
             </span>
             <span>
-              <strong className="block text-sm text-dark">Unread messages</strong>
+              <strong className="block text-sm text-dark">
+                Unread messages
+              </strong>
               <span className="block text-xs text-gray-500 mt-0.5">
                 You have {unreadMessageCount} unread message
                 {unreadMessageCount === 1 ? "" : "s"}.

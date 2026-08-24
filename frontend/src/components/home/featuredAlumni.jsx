@@ -6,7 +6,9 @@ import { UI_LIMITS } from "../../consts/appConstants";
 import { useGetFeaturedAlumniQuery } from "../../store/api/publicApi";
 
 export default function FeaturedAlumni() {
-  const { data, isLoading } = useGetFeaturedAlumniQuery(UI_LIMITS.FEATURED_ALUMNI);
+  const { data, isLoading } = useGetFeaturedAlumniQuery(
+    UI_LIMITS.FEATURED_ALUMNI,
+  );
   const alumni = (data?.results || []).map((a) => ({
     id: a._id,
     name: a.user?.fullName || "Alumni Member",
@@ -20,8 +22,12 @@ export default function FeaturedAlumni() {
       <div className="mx-auto max-w-7xl px-6 py-20">
         <div className="flex items-end justify-between mb-12">
           <div>
-            <h2 className="text-3xl font-bold text-dark mb-3">Featured Alumni</h2>
-            <p className="text-gray-500">Meet leaders shaping the future across industries.</p>
+            <h2 className="text-3xl font-bold text-dark mb-3">
+              Featured Alumni
+            </h2>
+            <p className="text-gray-500">
+              Meet leaders shaping the future across industries.
+            </p>
           </div>
           <a
             href="#"
@@ -54,7 +60,9 @@ export default function FeaturedAlumni() {
                   </div>
                 )}
                 <h3 className="font-semibold text-dark">{a.name}</h3>
-                <p className="text-sm text-primary font-medium mt-1">{a.role}</p>
+                <p className="text-sm text-primary font-medium mt-1">
+                  {a.role}
+                </p>
                 <p className="text-xs text-gray-500 mt-0.5 mb-5">{a.company}</p>
                 <button className="w-full border border-gray-200 text-dark text-sm font-medium py-2 rounded-full hover:border-primary hover:text-primary transition-colors">
                   View Profile

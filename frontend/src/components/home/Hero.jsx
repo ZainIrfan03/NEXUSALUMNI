@@ -44,7 +44,9 @@ export default function Hero() {
           <div className="absolute inset-0 bg-gradient-to-t from-dark/80 via-dark/30 to-dark/10" />
 
           <div className="absolute bottom-0 left-0 right-0 p-8">
-            <p className="text-white font-semibold text-lg">Global Elite Network</p>
+            <p className="text-white font-semibold text-lg">
+              Global Elite Network
+            </p>
             <p className="text-gray-200 text-xs mt-1">
               Empowering leaders · Fostering elite institutions
             </p>

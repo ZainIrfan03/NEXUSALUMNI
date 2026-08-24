@@ -1,4 +1,3 @@
-
 const stats = [
   { value: "15k+", label: "ACTIVE ALUMNI" },
   { value: "50k", label: "CONNECTIONS MADE" },

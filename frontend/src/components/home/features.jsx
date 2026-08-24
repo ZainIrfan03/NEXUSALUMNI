@@ -31,7 +31,8 @@ export default function Features() {
           Everything you need to thrive
         </h2>
         <p className="text-gray-500 mb-12">
-          A comprehensive ecosystem designed for your continuous professional development.
+          A comprehensive ecosystem designed for your continuous professional
+          development.
         </p>
 
         <div className="grid sm:grid-cols-2 gap-6">

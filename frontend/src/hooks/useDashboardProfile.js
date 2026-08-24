@@ -10,7 +10,8 @@ export default function useDashboardProfile(user) {
     skip: user?.role !== ROLES.ALUMNI,
   });
 
-  const activeProfile = user?.role === ROLES.STUDENT ? studentProfile : alumniProfile;
+  const activeProfile =
+    user?.role === ROLES.STUDENT ? studentProfile : alumniProfile;
 
   return {
     displayName: activeProfile?.user?.fullName || user?.fullName,

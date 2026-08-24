@@ -9,8 +9,6 @@ import {
   useLazyGetSuccessStoriesQuery,
 } from "../store/api/publicApi";
 
-
-
 const initialsOf = (name = "") =>
   name
     .split(" ")
@@ -38,16 +36,14 @@ export default function SuccessStoriesPage() {
   const queryKey = `${activeCategory}\u0000${search}`;
   const loading = loadedQuery !== queryKey;
 
- 
   useEffect(() => {
     const t = setTimeout(
       () => setSearch(searchInput.trim()),
-      UI_LIMITS.SEARCH_DEBOUNCE_MS
+      UI_LIMITS.SEARCH_DEBOUNCE_MS,
     );
     return () => clearTimeout(t);
   }, [searchInput]);
 
-  
   useEffect(() => {
     let cancelled = false;
     const requestedQuery = queryKey;
@@ -104,7 +100,6 @@ export default function SuccessStoriesPage() {
   return (
     <section className="w-full bg-background">
       <div className="mx-auto max-w-7xl px-6 py-16">
-     
         <div className="text-center max-w-xl mx-auto mb-10">
           <h1 className="text-3xl font-bold text-dark mb-3">Success Stories</h1>
           <p className="text-gray-500">
@@ -113,10 +108,12 @@ export default function SuccessStoriesPage() {
           </p>
         </div>
 
-       
         <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-10">
           <div className="relative flex-1">
-            <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+            <Search
+              size={16}
+              className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
+            />
             <input
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
@@ -148,13 +145,11 @@ export default function SuccessStoriesPage() {
           <EmptyState message="No success stories match your search yet." />
         ) : (
           <>
-            
             <div className="grid lg:grid-cols-3 gap-6 mb-6">
               <HeroCard story={hero} />
               {secondary && <StoryCard story={secondary} />}
             </div>
 
-           
             {rest.length > 0 && (
               <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {rest.map((s) => (
@@ -163,7 +158,6 @@ export default function SuccessStoriesPage() {
               </div>
             )}
 
-            
             {page < totalPages && (
               <div className="text-center mt-12">
                 <button
@@ -199,10 +193,14 @@ function HeroCard({ story }) {
         <h2 className="text-xl sm:text-2xl font-bold text-dark mb-3 leading-snug">
           {story.title}
         </h2>
-        <p className="text-sm text-gray-500 leading-relaxed mb-5">{story.description}</p>
+        <p className="text-sm text-gray-500 leading-relaxed mb-5">
+          {story.description}
+        </p>
         <div className="flex items-center justify-between border-t border-gray-100 pt-4 mt-auto">
           <div>
-            <p className="text-sm font-semibold text-dark">{story.authorName}</p>
+            <p className="text-sm font-semibold text-dark">
+              {story.authorName}
+            </p>
             <p className="text-xs text-gray-400">{story.authorRole}</p>
           </div>
           <span className="h-9 w-9 shrink-0 rounded-full bg-primary text-white flex items-center justify-center">
@@ -218,7 +216,11 @@ function StoryCard({ story }) {
   return (
     <div className="bg-white rounded-2xl overflow-hidden flex flex-col">
       <div className="relative">
-        <img src={getImageUrl(story.image)} alt={story.title} className="w-full h-48 object-cover" />
+        <img
+          src={getImageUrl(story.image)}
+          alt={story.title}
+          className="w-full h-48 object-cover"
+        />
       </div>
       <div className="p-6 flex flex-col flex-1">
         <div className="flex gap-2 mb-3">
@@ -229,15 +231,21 @@ function StoryCard({ story }) {
             {shortYear(story.graduationYear)}
           </span>
         </div>
-        <h3 className="font-semibold text-dark text-lg mb-2 leading-snug">{story.title}</h3>
-        <p className="text-sm text-gray-500 leading-relaxed mb-5">{story.description}</p>
+        <h3 className="font-semibold text-dark text-lg mb-2 leading-snug">
+          {story.title}
+        </h3>
+        <p className="text-sm text-gray-500 leading-relaxed mb-5">
+          {story.description}
+        </p>
         <div className="flex items-center justify-between border-t border-gray-100 pt-4 mt-auto">
           <div className="flex items-center gap-2">
             <div className="h-8 w-8 rounded-full bg-blue-50 text-primary text-xs font-semibold flex items-center justify-center">
               {initialsOf(story.authorName)}
             </div>
             <div>
-              <p className="text-sm font-medium text-dark">{story.authorName}</p>
+              <p className="text-sm font-medium text-dark">
+                {story.authorName}
+              </p>
               <p className="text-xs text-gray-400">{story.authorRole}</p>
             </div>
           </div>

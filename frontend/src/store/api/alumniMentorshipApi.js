@@ -1,19 +1,6 @@
 import { baseApi } from "./baseApi";
 import { TAGS } from "../../consts/appConstants";
 
-
-
-
-
-
-
-
-
-
-
-
-
-
 export const alumniMentorshipApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     getMentorshipOverview: builder.query({

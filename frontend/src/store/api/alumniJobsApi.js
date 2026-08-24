@@ -1,7 +1,6 @@
 import { baseApi } from "./baseApi";
 import { TAGS } from "../../consts/appConstants";
 
-
 export const alumniJobsApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     getMyJobs: builder.query({
@@ -20,7 +19,9 @@ export const alumniJobsApi = baseApi.injectEndpoints({
 
     getJobApplicants: builder.query({
       query: (jobId) => `/alumni/jobs/${jobId}/applicants`,
-      providesTags: (result, error, jobId) => [{ type: TAGS.JOB_APPLICANTS, id: jobId }],
+      providesTags: (result, error, jobId) => [
+        { type: TAGS.JOB_APPLICANTS, id: jobId },
+      ],
     }),
 
     deleteMyJob: builder.mutation({
@@ -31,15 +32,12 @@ export const alumniJobsApi = baseApi.injectEndpoints({
       invalidatesTags: (result, error, jobId) => [
         { type: TAGS.JOBS, id: jobId },
         { type: TAGS.JOBS, id: "ALUMNI_LIST" },
-        { type: TAGS.JOBS, id: "LIST" }, 
-        
+        { type: TAGS.JOBS, id: "LIST" },
+
         TAGS.ALUMNI_DASHBOARD,
       ],
     }),
 
-    
-    
-    
     updateApplicationStatus: builder.mutation({
       query: ({ applicationId, status }) => ({
         url: `/alumni/jobs/applications/${applicationId}/status`,
@@ -49,7 +47,7 @@ export const alumniJobsApi = baseApi.injectEndpoints({
       invalidatesTags: (result, error, { jobId }) => [
         { type: TAGS.JOB_APPLICANTS, id: jobId },
         { type: TAGS.JOBS, id: jobId },
-        { type: TAGS.JOBS, id: "ALUMNI_LIST" }, 
+        { type: TAGS.JOBS, id: "ALUMNI_LIST" },
       ],
     }),
 
@@ -74,8 +72,8 @@ export const alumniJobsApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: [
         { type: TAGS.JOBS, id: "ALUMNI_LIST" },
-        { type: TAGS.JOBS, id: "LIST" }, 
-        
+        { type: TAGS.JOBS, id: "LIST" },
+
         TAGS.ALUMNI_DASHBOARD,
       ],
     }),

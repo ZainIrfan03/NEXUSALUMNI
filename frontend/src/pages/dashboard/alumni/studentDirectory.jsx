@@ -3,11 +3,22 @@ import { useNavigate } from "react-router-dom";
 import { useGetStudentDirectoryQuery } from "../../../store/api/alumniDirectoryApi";
 import { ROUTES } from "../../../consts/appConstants";
 import { useStartConversationMutation } from "../../../store/api/messagesApi";
-import { Filter, UserPlus, Loader2, ChevronLeft, ChevronRight, Send } from "lucide-react";
+import {
+  Filter,
+  UserPlus,
+  Loader2,
+  ChevronLeft,
+  ChevronRight,
+  Send,
+} from "lucide-react";
 import { getImageUrl } from "../../../utils/getImageUrl";
 
-
-const SKILL_OPTIONS = ["Python", "Data Analysis", "UI/UX Design", "Public Speaking"];
+const SKILL_OPTIONS = [
+  "Python",
+  "Data Analysis",
+  "UI/UX Design",
+  "Public Speaking",
+];
 const YEAR_OPTIONS = ["2024", "2025", "2026", "2027"];
 
 function StudentCard({ student, onViewProfile, onMessage, messagingId }) {
@@ -55,7 +66,6 @@ function StudentCard({ student, onViewProfile, onMessage, messagingId }) {
           View Profile →
         </button>
 
-        
         {student.isMentee && (
           <button
             onClick={() => onMessage(student)}
@@ -121,13 +131,19 @@ export default function StudentDirectory() {
   const toggleSkill = (skill) => {
     setPage(1);
     setSkills((prev) =>
-      prev.includes(skill) ? prev.filter((existingSkill) => existingSkill !== skill) : [...prev, skill]
+      prev.includes(skill)
+        ? prev.filter((existingSkill) => existingSkill !== skill)
+        : [...prev, skill],
     );
   };
 
   const toggleYear = (year) => {
     setPage(1);
-    setYears((prev) => (prev.includes(year) ? prev.filter((existingYear) => existingYear !== year) : [...prev, year]));
+    setYears((prev) =>
+      prev.includes(year)
+        ? prev.filter((existingYear) => existingYear !== year)
+        : [...prev, year],
+    );
   };
 
   const clearFilters = () => {
@@ -137,17 +153,15 @@ export default function StudentDirectory() {
     setPage(1);
   };
 
-  
-  
-  
-  
   const handleMessage = async (student) => {
     if (!student.userId) return;
     setActionError("");
     setMessagingId(student._id);
     try {
       const conversation = await startConversation(student.userId).unwrap();
-      navigate(ROUTES.ALUMNI.MESSAGES, { state: { conversationId: conversation._id } });
+      navigate(ROUTES.ALUMNI.MESSAGES, {
+        state: { conversationId: conversation._id },
+      });
     } catch (err) {
       setActionError(err.data?.message || "Could not start chat.");
     } finally {
@@ -159,16 +173,18 @@ export default function StudentDirectory() {
 
   return (
     <div>
-      
       <div className="flex flex-wrap items-start justify-between gap-4 mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Student Directory</h1>
-          <p className="text-gray-500 mt-1">Connect with the next generation of industry leaders.</p>
+          <h1 className="text-2xl font-bold text-gray-900">
+            Student Directory
+          </h1>
+          <p className="text-gray-500 mt-1">
+            Connect with the next generation of industry leaders.
+          </p>
         </div>
       </div>
 
       <div className="grid lg:grid-cols-4 gap-6">
-        
         <div className="flex flex-col gap-4">
           <div className="bg-white rounded-xl border border-gray-200 p-5">
             <div className="flex items-center gap-2 mb-4">
@@ -199,7 +215,10 @@ export default function StudentDirectory() {
             </label>
             <div className="flex flex-col gap-2 mt-2 mb-4">
               {SKILL_OPTIONS.map((skill) => (
-                <label key={skill} className="flex items-center gap-2 text-sm text-gray-700">
+                <label
+                  key={skill}
+                  className="flex items-center gap-2 text-sm text-gray-700"
+                >
                   <input
                     type="checkbox"
                     checked={skills.includes(skill)}
@@ -229,23 +248,31 @@ export default function StudentDirectory() {
               ))}
             </div>
 
-            <button onClick={clearFilters} className="text-sm font-medium text-primary hover:underline">
+            <button
+              onClick={clearFilters}
+              className="text-sm font-medium text-primary hover:underline"
+            >
               Clear All Filters
             </button>
           </div>
 
           <div className="bg-dark rounded-xl p-5 text-white relative overflow-hidden">
             <p className="text-sm text-gray-300">Active Students</p>
-            <p className="text-3xl font-bold mt-2">{totalCount.toLocaleString()}</p>
-            <p className="text-sm text-green-400 mt-1">+12% from last semester</p>
+            <p className="text-3xl font-bold mt-2">
+              {totalCount.toLocaleString()}
+            </p>
+            <p className="text-sm text-green-400 mt-1">
+              +12% from last semester
+            </p>
           </div>
         </div>
 
-        
         <div className="lg:col-span-3">
           <div className="flex items-center justify-between mb-4">
             <p className="text-sm text-gray-500">
-              {loading ? "Loading..." : `Showing ${students.length} of ${totalCount} profiles matching your criteria`}
+              {loading
+                ? "Loading..."
+                : `Showing ${students.length} of ${totalCount} profiles matching your criteria`}
             </p>
             <div className="flex items-center gap-2 text-sm">
               <span className="text-gray-500">Sort by:</span>
@@ -278,7 +305,9 @@ export default function StudentDirectory() {
                 <StudentCard
                   key={student._id}
                   student={student}
-                  onViewProfile={(id) => navigate(ROUTES.ALUMNI.directoryProfile(id))}
+                  onViewProfile={(id) =>
+                    navigate(ROUTES.ALUMNI.directoryProfile(id))
+                  }
                   onMessage={handleMessage}
                   messagingId={messagingId}
                 />
@@ -287,21 +316,27 @@ export default function StudentDirectory() {
             </div>
           )}
 
-          
           <div className="flex items-center justify-center gap-2 mt-8">
             <button
-              onClick={() => setPage((currentPage) => Math.max(1, currentPage - 1))}
+              onClick={() =>
+                setPage((currentPage) => Math.max(1, currentPage - 1))
+              }
               disabled={page === 1}
               className="h-9 w-9 rounded-lg border border-gray-200 flex items-center justify-center disabled:opacity-40"
             >
               <ChevronLeft size={16} />
             </button>
-            {Array.from({ length: Math.min(totalPages, 3) }, (_, index) => index + 1).map((pageNumber) => (
+            {Array.from(
+              { length: Math.min(totalPages, 3) },
+              (_, index) => index + 1,
+            ).map((pageNumber) => (
               <button
                 key={pageNumber}
                 onClick={() => setPage(pageNumber)}
                 className={`h-9 w-9 rounded-lg text-sm font-medium ${
-                  page === pageNumber ? "bg-dark text-white" : "border border-gray-200 text-gray-700"
+                  page === pageNumber
+                    ? "bg-dark text-white"
+                    : "border border-gray-200 text-gray-700"
                 }`}
               >
                 {pageNumber}
@@ -317,7 +352,9 @@ export default function StudentDirectory() {
               </button>
             )}
             <button
-              onClick={() => setPage((currentPage) => Math.min(totalPages, currentPage + 1))}
+              onClick={() =>
+                setPage((currentPage) => Math.min(totalPages, currentPage + 1))
+              }
               disabled={page === totalPages}
               className="h-9 w-9 rounded-lg border border-gray-200 flex items-center justify-center disabled:opacity-40"
             >

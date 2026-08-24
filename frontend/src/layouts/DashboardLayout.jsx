@@ -8,7 +8,10 @@ export default function DashboardLayout() {
 
   return (
     <div className="flex min-h-screen bg-background">
-      <DashboardSidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      <DashboardSidebar
+        open={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+      />
 
       <div className="flex-1 flex flex-col">
         <DashboardHeader onOpenSidebar={() => setSidebarOpen(true)} />

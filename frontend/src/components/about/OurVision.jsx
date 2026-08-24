@@ -7,8 +7,8 @@ export default function OurVision() {
         <div className="text-center max-w-2xl mx-auto mb-12">
           <h2 className="text-3xl font-bold text-dark mb-4">Our Vision</h2>
           <p className="text-gray-500 leading-relaxed">
-            We believe in a world where every student has access to the
-            guidance and network needed to reach their full potential.
+            We believe in a world where every student has access to the guidance
+            and network needed to reach their full potential.
           </p>
         </div>
 
@@ -55,8 +55,8 @@ export default function OurVision() {
                 Community Driven Events
               </h3>
               <p className="text-sm text-gray-500 leading-relaxed">
-                From intimate fireside chats to large-scale industry mixers,
-                we facilitate events that foster lifelong connections and
+                From intimate fireside chats to large-scale industry mixers, we
+                facilitate events that foster lifelong connections and
                 continuous learning.
               </p>
             </div>

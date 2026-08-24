@@ -8,10 +8,16 @@ import {
 import { ROUTES } from "../../../consts/appConstants";
 
 export default function EditProfile() {
-  const { data: profile, isLoading: loading, error: queryError } = useGetMyProfileQuery();
+  const {
+    data: profile,
+    isLoading: loading,
+    error: queryError,
+  } = useGetMyProfileQuery();
   const [updateProfile, { isLoading: saving }] = useUpdateMyProfileMutation();
-  const [uploadAvatar, { isLoading: uploadingAvatar }] = useUploadAvatarMutation();
-  const [uploadResume, { isLoading: uploadingResume }] = useUploadResumeMutation();
+  const [uploadAvatar, { isLoading: uploadingAvatar }] =
+    useUploadAvatarMutation();
+  const [uploadResume, { isLoading: uploadingResume }] =
+    useUploadResumeMutation();
 
   return (
     <ProfileEditPage

@@ -1,5 +1,5 @@
- export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL; 
- export const SOCKET_URL = import.meta.env.VITE_SOCKET_URL;
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+export const SOCKET_URL = import.meta.env.VITE_SOCKET_URL;
 
 export const SOCKET_EVENTS = {
   TYPING: "typing",
@@ -94,7 +94,7 @@ export const UI_LIMITS = {
   DASHBOARD_PREVIEW_COUNT: 2,
   SEARCH_DEBOUNCE_MS: 400,
 };
- 
+
 export const MENTORSHIP_STATUS = {
   PENDING: "pending",
   ACCEPTED: "accepted",

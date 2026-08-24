@@ -20,19 +20,14 @@ import {
   FileText,
 } from "lucide-react";
 
-
-
-
-
-
-
-
-
-
 export default function AlumniProfile() {
   const navigate = useNavigate();
 
-  const { data: profile, isLoading: loading, error: queryError } = useGetMyAlumniProfileQuery();
+  const {
+    data: profile,
+    isLoading: loading,
+    error: queryError,
+  } = useGetMyAlumniProfileQuery();
   const [addAlumniExperience] = useAddAlumniExperienceMutation();
 
   const [actionError, setActionError] = useState("");
@@ -54,7 +49,14 @@ export default function AlumniProfile() {
     setActionError("");
     try {
       await addAlumniExperience(roleForm).unwrap();
-      setRoleForm({ title: "", company: "", startDate: "", endDate: "", current: false, description: "" });
+      setRoleForm({
+        title: "",
+        company: "",
+        startDate: "",
+        endDate: "",
+        current: false,
+        description: "",
+      });
       setShowRoleForm(false);
     } catch (err) {
       setActionError(err.data?.message || "Could not add role.");
@@ -62,9 +64,7 @@ export default function AlumniProfile() {
   };
 
   if (loading) {
-    return (
-      <LoadingSpinner label="Loading profile..." className="py-20" />
-    );
+    return <LoadingSpinner label="Loading profile..." className="py-20" />;
   }
 
   if (error && !profile) {
@@ -97,7 +97,6 @@ export default function AlumniProfile() {
         </div>
       )}
 
-      
       <div className="bg-white rounded-2xl overflow-hidden mb-6">
         <div className="h-32 bg-gradient-to-r from-primary to-dark" />
         <div className="px-6 pb-6">
@@ -117,8 +116,12 @@ export default function AlumniProfile() {
 
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
-              <h1 className="text-2xl font-bold text-dark">{user?.fullName || "—"}</h1>
-              {headline && <p className="text-primary font-medium mt-0.5">{headline}</p>}
+              <h1 className="text-2xl font-bold text-dark">
+                {user?.fullName || "—"}
+              </h1>
+              {headline && (
+                <p className="text-primary font-medium mt-0.5">{headline}</p>
+              )}
               {location && (
                 <p className="text-gray-500 text-sm flex items-center gap-1 mt-1">
                   <MapPin size={14} /> {location}
@@ -136,9 +139,7 @@ export default function AlumniProfile() {
       </div>
 
       <div className="grid lg:grid-cols-3 gap-6">
-        
         <div className="lg:col-span-2 flex flex-col gap-6">
-          
           <div className="bg-white rounded-2xl p-6">
             <h2 className="text-lg font-semibold text-dark mb-3">Bio</h2>
             <p className="text-sm text-gray-600 leading-relaxed">
@@ -146,9 +147,10 @@ export default function AlumniProfile() {
             </p>
           </div>
 
-          
           <div className="bg-white rounded-2xl p-6">
-            <h2 className="text-lg font-semibold text-dark mb-3">Resume / CV</h2>
+            <h2 className="text-lg font-semibold text-dark mb-3">
+              Resume / CV
+            </h2>
             {fileUrl(resumeUrl) ? (
               <a
                 href={fileUrl(resumeUrl)}
@@ -164,7 +166,6 @@ export default function AlumniProfile() {
             )}
           </div>
 
-          
           <div className="bg-white rounded-2xl p-6">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-semibold text-dark">Experience</h2>
@@ -192,7 +193,9 @@ export default function AlumniProfile() {
                     type="text"
                     placeholder="Job title"
                     value={roleForm.title}
-                    onChange={(event) => setRoleForm({ ...roleForm, title: event.target.value })}
+                    onChange={(event) =>
+                      setRoleForm({ ...roleForm, title: event.target.value })
+                    }
                     className="border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-primary"
                     required
                   />
@@ -200,7 +203,9 @@ export default function AlumniProfile() {
                     type="text"
                     placeholder="Company"
                     value={roleForm.company}
-                    onChange={(event) => setRoleForm({ ...roleForm, company: event.target.value })}
+                    onChange={(event) =>
+                      setRoleForm({ ...roleForm, company: event.target.value })
+                    }
                     className="border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-primary"
                     required
                   />
@@ -208,14 +213,21 @@ export default function AlumniProfile() {
                     type="text"
                     placeholder="Start (e.g. 2021)"
                     value={roleForm.startDate}
-                    onChange={(event) => setRoleForm({ ...roleForm, startDate: event.target.value })}
+                    onChange={(event) =>
+                      setRoleForm({
+                        ...roleForm,
+                        startDate: event.target.value,
+                      })
+                    }
                     className="border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-primary"
                   />
                   <input
                     type="text"
                     placeholder="End (leave blank if current)"
                     value={roleForm.endDate}
-                    onChange={(event) => setRoleForm({ ...roleForm, endDate: event.target.value })}
+                    onChange={(event) =>
+                      setRoleForm({ ...roleForm, endDate: event.target.value })
+                    }
                     disabled={roleForm.current}
                     className="border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-primary disabled:bg-gray-50"
                   />
@@ -224,7 +236,13 @@ export default function AlumniProfile() {
                   <input
                     type="checkbox"
                     checked={roleForm.current}
-                    onChange={(event) => setRoleForm({ ...roleForm, current: event.target.checked, endDate: "" })}
+                    onChange={(event) =>
+                      setRoleForm({
+                        ...roleForm,
+                        current: event.target.checked,
+                        endDate: "",
+                      })
+                    }
                   />
                   I currently work here
                 </label>
@@ -232,7 +250,12 @@ export default function AlumniProfile() {
                   placeholder="Description"
                   rows={2}
                   value={roleForm.description}
-                  onChange={(event) => setRoleForm({ ...roleForm, description: event.target.value })}
+                  onChange={(event) =>
+                    setRoleForm({
+                      ...roleForm,
+                      description: event.target.value,
+                    })
+                  }
                   className="border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-primary resize-none"
                 />
                 <button
@@ -250,14 +273,19 @@ export default function AlumniProfile() {
 
             <div className="flex flex-col divide-y divide-gray-100">
               {experience.map((exp) => (
-                <div key={exp._id} className="flex gap-3 py-4 first:pt-0 last:pb-0">
+                <div
+                  key={exp._id}
+                  className="flex gap-3 py-4 first:pt-0 last:pb-0"
+                >
                   <div className="h-10 w-10 rounded-lg bg-gray-100 flex items-center justify-center shrink-0">
                     <Briefcase size={16} className="text-gray-500" />
                   </div>
                   <div className="flex-1">
                     <div className="flex items-start justify-between gap-2">
                       <div>
-                        <p className="font-semibold text-dark text-sm">{exp.title}</p>
+                        <p className="font-semibold text-dark text-sm">
+                          {exp.title}
+                        </p>
                         <p className="text-primary text-sm">{exp.company}</p>
                       </div>
                       {exp.current ? (
@@ -273,7 +301,9 @@ export default function AlumniProfile() {
                       )}
                     </div>
                     {exp.description && (
-                      <p className="text-sm text-gray-500 mt-1">{exp.description}</p>
+                      <p className="text-sm text-gray-500 mt-1">
+                        {exp.description}
+                      </p>
                     )}
                   </div>
                 </div>
@@ -282,9 +312,7 @@ export default function AlumniProfile() {
           </div>
         </div>
 
-        
         <div className="flex flex-col gap-6">
-          
           <div className="bg-white rounded-2xl p-6">
             <h2 className="text-lg font-semibold text-dark mb-3">Skills</h2>
             <div className="flex flex-wrap gap-2 mb-4">
@@ -319,7 +347,6 @@ export default function AlumniProfile() {
             </div>
           </div>
 
-          
           <div className="bg-white rounded-2xl p-6">
             <h2 className="text-lg font-semibold text-dark mb-4">Education</h2>
             {education.length === 0 && (
@@ -332,19 +359,24 @@ export default function AlumniProfile() {
                     <GraduationCap size={16} className="text-gray-500" />
                   </div>
                   <div>
-                    <p className="font-semibold text-dark text-sm">{edu.school}</p>
+                    <p className="font-semibold text-dark text-sm">
+                      {edu.school}
+                    </p>
                     <p className="text-sm text-gray-500">{edu.degree}</p>
-                    {edu.year && <p className="text-xs text-gray-400">{edu.year}</p>}
+                    {edu.year && (
+                      <p className="text-xs text-gray-400">{edu.year}</p>
+                    )}
                   </div>
                 </div>
               ))}
             </div>
           </div>
 
-          
           {openToNetworking && (
             <div className="bg-dark rounded-2xl p-5 text-white">
-              <p className="text-xs uppercase tracking-wide text-gray-300 mb-2">Networking</p>
+              <p className="text-xs uppercase tracking-wide text-gray-300 mb-2">
+                Networking
+              </p>
               <p className="font-semibold mb-4">
                 Open to mentorship and new collaboration opportunities.
               </p>

@@ -10,15 +10,11 @@ import {
   useSendMentorshipRequestMutation,
 } from "../../../store/api/studentMentorshipApi";
 import { useStartConversationMutation } from "../../../store/api/messagesApi";
-import { MENTORSHIP_STATUS, ROUTES, UI_LIMITS } from "../../../consts/appConstants";
-
-
-
-
-
-
-
-
+import {
+  MENTORSHIP_STATUS,
+  ROUTES,
+  UI_LIMITS,
+} from "../../../consts/appConstants";
 
 function MentorAvatar({ name, img }) {
   return img ? (
@@ -44,9 +40,9 @@ const statusTones = {
 export default function Mentorship() {
   const navigate = useNavigate();
   const [actionError, setActionError] = useState("");
-  const [sendingId, setSendingId] = useState(null); 
+  const [sendingId, setSendingId] = useState(null);
   const [visibleRequestCount, setVisibleRequestCount] = useState(
-    UI_LIMITS.MENTORSHIP_REQUEST_PAGE_SIZE
+    UI_LIMITS.MENTORSHIP_REQUEST_PAGE_SIZE,
   );
 
   const {
@@ -76,8 +72,6 @@ export default function Mentorship() {
     setActionError("");
     try {
       await sendMentorshipRequest({ alumniDocId: mentor.alumniDocId }).unwrap();
-      
-      
     } catch (err) {
       setActionError(err?.data?.message || "Could not send request");
     } finally {
@@ -85,19 +79,17 @@ export default function Mentorship() {
     }
   };
 
-  
-  
-  
-  
   const getRequestStatus = (alumniUserId) =>
-    requests.find((request) => request.alumni?._id?.toString() === alumniUserId?.toString())?.status;
+    requests.find(
+      (request) => request.alumni?._id?.toString() === alumniUserId?.toString(),
+    )?.status;
 
-  
-  
   const handleStartChat = async (mentor) => {
     setActionError("");
     try {
-      const conversation = await startConversation(mentor.alumniUserId).unwrap();
+      const conversation = await startConversation(
+        mentor.alumniUserId,
+      ).unwrap();
       navigate(ROUTES.STUDENT.MESSAGES, {
         state: { conversationId: conversation._id },
       });
@@ -113,15 +105,17 @@ export default function Mentorship() {
     <div>
       <p className="text-sm font-medium text-primary mb-1">Mentorship Hub</p>
       <h1 className="text-xl text-dark mb-8">
-        Connect with world-class alumni and track your professional growth journey.
+        Connect with world-class alumni and track your professional growth
+        journey.
       </h1>
 
       {error && (
-        <p className="text-sm text-red-500 bg-red-50 rounded-xl px-4 py-3 mb-5">{error}</p>
+        <p className="text-sm text-red-500 bg-red-50 rounded-xl px-4 py-3 mb-5">
+          {error}
+        </p>
       )}
 
       <div className="grid lg:grid-cols-3 gap-6">
-        
         <div className="lg:col-span-2">
           <div className="flex items-center justify-between mb-5">
             <div className="flex items-center gap-2">
@@ -140,30 +134,39 @@ export default function Mentorship() {
               {mentors.map((mentor) => {
                 const isSending = sendingId === mentor.alumniUserId;
                 const status = getRequestStatus(mentor.alumniUserId);
-                const canChat = status === MENTORSHIP_STATUS.ACCEPTED || status === MENTORSHIP_STATUS.COMPLETED;
-                
-                const isLocked = isSending || status === MENTORSHIP_STATUS.PENDING || canChat;
+                const canChat =
+                  status === MENTORSHIP_STATUS.ACCEPTED ||
+                  status === MENTORSHIP_STATUS.COMPLETED;
+
+                const isLocked =
+                  isSending || status === MENTORSHIP_STATUS.PENDING || canChat;
 
                 const buttonLabel = isSending
                   ? "Sending..."
                   : status === MENTORSHIP_STATUS.ACCEPTED
-                  ? "Accepted"
-                  : status === MENTORSHIP_STATUS.COMPLETED
-                  ? "Completed"
-                  : status === MENTORSHIP_STATUS.PENDING
-                  ? "Request Sent"
-                  : status === MENTORSHIP_STATUS.DECLINED
-                  ? "Send Request Again"
-                  : "Send Request";
+                    ? "Accepted"
+                    : status === MENTORSHIP_STATUS.COMPLETED
+                      ? "Completed"
+                      : status === MENTORSHIP_STATUS.PENDING
+                        ? "Request Sent"
+                        : status === MENTORSHIP_STATUS.DECLINED
+                          ? "Send Request Again"
+                          : "Send Request";
 
                 return (
-                  <div key={mentor.alumniDocId} className="bg-white rounded-2xl p-5 flex flex-col">
+                  <div
+                    key={mentor.alumniDocId}
+                    className="bg-white rounded-2xl p-5 flex flex-col"
+                  >
                     <div className="flex items-start gap-3 mb-3">
                       <MentorAvatar name={mentor.name} img={mentor.img} />
                       <div>
                         <p className="font-semibold text-dark">{mentor.name}</p>
                         <p className="text-sm text-primary font-medium">
-                          {mentor.role} {mentor.company && <span className="text-gray-400">•</span>}{" "}
+                          {mentor.role}{" "}
+                          {mentor.company && (
+                            <span className="text-gray-400">•</span>
+                          )}{" "}
                           {mentor.company}
                         </p>
                       </div>
@@ -185,7 +188,6 @@ export default function Mentorship() {
                     <div className="flex-1" />
 
                     <div className="flex items-center justify-end gap-2 border-t border-gray-100 pt-4">
-                      
                       {canChat && (
                         <button
                           onClick={() => handleStartChat(mentor)}
@@ -214,7 +216,6 @@ export default function Mentorship() {
           )}
         </div>
 
-        
         <div className="flex flex-col gap-6">
           <div className="bg-white rounded-2xl p-5">
             <div className="flex items-center gap-2 mb-4">
@@ -223,33 +224,45 @@ export default function Mentorship() {
             </div>
 
             {loadingRequests ? (
-              <LoadingSpinner label="Loading..." size={15} className="py-8 text-sm" />
+              <LoadingSpinner
+                label="Loading..."
+                size={15}
+                className="py-8 text-sm"
+              />
             ) : requests.length === 0 ? (
               <EmptyState message="No requests sent yet." className="py-4" />
             ) : (
               <>
-                
-
-
                 <div className="flex flex-col max-h-[280px] overflow-y-auto pr-1">
                   {visibleRequests.map((request, index) => (
                     <div
                       key={request._id}
                       className={`flex items-start gap-3 py-3 ${
-                        index !== visibleRequests.length - 1 ? "border-b border-gray-100" : ""
+                        index !== visibleRequests.length - 1
+                          ? "border-b border-gray-100"
+                          : ""
                       }`}
                     >
                       <div className="h-9 w-9 rounded-lg bg-gray-100 text-dark text-xs font-semibold flex items-center justify-center shrink-0">
-                        {request.alumni?.fullName?.split(" ").map((word) => word[0]).join("") || "?"}
+                        {request.alumni?.fullName
+                          ?.split(" ")
+                          .map((word) => word[0])
+                          .join("") || "?"}
                       </div>
                       <div className="flex-1">
-                        <p className="text-sm font-medium text-dark">{request.alumni?.fullName}</p>
+                        <p className="text-sm font-medium text-dark">
+                          {request.alumni?.fullName}
+                        </p>
                         <p className="text-xs text-gray-400">
-                          Sent: {new Date(request.createdAt).toLocaleDateString("en-US", {
-                            month: "short",
-                            day: "numeric",
-                            year: "numeric",
-                          })}
+                          Sent:{" "}
+                          {new Date(request.createdAt).toLocaleDateString(
+                            "en-US",
+                            {
+                              month: "short",
+                              day: "numeric",
+                              year: "numeric",
+                            },
+                          )}
                         </p>
                       </div>
                       <StatusBadge
@@ -265,7 +278,8 @@ export default function Mentorship() {
                   <button
                     onClick={() =>
                       setVisibleRequestCount(
-                        (currentCount) => currentCount + UI_LIMITS.MENTORSHIP_REQUEST_PAGE_SIZE
+                        (currentCount) =>
+                          currentCount + UI_LIMITS.MENTORSHIP_REQUEST_PAGE_SIZE,
                       )
                     }
                     className="w-full text-sm font-medium text-primary hover:underline pt-3 mt-1 border-t border-gray-100"
@@ -287,7 +301,6 @@ export default function Mentorship() {
         </div>
       </div>
 
-      
       <div className="mt-8 bg-primary rounded-2xl p-10 flex flex-wrap items-center justify-between gap-8">
         <div className="max-w-md">
           <h2 className="text-2xl font-semibold text-white mb-3">

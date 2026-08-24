@@ -11,10 +11,6 @@ import LoadingSpinner from "../../../components/common/LoadingSpinner";
 import { ROUTES } from "../../../consts/appConstants";
 import { ClipboardList, Users, Send } from "lucide-react";
 
-
-
-
-
 function PersonAvatar({ name, img, className }) {
   return img ? (
     <img src={img} alt={name} className={className} />
@@ -56,7 +52,9 @@ function RequestCard({ request, onAccept, onReject }) {
               </span>
             )}
           </div>
-          <p className="text-sm text-gray-500 mt-2 line-clamp-2">{request.message}</p>
+          <p className="text-sm text-gray-500 mt-2 line-clamp-2">
+            {request.message}
+          </p>
         </div>
       </div>
 
@@ -81,13 +79,18 @@ function RequestCard({ request, onAccept, onReject }) {
 export default function AlumniMentorship() {
   const navigate = useNavigate();
 
-  const { data, isLoading: loading, error: queryError } = useGetMentorshipOverviewQuery();
+  const {
+    data,
+    isLoading: loading,
+    error: queryError,
+  } = useGetMentorshipOverviewQuery();
   const [acceptMentorshipRequest] = useAcceptMentorshipRequestMutation();
   const [rejectMentorshipRequest] = useRejectMentorshipRequestMutation();
   const [startConversation] = useStartConversationMutation();
 
   const [actionError, setActionError] = useState("");
-  const error = actionError || (queryError && "Could not load mentorship data.");
+  const error =
+    actionError || (queryError && "Could not load mentorship data.");
 
   const handleAccept = async (id) => {
     setActionError("");
@@ -107,9 +110,6 @@ export default function AlumniMentorship() {
     }
   };
 
-  
-  
-  
   const handleMessage = async (menteeUserId) => {
     setActionError("");
     try {
@@ -138,12 +138,14 @@ export default function AlumniMentorship() {
         </div>
       )}
 
-      
       <div className="flex flex-wrap items-start justify-between gap-4 mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Mentorship Management</h1>
+          <h1 className="text-2xl font-bold text-gray-900">
+            Mentorship Management
+          </h1>
           <p className="text-gray-500 mt-1 max-w-xl">
-            Guide the next generation of industry leaders and manage your active student connections.
+            Guide the next generation of industry leaders and manage your active
+            student connections.
           </p>
         </div>
         <div className="bg-gray-100 rounded-xl px-5 py-3 flex items-center gap-3">
@@ -154,12 +156,13 @@ export default function AlumniMentorship() {
             <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
               Active Mentees
             </p>
-            <p className="text-xl font-bold text-gray-900">{activeMenteesCount}</p>
+            <p className="text-xl font-bold text-gray-900">
+              {activeMenteesCount}
+            </p>
           </div>
         </div>
       </div>
 
-      
       <div className="flex items-center gap-2 mb-4">
         <ClipboardList size={18} className="text-gray-700" />
         <h2 className="text-lg font-bold text-gray-900">New Requests</h2>
@@ -171,16 +174,22 @@ export default function AlumniMentorship() {
       </div>
 
       {requests.length === 0 ? (
-        <p className="text-sm text-gray-400 mb-8">No new mentorship requests right now.</p>
+        <p className="text-sm text-gray-400 mb-8">
+          No new mentorship requests right now.
+        </p>
       ) : (
         <div className="grid md:grid-cols-2 gap-5 mb-10">
           {requests.map((req) => (
-            <RequestCard key={req._id} request={req} onAccept={handleAccept} onReject={handleReject} />
+            <RequestCard
+              key={req._id}
+              request={req}
+              onAccept={handleAccept}
+              onReject={handleReject}
+            />
           ))}
         </div>
       )}
 
-      
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <Users size={18} className="text-gray-700" />
@@ -205,7 +214,10 @@ export default function AlumniMentorship() {
           <tbody>
             {mentees.length === 0 && (
               <tr>
-                <td colSpan={5} className="px-5 py-8 text-center text-sm text-gray-400">
+                <td
+                  colSpan={5}
+                  className="px-5 py-8 text-center text-sm text-gray-400"
+                >
                   No mentees yet.
                 </td>
               </tr>
@@ -220,12 +232,18 @@ export default function AlumniMentorship() {
                       className="h-10 w-10 rounded-full object-cover shrink-0"
                     />
                     <div>
-                      <p className="font-semibold text-gray-900 text-sm">{mentee.name}</p>
-                      <p className="text-xs text-gray-500">{mentee.yearLabel}</p>
+                      <p className="font-semibold text-gray-900 text-sm">
+                        {mentee.name}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        {mentee.yearLabel}
+                      </p>
                     </div>
                   </div>
                 </td>
-                <td className="px-5 py-4 text-sm text-gray-700">{mentee.department}</td>
+                <td className="px-5 py-4 text-sm text-gray-700">
+                  {mentee.department}
+                </td>
                 <td className="px-5 py-4">
                   <span className="flex items-center gap-2 text-sm text-gray-700">
                     <span
@@ -234,7 +252,9 @@ export default function AlumniMentorship() {
                     {mentee.status}
                   </span>
                 </td>
-                <td className="px-5 py-4 text-sm text-gray-500">{mentee.lastInteraction}</td>
+                <td className="px-5 py-4 text-sm text-gray-500">
+                  {mentee.lastInteraction}
+                </td>
                 <td className="px-5 py-4 text-right">
                   <button
                     onClick={() => handleMessage(mentee.studentUserId)}

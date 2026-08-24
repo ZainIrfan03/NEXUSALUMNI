@@ -2,7 +2,11 @@ import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useCreateJobMutation } from "../../../store/api/alumniJobsApi";
 import { Briefcase, ArrowLeft, Loader2 } from "lucide-react";
-import { EXPERIENCE_LEVELS, JOB_TYPES, ROUTES } from "../../../consts/appConstants";
+import {
+  EXPERIENCE_LEVELS,
+  JOB_TYPES,
+  ROUTES,
+} from "../../../consts/appConstants";
 
 const TYPE_OPTIONS = [
   JOB_TYPES.FULL_TIME,
@@ -10,16 +14,19 @@ const TYPE_OPTIONS = [
   JOB_TYPES.INTERNSHIP,
   JOB_TYPES.REMOTE,
 ];
-const DEPARTMENT_OPTIONS = ["Engineering", "Design", "Marketing", "Sales", "Operations", "Other"];
+const DEPARTMENT_OPTIONS = [
+  "Engineering",
+  "Design",
+  "Marketing",
+  "Sales",
+  "Operations",
+  "Other",
+];
 
 export default function AlumniJobNew() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  
-  
-  
-  
   const [form, setForm] = useState({
     title: "",
     company: "",
@@ -61,13 +68,14 @@ export default function AlumniJobNew() {
       }).unwrap();
       navigate(ROUTES.ALUMNI.JOBS);
     } catch (err) {
-      setError(err.data?.message || "Could not post this job. Please try again.");
+      setError(
+        err.data?.message || "Could not post this job. Please try again.",
+      );
     }
   };
 
   return (
     <div className="max-w-3xl mx-auto">
-      
       <button
         onClick={() => navigate(ROUTES.ALUMNI.JOBS)}
         className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 mb-4"
@@ -206,7 +214,9 @@ export default function AlumniJobNew() {
               className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-primary"
             >
               {Object.values(EXPERIENCE_LEVELS).map((level) => (
-                <option key={level} value={level}>{level}</option>
+                <option key={level} value={level}>
+                  {level}
+                </option>
               ))}
             </select>
           </div>
@@ -241,14 +251,19 @@ export default function AlumniJobNew() {
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1.5">
-            Requirements <span className="text-xs font-normal text-gray-400">(one per line)</span>
+            Requirements{" "}
+            <span className="text-xs font-normal text-gray-400">
+              (one per line)
+            </span>
           </label>
           <textarea
             name="requirements"
             value={form.requirements}
             onChange={handleChange}
             rows={4}
-            placeholder={"JavaScript and React\nStrong communication skills\nCurrently enrolled or recently graduated"}
+            placeholder={
+              "JavaScript and React\nStrong communication skills\nCurrently enrolled or recently graduated"
+            }
             className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-primary resize-none"
           />
         </div>

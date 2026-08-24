@@ -76,7 +76,8 @@ export default function ProfileEditPage({
     if (seedOnce) setHasSeeded(true);
   }
 
-  const handleChange = (event) => setForm({ ...form, [event.target.name]: event.target.value });
+  const handleChange = (event) =>
+    setForm({ ...form, [event.target.name]: event.target.value });
 
   const addChip = (event, value, setValue, list, setList) => {
     if (event.key === "Enter" && value.trim()) {
@@ -86,7 +87,8 @@ export default function ProfileEditPage({
     }
   };
 
-  const removeChip = (list, setList, item) => setList(list.filter((entry) => entry !== item));
+  const removeChip = (list, setList, item) =>
+    setList(list.filter((entry) => entry !== item));
 
   const handleAvatarSelect = (event) => {
     const file = event.target.files?.[0];
@@ -163,9 +165,7 @@ export default function ProfileEditPage({
   };
 
   if (loading) {
-    return (
-      <LoadingSpinner label="Loading profile..." className="py-20" />
-    );
+    return <LoadingSpinner label="Loading profile..." className="py-20" />;
   }
 
   return (
@@ -177,7 +177,9 @@ export default function ProfileEditPage({
 
       <div className="flex flex-wrap items-start justify-between gap-4 mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-dark mb-1">Settings & Preferences</h1>
+          <h1 className="text-2xl font-bold text-dark mb-1">
+            Settings & Preferences
+          </h1>
           <p className="text-gray-500 text-sm">
             Manage your digital presence and professional identity.
           </p>
@@ -215,7 +217,9 @@ export default function ProfileEditPage({
           <div className="bg-white rounded-2xl p-6">
             <div className="flex items-center gap-2 mb-6">
               <UserCog size={20} className="text-primary" />
-              <h2 className="text-lg font-semibold text-dark">Personal Information</h2>
+              <h2 className="text-lg font-semibold text-dark">
+                Personal Information
+              </h2>
             </div>
 
             <div className="grid sm:grid-cols-2 gap-5 mb-5">
@@ -264,7 +268,9 @@ export default function ProfileEditPage({
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-dark mb-1.5">Bio</label>
+              <label className="block text-sm font-medium text-dark mb-1.5">
+                Bio
+              </label>
               <textarea
                 name="bio"
                 value={form.bio}
@@ -288,12 +294,19 @@ export default function ProfileEditPage({
               <div className="h-12 w-12 rounded-full bg-gray-100 flex items-center justify-center mb-4">
                 <Upload size={20} className="text-gray-500" />
               </div>
-              <p className="font-semibold text-dark mb-1">Upload latest Resume</p>
+              <p className="font-semibold text-dark mb-1">
+                Upload latest Resume
+              </p>
               <p className="text-sm text-gray-500 mb-4">
                 Drag and drop your PDF here, or{" "}
                 <span className="text-primary font-medium">browse files</span>
               </p>
-              <input type="file" accept=".pdf" onChange={handleResumeSelect} className="hidden" />
+              <input
+                type="file"
+                accept=".pdf"
+                onChange={handleResumeSelect}
+                className="hidden"
+              />
             </label>
 
             {resumeFile && (
@@ -349,12 +362,18 @@ export default function ProfileEditPage({
               )}
               <label className="absolute bottom-0 right-0 h-8 w-8 bg-primary rounded-full flex items-center justify-center cursor-pointer border-2 border-white">
                 <Camera size={14} className="text-white" />
-                <input type="file" accept=".png,.jpg,.jpeg,.webp" onChange={handleAvatarSelect} className="hidden" />
+                <input
+                  type="file"
+                  accept=".png,.jpg,.jpeg,.webp"
+                  onChange={handleAvatarSelect}
+                  className="hidden"
+                />
               </label>
             </div>
             <h3 className="font-semibold text-dark mb-1">Profile Picture</h3>
             <p className="text-sm text-gray-500 mb-4">
-              Upload a high-resolution professional photo. Square format recommended.
+              Upload a high-resolution professional photo. Square format
+              recommended.
             </p>
 
             {avatarFile ? (
@@ -380,7 +399,12 @@ export default function ProfileEditPage({
               <div className="flex justify-center">
                 <label className="text-sm font-medium text-primary bg-blue-50 rounded-xl px-5 py-2 cursor-pointer hover:bg-blue-100 transition-colors">
                   {avatarUrl ? "Change Photo" : "Upload Photo"}
-                  <input type="file" accept=".png,.jpg,.jpeg,.webp" onChange={handleAvatarSelect} className="hidden" />
+                  <input
+                    type="file"
+                    accept=".png,.jpg,.jpeg,.webp"
+                    onChange={handleAvatarSelect}
+                    className="hidden"
+                  />
                 </label>
               </div>
             )}
@@ -389,7 +413,9 @@ export default function ProfileEditPage({
           <div className="bg-white rounded-2xl p-6">
             <div className="flex items-center gap-2 mb-5">
               <Sparkles size={18} className="text-primary" />
-              <h2 className="text-lg font-semibold text-dark">Skills & Interests</h2>
+              <h2 className="text-lg font-semibold text-dark">
+                Skills & Interests
+              </h2>
             </div>
 
             <p className="text-sm font-medium text-dark mb-2">Expertise Tags</p>
@@ -411,7 +437,9 @@ export default function ProfileEditPage({
                 type="text"
                 value={skillInput}
                 onChange={(event) => setSkillInput(event.target.value)}
-                onKeyDown={(event) => addChip(event, skillInput, setSkillInput, skills, setSkills)}
+                onKeyDown={(event) =>
+                  addChip(event, skillInput, setSkillInput, skills, setSkills)
+                }
                 placeholder="Add a skill..."
                 className="w-full py-2.5 text-sm outline-none"
               />
@@ -428,7 +456,9 @@ export default function ProfileEditPage({
               </button>
             </div>
 
-            <p className="text-sm font-medium text-dark mb-2">Areas of Interest</p>
+            <p className="text-sm font-medium text-dark mb-2">
+              Areas of Interest
+            </p>
             <div className="flex flex-wrap gap-2 mb-3">
               {interests.map((interest) => (
                 <span
@@ -436,7 +466,11 @@ export default function ProfileEditPage({
                   className="flex items-center gap-1 text-xs font-medium text-dark bg-gray-100 rounded-full px-3 py-1.5"
                 >
                   {interest}
-                  <button onClick={() => removeChip(interests, setInterests, interest)}>
+                  <button
+                    onClick={() =>
+                      removeChip(interests, setInterests, interest)
+                    }
+                  >
                     <X size={12} />
                   </button>
                 </span>
@@ -448,7 +482,13 @@ export default function ProfileEditPage({
                 value={interestInput}
                 onChange={(event) => setInterestInput(event.target.value)}
                 onKeyDown={(event) =>
-                  addChip(event, interestInput, setInterestInput, interests, setInterests)
+                  addChip(
+                    event,
+                    interestInput,
+                    setInterestInput,
+                    interests,
+                    setInterests,
+                  )
                 }
                 placeholder="Add an interest..."
                 className="w-full py-2.5 text-sm outline-none"
@@ -477,7 +517,9 @@ export default function ProfileEditPage({
             <button
               onClick={() => setIsPublic(!isPublic)}
               className={`w-11 h-6 rounded-full flex items-center px-0.5 transition-colors ${
-                isPublic ? "bg-primary justify-end" : "bg-gray-300 justify-start"
+                isPublic
+                  ? "bg-primary justify-end"
+                  : "bg-gray-300 justify-start"
               }`}
             >
               <span className="h-5 w-5 bg-white rounded-full shadow-sm" />

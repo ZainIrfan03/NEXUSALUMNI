@@ -39,10 +39,8 @@ export default function MessagesPage() {
   const location = useLocation();
   const incomingConversationId = location.state?.conversationId;
 
-  const { data: conversations = [], isLoading: loadingConvos } = useGetConversationsQuery(
-    undefined,
-    { refetchOnMountOrArgChange: true }
-  );
+  const { data: conversations = [], isLoading: loadingConvos } =
+    useGetConversationsQuery(undefined, { refetchOnMountOrArgChange: true });
 
   const [selectedConversationId, setActiveId] = useState(null);
   const [draft, setDraft] = useState("");
@@ -56,27 +54,37 @@ export default function MessagesPage() {
   const imageInputRef = useRef(null);
 
   const activeId = conversations.some(
-    (conversation) => conversation._id === selectedConversationId
+    (conversation) => conversation._id === selectedConversationId,
   )
     ? selectedConversationId
-    : conversations.some((conversation) => conversation._id === incomingConversationId)
+    : conversations.some(
+          (conversation) => conversation._id === incomingConversationId,
+        )
       ? incomingConversationId
       : conversations[0]?._id || null;
   const activeIdRef = useRef(activeId);
 
-  const { data: messages = [], isLoading: loadingMessages } = useGetMessagesQuery(activeId, {
-    skip: !activeId,
-  });
-  const [sendFileMessage, { isLoading: uploading }] = useSendFileMessageMutation();
+  const { data: messages = [], isLoading: loadingMessages } =
+    useGetMessagesQuery(activeId, {
+      skip: !activeId,
+    });
+  const [sendFileMessage, { isLoading: uploading }] =
+    useSendFileMessageMutation();
   const [deleteConversationMutation] = useDeleteConversationMutation();
   const [markConversationRead] = useMarkConversationReadMutation();
 
-  const activeConvo = conversations.find((conversation) => conversation._id === activeId);
-  const otherPerson = activeConvo?.participants.find((participant) => participant._id !== user._id);
+  const activeConvo = conversations.find(
+    (conversation) => conversation._id === activeId,
+  );
+  const otherPerson = activeConvo?.participants.find(
+    (participant) => participant._id !== user._id,
+  );
 
   useEffect(() => {
     if (!activeId) return;
-    markConversationRead(activeId).unwrap().catch(() => {});
+    markConversationRead(activeId)
+      .unwrap()
+      .catch(() => {});
   }, [activeId, markConversationRead]);
 
   useEffect(() => {
@@ -88,30 +96,47 @@ export default function MessagesPage() {
 
     const handleReceiveMessage = (msg) => {
       dispatch(
-        messagesApi.util.updateQueryData("getMessages", msg.conversation, (draftMessages) => {
-          draftMessages.push(msg);
-        })
+        messagesApi.util.updateQueryData(
+          "getMessages",
+          msg.conversation,
+          (draftMessages) => {
+            draftMessages.push(msg);
+          },
+        ),
       );
       dispatch(
-        messagesApi.util.updateQueryData("getConversations", undefined, (draftConvos) => {
-          const convo = draftConvos.find((c) => c._id === msg.conversation);
-          if (convo) {
-            convo.lastMessage = msg.text || (msg.fileName ? `📎 ${msg.fileName}` : "");
-            convo.updatedAt = new Date().toISOString();
-          }
-          draftConvos.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
-        })
+        messagesApi.util.updateQueryData(
+          "getConversations",
+          undefined,
+          (draftConvos) => {
+            const convo = draftConvos.find((c) => c._id === msg.conversation);
+            if (convo) {
+              convo.lastMessage =
+                msg.text || (msg.fileName ? `📎 ${msg.fileName}` : "");
+              convo.updatedAt = new Date().toISOString();
+            }
+            draftConvos.sort(
+              (a, b) => new Date(b.updatedAt) - new Date(a.updatedAt),
+            );
+          },
+        ),
       );
       if (msg.conversation === activeIdRef.current) {
-        markConversationRead(msg.conversation).unwrap().catch(() => {});
+        markConversationRead(msg.conversation)
+          .unwrap()
+          .catch(() => {});
       }
     };
 
     const handleMessageSent = (msg) => {
       dispatch(
-        messagesApi.util.updateQueryData("getMessages", msg.conversation, (draftMessages) => {
-          draftMessages.push(msg);
-        })
+        messagesApi.util.updateQueryData(
+          "getMessages",
+          msg.conversation,
+          (draftMessages) => {
+            draftMessages.push(msg);
+          },
+        ),
       );
     };
 
@@ -179,9 +204,14 @@ export default function MessagesPage() {
       const formData = new FormData();
       formData.append("file", file);
 
-      const message = await sendFileMessage({ conversationId: activeId, formData }).unwrap();
+      const message = await sendFileMessage({
+        conversationId: activeId,
+        formData,
+      }).unwrap();
 
-      getSocket()?.emit(SOCKET_EVENTS.FILE_MESSAGE_SENT, { messageId: message._id });
+      getSocket()?.emit(SOCKET_EVENTS.FILE_MESSAGE_SENT, {
+        messageId: message._id,
+      });
     } catch (err) {
       setAttachError(err.data?.message || "Upload failed. Try a smaller file.");
     }
@@ -190,7 +220,7 @@ export default function MessagesPage() {
   const handleDeleteChat = async () => {
     if (!activeId) return;
     const confirmed = window.confirm(
-      "Delete this entire conversation? This can't be undone."
+      "Delete this entire conversation? This can't be undone.",
     );
     if (!confirmed) return;
 
@@ -198,7 +228,9 @@ export default function MessagesPage() {
     setDeleting(true);
     try {
       await deleteConversationMutation(activeId).unwrap();
-      const remaining = conversations.filter((conversation) => conversation._id !== activeId);
+      const remaining = conversations.filter(
+        (conversation) => conversation._id !== activeId,
+      );
       setActiveId(remaining.length > 0 ? remaining[0]._id : null);
     } catch (err) {
       console.error(err);
@@ -232,16 +264,23 @@ export default function MessagesPage() {
           {loadingConvos ? (
             <LoadingSpinner label="Loading..." className="py-10" />
           ) : conversations.length === 0 ? (
-            <EmptyState message="No conversations yet. Message an alumni from the Directory to start one." className="px-4" />
+            <EmptyState
+              message="No conversations yet. Message an alumni from the Directory to start one."
+              className="px-4"
+            />
           ) : (
             conversations.map((conversation) => {
-              const other = conversation.participants.find((participant) => participant._id !== user._id);
+              const other = conversation.participants.find(
+                (participant) => participant._id !== user._id,
+              );
               return (
                 <button
                   key={conversation._id}
                   onClick={() => setActiveId(conversation._id)}
                   className={`w-full flex items-start gap-3 px-5 py-3.5 text-left transition-colors ${
-                    activeId === conversation._id ? "bg-blue-50 border-r-2 border-primary" : "hover:bg-gray-50"
+                    activeId === conversation._id
+                      ? "bg-blue-50 border-r-2 border-primary"
+                      : "hover:bg-gray-50"
                   }`}
                 >
                   <UserAvatar
@@ -250,7 +289,9 @@ export default function MessagesPage() {
                     className="h-11 w-11"
                   />
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-dark truncate">{other?.fullName}</p>
+                    <p className="text-sm font-semibold text-dark truncate">
+                      {other?.fullName}
+                    </p>
                     <p className="text-sm text-gray-500 truncate mt-0.5">
                       {conversation.lastMessage || "Say hello 👋"}
                     </p>
@@ -291,7 +332,11 @@ export default function MessagesPage() {
                       disabled={deleting}
                       className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 disabled:opacity-50"
                     >
-                      {deleting ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}
+                      {deleting ? (
+                        <Loader2 size={14} className="animate-spin" />
+                      ) : (
+                        <Trash2 size={14} />
+                      )}
                       Delete Chat
                     </button>
                   </div>
@@ -307,30 +352,45 @@ export default function MessagesPage() {
               messages.map((chatMessage) => {
                 const isMe = chatMessage.sender === user._id;
                 return (
-                  <div key={chatMessage._id} className={`flex mb-4 ${isMe ? "justify-end" : "justify-start"}`}>
-                    <div className={`max-w-[70%] flex flex-col ${isMe ? "items-end" : "items-start"}`}>
-                      {chatMessage.fileUrl && chatMessage.fileType === "image" && (
-                        <a href={fileUrl(chatMessage.fileUrl)} target="_blank" rel="noopener noreferrer">
-                          <img
-                            src={fileUrl(chatMessage.fileUrl)}
-                            alt={chatMessage.fileName || "attachment"}
-                            className="max-w-[220px] max-h-[220px] rounded-xl mb-1 object-cover border border-gray-100"
-                          />
-                        </a>
-                      )}
-                      {chatMessage.fileUrl && chatMessage.fileType === "file" && (
-                        <a
-                          href={fileUrl(chatMessage.fileUrl)}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className={`flex items-center gap-2 px-3 py-2.5 rounded-xl mb-1 text-sm max-w-[240px] ${
-                            isMe ? "bg-primary/10 text-primary" : "bg-white border border-gray-100 text-dark"
-                          }`}
-                        >
-                          <FileText size={16} className="shrink-0" />
-                          <span className="truncate">{chatMessage.fileName}</span>
-                        </a>
-                      )}
+                  <div
+                    key={chatMessage._id}
+                    className={`flex mb-4 ${isMe ? "justify-end" : "justify-start"}`}
+                  >
+                    <div
+                      className={`max-w-[70%] flex flex-col ${isMe ? "items-end" : "items-start"}`}
+                    >
+                      {chatMessage.fileUrl &&
+                        chatMessage.fileType === "image" && (
+                          <a
+                            href={fileUrl(chatMessage.fileUrl)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            <img
+                              src={fileUrl(chatMessage.fileUrl)}
+                              alt={chatMessage.fileName || "attachment"}
+                              className="max-w-[220px] max-h-[220px] rounded-xl mb-1 object-cover border border-gray-100"
+                            />
+                          </a>
+                        )}
+                      {chatMessage.fileUrl &&
+                        chatMessage.fileType === "file" && (
+                          <a
+                            href={fileUrl(chatMessage.fileUrl)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className={`flex items-center gap-2 px-3 py-2.5 rounded-xl mb-1 text-sm max-w-[240px] ${
+                              isMe
+                                ? "bg-primary/10 text-primary"
+                                : "bg-white border border-gray-100 text-dark"
+                            }`}
+                          >
+                            <FileText size={16} className="shrink-0" />
+                            <span className="truncate">
+                              {chatMessage.fileName}
+                            </span>
+                          </a>
+                        )}
                       {chatMessage.text && (
                         <div
                           className={`px-4 py-2.5 rounded-2xl text-sm leading-relaxed ${
@@ -344,12 +404,20 @@ export default function MessagesPage() {
                       )}
                       <div className="flex items-center gap-1 mt-1 px-1">
                         <span className="text-[11px] text-gray-400">
-                          {new Date(chatMessage.createdAt).toLocaleTimeString([], {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}
+                          {new Date(chatMessage.createdAt).toLocaleTimeString(
+                            [],
+                            {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            },
+                          )}
                         </span>
-                        {isMe && (chatMessage.seen ? <CheckCheck size={12} className="text-primary" /> : <Check size={12} className="text-gray-400" />)}
+                        {isMe &&
+                          (chatMessage.seen ? (
+                            <CheckCheck size={12} className="text-primary" />
+                          ) : (
+                            <Check size={12} className="text-gray-400" />
+                          ))}
                       </div>
                     </div>
                   </div>
@@ -417,7 +485,9 @@ export default function MessagesPage() {
                   handleTyping();
                 }}
                 onKeyDown={handleKeyDown}
-                placeholder={uploading ? "Uploading attachment..." : "Type your message..."}
+                placeholder={
+                  uploading ? "Uploading attachment..." : "Type your message..."
+                }
                 disabled={uploading}
                 className="flex-1 bg-transparent text-sm outline-none placeholder:text-gray-400"
               />
@@ -429,7 +499,13 @@ export default function MessagesPage() {
                 disabled={uploading}
                 className="flex items-center gap-1.5 bg-primary text-white text-sm font-medium px-4 py-2 rounded-xl shrink-0 hover:opacity-90 transition-opacity disabled:opacity-50"
               >
-                {uploading ? <Loader2 size={14} className="animate-spin" /> : <>Send <Send size={14} /></>}
+                {uploading ? (
+                  <Loader2 size={14} className="animate-spin" />
+                ) : (
+                  <>
+                    Send <Send size={14} />
+                  </>
+                )}
               </button>
             </div>
           </div>

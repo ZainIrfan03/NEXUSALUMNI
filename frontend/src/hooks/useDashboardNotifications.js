@@ -1,6 +1,11 @@
 import { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
-import { APPLICATION_STATUS, ROLES, SOCKET_EVENTS, TAGS } from "../consts/appConstants";
+import {
+  APPLICATION_STATUS,
+  ROLES,
+  SOCKET_EVENTS,
+  TAGS,
+} from "../consts/appConstants";
 import { baseApi } from "../store/api/baseApi";
 import { useGetUnreadMessageCountQuery } from "../store/api/messagesApi";
 import { useGetMyApplicationsQuery } from "../store/api/studentJobsApi";
@@ -21,14 +26,16 @@ export default function useDashboardNotifications(user) {
   const interviewNotifications = (applicationsData?.applications || [])
     .filter(
       (application) =>
-        application.interview && application.status === APPLICATION_STATUS.INTERVIEW
+        application.interview &&
+        application.status === APPLICATION_STATUS.INTERVIEW,
     )
     .slice(0, 3);
   const pendingInterviewCount = interviewNotifications.filter(
-    (application) => application.interview.response === "pending"
+    (application) => application.interview.response === "pending",
   ).length;
   const liveNoticeAlreadyLoaded = interviewNotifications.some(
-    (application) => String(application._id) === String(interviewNotice?.applicationId)
+    (application) =>
+      String(application._id) === String(interviewNotice?.applicationId),
   );
   const notificationCount =
     unreadMessageCount +

@@ -1,6 +1,9 @@
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { useGetDashboardStatsQuery, useGetRecentActivityQuery } from "../../../store/api/studentDashboardApi";
+import {
+  useGetDashboardStatsQuery,
+  useGetRecentActivityQuery,
+} from "../../../store/api/studentDashboardApi";
 import { useGetRecommendedMentorsQuery } from "../../../store/api/studentMentorshipApi";
 import UserAvatar from "../../../components/common/UserAvatar";
 import { ROUTES, UI_LIMITS } from "../../../consts/appConstants";
@@ -17,7 +20,6 @@ import {
   Loader2,
 } from "lucide-react";
 
-
 const timeAgo = (dateString) => {
   const seconds = Math.floor((Date.now() - new Date(dateString)) / 1000);
   if (seconds < 60) return "just now";
@@ -29,7 +31,6 @@ const timeAgo = (dateString) => {
   return `${days}d ago`;
 };
 
-
 const activityIcons = { connection: UserPlus, job: Briefcase };
 
 export default function StudentDashboard() {
@@ -37,33 +38,41 @@ export default function StudentDashboard() {
   const { user } = useSelector((state) => state.auth);
   const firstName = user?.fullName?.split(" ")[0] || "there";
 
-  
   const hour = new Date().getHours();
-  const greeting = hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
+  const greeting =
+    hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
 
-  const { data: statsData, isLoading: loadingStats } = useGetDashboardStatsQuery();
-  const { data: activity = [], isLoading: loadingActivity } = useGetRecentActivityQuery();
-  const { data: recommendedMentors, isLoading: loadingMentors } = useGetRecommendedMentorsQuery();
+  const { data: statsData, isLoading: loadingStats } =
+    useGetDashboardStatsQuery();
+  const { data: activity = [], isLoading: loadingActivity } =
+    useGetRecentActivityQuery();
+  const { data: recommendedMentors, isLoading: loadingMentors } =
+    useGetRecommendedMentorsQuery();
 
-  
-  
-  
-  
-  const mentors = (recommendedMentors ?? []).slice(0, UI_LIMITS.DASHBOARD_PREVIEW_COUNT).map((mentor) => ({
-    name: mentor.name,
-    role: [mentor.role, mentor.company].filter(Boolean).join(", "),
-    img: mentor.img,
-  }));
+  const mentors = (recommendedMentors ?? [])
+    .slice(0, UI_LIMITS.DASHBOARD_PREVIEW_COUNT)
+    .map((mentor) => ({
+      name: mentor.name,
+      role: [mentor.role, mentor.company].filter(Boolean).join(", "),
+      img: mentor.img,
+    }));
 
   const stats = [
-    { label: "Total Alumni", value: statsData?.totalAlumni ?? "—", icon: Users },
-    { label: "Pending Requests", value: statsData?.pendingRequests ?? "—", icon: Clock },
+    {
+      label: "Total Alumni",
+      value: statsData?.totalAlumni ?? "—",
+      icon: Users,
+    },
+    {
+      label: "Pending Requests",
+      value: statsData?.pendingRequests ?? "—",
+      icon: Clock,
+    },
     { label: "Saved Jobs", value: statsData?.savedJobs ?? "—", icon: Bookmark },
   ];
 
   return (
     <div className="flex flex-col gap-6">
-      
       <div className="relative rounded-2xl overflow-hidden py-6">
         <div className="grid md:grid-cols-[1fr_auto] gap-8 items-center">
           <div>
@@ -103,7 +112,6 @@ export default function StudentDashboard() {
             </div>
           </div>
 
-          
           <div className="hidden md:flex relative h-44 w-44 items-center justify-center shrink-0">
             <div className="absolute inset-0 bg-gradient-to-br from-blue-100 to-white rounded-[2.5rem] blur-xl opacity-70" />
             <div className="relative h-32 w-32 bg-white rounded-[2rem] shadow-sm flex items-center justify-center">
@@ -113,26 +121,30 @@ export default function StudentDashboard() {
         </div>
       </div>
 
-      
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {stats.map(({ label, value, icon: Icon }) => (
-          <div key={label} className="bg-white rounded-2xl p-5 flex items-center gap-4">
+          <div
+            key={label}
+            className="bg-white rounded-2xl p-5 flex items-center gap-4"
+          >
             <div className="h-11 w-11 rounded-xl bg-blue-50 flex items-center justify-center shrink-0">
               <Icon size={20} className="text-primary" />
             </div>
             <div>
               <p className="text-xs text-gray-500">{label}</p>
               <p className="text-2xl font-bold text-dark">
-                {loadingStats ? <Loader2 size={18} className="animate-spin text-gray-300" /> : value}
+                {loadingStats ? (
+                  <Loader2 size={18} className="animate-spin text-gray-300" />
+                ) : (
+                  value
+                )}
               </p>
             </div>
           </div>
         ))}
       </div>
 
-      
       <div className="grid lg:grid-cols-3 gap-6">
-        
         <div className="lg:col-span-2 bg-white rounded-2xl p-6">
           <div className="flex items-center justify-between mb-5">
             <h2 className="text-lg font-semibold text-dark">Recent Activity</h2>
@@ -146,7 +158,9 @@ export default function StudentDashboard() {
                 <Loader2 size={16} className="animate-spin" /> Loading...
               </div>
             ) : activity.length === 0 ? (
-              <p className="text-sm text-gray-400 py-4">No recent activity yet.</p>
+              <p className="text-sm text-gray-400 py-4">
+                No recent activity yet.
+              </p>
             ) : (
               activity.map((activityItem, index) => {
                 const Icon = activityIcons[activityItem.type] || Briefcase;
@@ -154,7 +168,9 @@ export default function StudentDashboard() {
                   <div
                     key={activityItem._id || index}
                     className={`flex gap-4 py-4 ${
-                      index !== activity.length - 1 ? "border-b border-gray-100" : ""
+                      index !== activity.length - 1
+                        ? "border-b border-gray-100"
+                        : ""
                     }`}
                   >
                     <div className="h-10 w-10 rounded-full bg-gray-100 flex items-center justify-center shrink-0">
@@ -162,12 +178,16 @@ export default function StudentDashboard() {
                     </div>
                     <div className="flex-1">
                       <div className="flex items-start justify-between gap-3">
-                        <p className="text-sm font-medium text-dark leading-snug">{activityItem.title}</p>
+                        <p className="text-sm font-medium text-dark leading-snug">
+                          {activityItem.title}
+                        </p>
                         <span className="text-xs text-gray-400 whitespace-nowrap">
                           {timeAgo(activityItem.date)}
                         </span>
                       </div>
-                      <p className="text-sm text-gray-500 mt-1">{activityItem.desc}</p>
+                      <p className="text-sm text-gray-500 mt-1">
+                        {activityItem.desc}
+                      </p>
                     </div>
                   </div>
                 );
@@ -176,7 +196,6 @@ export default function StudentDashboard() {
           </div>
         </div>
 
-        
         <div className="bg-white rounded-2xl p-6">
           <div className="flex items-center justify-between mb-5">
             <h2 className="text-lg font-semibold text-dark leading-tight">
@@ -198,14 +217,25 @@ export default function StudentDashboard() {
                 <Loader2 size={16} className="animate-spin" /> Loading...
               </div>
             ) : mentors.length === 0 ? (
-              <p className="text-sm text-gray-400 py-4">No recommendations yet.</p>
+              <p className="text-sm text-gray-400 py-4">
+                No recommendations yet.
+              </p>
             ) : (
               mentors.map((mentor) => (
-                <div key={mentor.name} className="border border-gray-100 rounded-xl p-4">
+                <div
+                  key={mentor.name}
+                  className="border border-gray-100 rounded-xl p-4"
+                >
                   <div className="flex items-center gap-3 mb-3">
-                    <UserAvatar name={mentor.name} src={mentor.img} className="h-11 w-11" />
+                    <UserAvatar
+                      name={mentor.name}
+                      src={mentor.img}
+                      className="h-11 w-11"
+                    />
                     <div>
-                      <p className="text-sm font-semibold text-dark">{mentor.name}</p>
+                      <p className="text-sm font-semibold text-dark">
+                        {mentor.name}
+                      </p>
                       <p className="text-xs text-gray-500">{mentor.role}</p>
                     </div>
                   </div>
@@ -221,7 +251,6 @@ export default function StudentDashboard() {
           </div>
         </div>
       </div>
-
     </div>
   );
 }

@@ -4,7 +4,11 @@ import { ROLES, ROUTES } from "../consts/appConstants";
 import ProtectedRoute from "./ProtectedRoute";
 
 const adminPages = [
-  [ROUTES.ADMIN.DASHBOARD, "Admin Dashboard", "Monitor and manage the alumni platform."],
+  [
+    ROUTES.ADMIN.DASHBOARD,
+    "Admin Dashboard",
+    "Monitor and manage the alumni platform.",
+  ],
   [ROUTES.ADMIN.USERS, "Users", "Manage platform users and access."],
   [ROUTES.ADMIN.JOBS, "Jobs", "Review and manage job postings."],
   [ROUTES.ADMIN.EVENTS, "Events", "Review and manage platform events."],
