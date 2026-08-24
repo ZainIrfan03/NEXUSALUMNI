@@ -11,11 +11,11 @@ import AlumniProfileView from "../pages/dashboard/student/AlumniProfileView";
 import { ROLES, ROUTES } from "../consts/appConstants";
 
 
-/**
- * studentRoutes — every route that belongs to the Student role, in one place.
- * App.jsx just imports this and drops it inside <Routes>.
- * Adding a new student page = add one <Route> line here, nowhere else.
- */
+
+
+
+
+
 const studentRoutes = (
     <>
         <Route
@@ -68,9 +68,9 @@ const studentRoutes = (
             <Mentorship />
              </ProtectedRoute>
         } />
-        {/* Add as pages get built:
-    <Route path="/dashboard/student/events" element={...} />
-    */}
+        
+
+
     </>
 );
 

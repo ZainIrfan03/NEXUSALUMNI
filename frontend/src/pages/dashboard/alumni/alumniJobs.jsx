@@ -74,7 +74,7 @@ const JOB_STATUS_TONES = {
   Draft: "warning",
 };
 
-// Applicant pipeline stages — same order the alumni moves someone through.
+
 const APPLICANT_STATUS_TONES = {
   [APPLICATION_STATUS.APPLIED]: "neutral",
   [APPLICATION_STATUS.IN_REVIEW]: "warning",
@@ -112,9 +112,9 @@ export default function AlumniJobs() {
     fillRate: 0,
   };
 
-  // Applicants modal — only the id lives in state, everything else (title,
-  // applicant list) is derived live from cache, so it always reflects
-  // whatever the backend most recently said.
+  
+  
+  
   const [applicantsJobId, setApplicantsJobId] = useState(null);
   const [updatingId, setUpdatingId] = useState(null);
   const [interviewTarget, setInterviewTarget] = useState(null);
@@ -173,10 +173,10 @@ export default function AlumniJobs() {
     }
   };
 
-  // Moves an applicant to a new pipeline stage (Move to Review / Schedule
-  // Interview / Accept / Reject) from the modal. invalidatesTags on the
-  // mutation refreshes both the applicants list and the postings table's
-  // unread count — no manual local-state patching or refetch call needed.
+  
+  
+  
+  
   const handleStatusChange = async (applicant, status) => {
     if (status === APPLICATION_STATUS.INTERVIEW) {
       setScheduleError("");
@@ -236,7 +236,7 @@ export default function AlumniJobs() {
         </div>
       )}
 
-      {/* Header */}
+      
       <div className="flex flex-wrap items-start justify-between gap-4 mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">My Job Postings</h1>
@@ -252,7 +252,7 @@ export default function AlumniJobs() {
         </button>
       </div>
 
-      {/* Stats */}
+      
       <div className="grid sm:grid-cols-3 gap-5 mb-8">
         <DashboardStatCard
           variant="jobs"
@@ -271,7 +271,7 @@ export default function AlumniJobs() {
         <DashboardStatCard variant="jobs" icon={TrendingUp} value={`${stats.fillRate}%`} label="Fill Rate" />
       </div>
 
-      {/* Postings table */}
+      
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
         <table className="w-full text-left">
           <thead>
@@ -404,7 +404,7 @@ export default function AlumniJobs() {
         </div>
       </div>
 
-      {/* Bottom promo cards */}
+      
       <div className="grid md:grid-cols-2 gap-5 mt-6">
         <div className="bg-blue-50 rounded-xl p-5 flex gap-3">
           <Lightbulb size={20} className="text-primary shrink-0 mt-0.5" />
@@ -435,7 +435,7 @@ export default function AlumniJobs() {
         </div>
       </div>
 
-      {/* Applicants modal — status dropdown moves someone through the pipeline */}
+      
       {applicantsJobId && (
         <div
           className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4"

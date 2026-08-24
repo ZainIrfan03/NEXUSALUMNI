@@ -13,8 +13,8 @@ export default function useLogout() {
   return async () => {
     try {
       await endSession().unwrap();
-    } catch {
-      // Local logout must still complete if the server is temporarily unavailable.
+    } catch (error) {
+      void error;
     } finally {
       disconnectSocket();
       dispatch(logout());

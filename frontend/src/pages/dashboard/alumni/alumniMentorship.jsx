@@ -11,9 +11,9 @@ import LoadingSpinner from "../../../components/common/LoadingSpinner";
 import { ROUTES } from "../../../consts/appConstants";
 import { ClipboardList, Users, Send } from "lucide-react";
 
-// Files come back from the backend as relative paths (e.g. "/uploads/avatars/xyz.png"),
-// so build a full URL for <img src>. Stale blob: URLs (from old preview-only
-// code) can never load after a refresh, so they're treated as invalid.
+
+
+
 
 function PersonAvatar({ name, img, className }) {
   return img ? (
@@ -107,9 +107,9 @@ export default function AlumniMentorship() {
     }
   };
 
-  // Creates (or finds an existing) conversation with this mentee, then
-  // navigates to the alumni Messages page with that conversation pre-selected
-  // — same pattern used on the student side's Mentorship page.
+  
+  
+  
   const handleMessage = async (menteeUserId) => {
     setActionError("");
     try {
@@ -138,7 +138,7 @@ export default function AlumniMentorship() {
         </div>
       )}
 
-      {/* Header */}
+      
       <div className="flex flex-wrap items-start justify-between gap-4 mb-8">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Mentorship Management</h1>
@@ -159,7 +159,7 @@ export default function AlumniMentorship() {
         </div>
       </div>
 
-      {/* New Requests */}
+      
       <div className="flex items-center gap-2 mb-4">
         <ClipboardList size={18} className="text-gray-700" />
         <h2 className="text-lg font-bold text-gray-900">New Requests</h2>
@@ -180,7 +180,7 @@ export default function AlumniMentorship() {
         </div>
       )}
 
-      {/* Current Mentees */}
+      
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <Users size={18} className="text-gray-700" />

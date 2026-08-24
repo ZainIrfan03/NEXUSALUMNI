@@ -21,12 +21,12 @@ import {
   FileText,
 } from "lucide-react";
 
-// Files come back from the backend as relative paths (e.g. "/uploads/avatars/xyz.png"),
 
-/**
- * My Profile — read-only View Mode. File: src/pages/dashboard/student/MyProfile.jsx
- * "Edit Profile" sends the user to /dashboard/student/profile/edit.
- */
+
+
+
+
+
 export default function MyProfile() {
   const navigate = useNavigate();
 
@@ -126,7 +126,7 @@ export default function MyProfile() {
         </div>
       )}
 
-      {/* Header banner */}
+      
       <div className="bg-white rounded-2xl overflow-hidden mb-6">
         <div className="h-32 bg-gradient-to-r from-primary to-dark" />
         <div className="px-6 pb-6">
@@ -165,9 +165,9 @@ export default function MyProfile() {
       </div>
 
       <div className="grid lg:grid-cols-3 gap-6">
-        {/* Left column */}
+        
         <div className="lg:col-span-2 flex flex-col gap-6">
-          {/* Bio */}
+          
           <div className="bg-white rounded-2xl p-6">
             <h2 className="text-lg font-semibold text-dark mb-3">Bio</h2>
             <p className="text-sm text-gray-600 leading-relaxed">
@@ -175,7 +175,7 @@ export default function MyProfile() {
             </p>
           </div>
 
-          {/* Resume / CV */}
+          
           <div className="bg-white rounded-2xl p-6">
             <h2 className="text-lg font-semibold text-dark mb-3">Resume / CV</h2>
             {fileUrl(resumeUrl) ? (
@@ -193,7 +193,7 @@ export default function MyProfile() {
             )}
           </div>
 
-          {/* Experience */}
+          
           <div className="bg-white rounded-2xl p-6">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-semibold text-dark">Experience</h2>
@@ -311,9 +311,9 @@ export default function MyProfile() {
           </div>
         </div>
 
-        {/* Right column */}
+        
         <div className="flex flex-col gap-6">
-          {/* Skills */}
+          
           <div className="bg-white rounded-2xl p-6">
             <h2 className="text-lg font-semibold text-dark mb-3">Skills</h2>
             <div className="flex flex-wrap gap-2 mb-4">
@@ -348,7 +348,7 @@ export default function MyProfile() {
             </div>
           </div>
 
-          {/* Education */}
+          
           <div className="bg-white rounded-2xl p-6">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-semibold text-dark">Education</h2>
@@ -429,7 +429,7 @@ export default function MyProfile() {
             </div>
           </div>
 
-          {/* Networking */}
+          
           {openToNetworking && (
             <div className="bg-dark rounded-2xl p-5 text-white">
               <p className="text-xs uppercase tracking-wide text-gray-300 mb-2">Networking</p>

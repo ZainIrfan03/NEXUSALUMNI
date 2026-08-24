@@ -5,14 +5,14 @@ import { ChevronDown, LayoutGrid, List, ChevronLeft, ChevronRight } from "lucide
 import LoadingSpinner from "../../../components/common/LoadingSpinner";
 import { ROUTES, UI_LIMITS } from "../../../consts/appConstants";
 
-/**
- * Alumni Directory — file: src/pages/dashboard/student/Directory.jsx
- * Now connected to GET /api/directory (see backend/controllers/directoryController.js)
- * "View Profile" navigates to /dashboard/student/directory/:id (AlumniProfileView.jsx)
- */
 
-// Files come back from the backend as relative paths (e.g. "/uploads/avatars/xyz.png"),
-// so build a full URL for <img src>. Stale blob: URLs (from old preview-only
+
+
+
+
+
+
+
 
 const departments = ["Engineering", "Marketing", "Product"];
 
@@ -34,7 +34,7 @@ function AlumniAvatar({ name, img, size = "h-20 w-20" }) {
 
 export default function Directory() {
   const navigate = useNavigate();
-  const [viewMode, setViewMode] = useState("grid"); // "grid" | "list"
+  const [viewMode, setViewMode] = useState("grid"); 
   const [selectedDepts, setSelectedDepts] = useState([]);
   const [filters, setFilters] = useState({
     industry: "All Industries",
@@ -44,8 +44,8 @@ export default function Directory() {
   });
   const [activePage, setActivePage] = useState(1);
 
-  // (industry/department/location filters need matching fields added to
-  // the Alumni model + controller before they can be sent here too.)
+  
+  
   const { data, isLoading: loading, error: queryError } = useGetAlumniDirectoryQuery({
     page: activePage,
     limit: UI_LIMITS.DIRECTORY_PAGE_SIZE,
@@ -75,7 +75,7 @@ export default function Directory() {
 
   return (
     <div className="grid lg:grid-cols-[280px_1fr] gap-6">
-      {/* Filters sidebar */}
+      
       <aside className="flex flex-col gap-5">
         <div className="bg-white rounded-2xl p-5">
           <p className="text-xs font-semibold tracking-wider text-gray-400 mb-4">
@@ -152,7 +152,7 @@ export default function Directory() {
           </button>
         </div>
 
-        {/* Directory insights */}
+        
         <div className="bg-primary rounded-2xl p-5 text-white">
           <p className="text-xs font-semibold tracking-wider text-white/70 mb-2">
             DIRECTORY INSIGHTS
@@ -172,7 +172,7 @@ export default function Directory() {
         </div>
       </aside>
 
-      {/* Main content */}
+      
       <div>
         <div className="flex items-end justify-between mb-6 flex-wrap gap-3">
           <div>
@@ -247,7 +247,7 @@ export default function Directory() {
           ))}
         </div>
         )}
-        {/* Pagination */}
+        
         <div className="flex items-center justify-center gap-2 mt-10">
           <button
             onClick={() => setActivePage((currentPage) => Math.max(1, currentPage - 1))}

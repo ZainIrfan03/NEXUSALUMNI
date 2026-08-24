@@ -12,12 +12,12 @@ import StudentProfileView from "../pages/dashboard/alumni/StudentProfileView";
 import { ROLES, ROUTES } from "../consts/appConstants";
 
 
-/**
- * alumniRoutes — every route that belongs to the Alumni role, in one place.
- * App.jsx just imports this and drops it inside <Routes>.
- * Adding a new alumni page = add one <Route> line here, nowhere else.
- * (same pattern as studentRoutes.jsx)
- */
+
+
+
+
+
+
 const alumniRoutes = (
     <>
         <Route

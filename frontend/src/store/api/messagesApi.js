@@ -1,22 +1,22 @@
 import { baseApi } from "./baseApi";
 import { TAGS } from "../../consts/appConstants";
 
-/**
- * Messages API — covers:
- *   POST   /messages/conversations              (startConversation — used
- *          directly from Mentorship/Directory to jump into a chat)
- *   GET    /messages/conversations               (inbox list)
- *   GET    /messages/:conversationId              (message history)
- *   POST   /messages/:conversationId               (file/image attachment)
- *   DELETE /messages/conversations/:conversationId  (delete a whole chat)
- *
- * Live delivery (new text messages, typing indicator) still comes over
- * Socket.io, not REST — RTK Query has no notion of that, so Messages.jsx
- * patches the cache directly with `messagesApi.util.updateQueryData` when
- * a socket event arrives, instead of a "sendMessage" mutation here. File
- * attachments DO go over REST (multer), so those get a real mutation that
- * invalidates the conversation's message cache + the inbox list.
- */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export const messagesApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     startConversation: builder.mutation({

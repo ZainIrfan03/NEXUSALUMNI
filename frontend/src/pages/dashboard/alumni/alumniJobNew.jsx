@@ -16,10 +16,10 @@ export default function AlumniJobNew() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // The Dashboard's "Post Opportunity" quick-form collects title/location/
-  // type but not "company" (a required field on the backend), so it hands
-  // off here instead of submitting incomplete data — this fills in
-  // whatever the user already typed there.
+  
+  
+  
+  
   const [form, setForm] = useState({
     title: "",
     company: "",
@@ -67,7 +67,7 @@ export default function AlumniJobNew() {
 
   return (
     <div className="max-w-3xl mx-auto">
-      {/* Breadcrumb / back */}
+      
       <button
         onClick={() => navigate(ROUTES.ALUMNI.JOBS)}
         className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 mb-4"

@@ -10,23 +10,23 @@ import { MENTORSHIP_STATUS } from "../../../consts/appConstants";
 import LoadingSpinner from "../../../components/common/LoadingSpinner";
 import { ArrowLeft, MapPin, Briefcase, GraduationCap, Send } from "lucide-react";
 
-// Files come back from the backend as relative paths (e.g. "/uploads/avatars/xyz.png"),
-// so build a full URL for <img src>. Stale blob: URLs (from old preview-only
 
-/**
- * Alumni Profile View (read-only) — file: src/pages/dashboard/student/AlumniProfileView.jsx
- * Opened from Directory.jsx via "View Profile" -> /dashboard/student/directory/:id
- * :id is the Alumni document's own _id.
- */
+
+
+
+
+
+
+
 export default function AlumniProfileView() {
   const { id } = useParams();
   const navigate = useNavigate();
 
   const { data: alumni, isLoading: loading, error: profileQueryError } = useGetAlumniByIdQuery(id);
 
-  // Once the alumni's User id is known, check whether a mentorship request
-  // already exists (any status) so the button can be hidden entirely.
-  // Reuses the same cached query the student Mentorship page uses.
+  
+  
+  
   const alumniUserId = alumni?.user?._id;
   const {
     data: myRequests,
@@ -36,7 +36,7 @@ export default function AlumniProfileView() {
   const existingRequest = myRequests?.find(
     (request) => request.alumni?._id?.toString() === alumniUserId?.toString()
   );
-  const requestStatus = existingRequest?.status || null; // null | "pending" | "accepted" | "completed" | "declined"
+  const requestStatus = existingRequest?.status || null; 
 
   const [sendMentorshipRequest, { isLoading: requesting }] = useSendMentorshipRequestMutation();
   const [actionError, setActionError] = useState("");
@@ -97,7 +97,7 @@ export default function AlumniProfileView() {
         </div>
       )}
 
-      {/* Header banner */}
+      
       <div className="bg-white rounded-2xl overflow-hidden mb-6">
         <div className="h-28 bg-gradient-to-r from-primary to-dark" />
         <div className="px-6 pb-6">
@@ -163,7 +163,7 @@ export default function AlumniProfileView() {
       </div>
 
       <div className="grid lg:grid-cols-3 gap-6">
-        {/* Left column */}
+        
         <div className="lg:col-span-2 flex flex-col gap-6">
           <div className="bg-white rounded-2xl p-6">
             <h2 className="text-lg font-semibold text-dark mb-3">Bio</h2>
@@ -211,7 +211,7 @@ export default function AlumniProfileView() {
           </div>
         </div>
 
-        {/* Right column */}
+        
         <div className="flex flex-col gap-6">
           <div className="bg-white rounded-2xl p-6">
             <h2 className="text-lg font-semibold text-dark mb-3">Skills</h2>

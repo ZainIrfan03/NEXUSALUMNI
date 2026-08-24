@@ -12,13 +12,13 @@ import {
 import { useStartConversationMutation } from "../../../store/api/messagesApi";
 import { MENTORSHIP_STATUS, ROUTES, UI_LIMITS } from "../../../consts/appConstants";
 
-/**
- * Mentorship Hub — file: src/pages/dashboard/student/Mentorship.jsx
- * Now connected to:
- *   GET  /api/mentorship/recommended
- *   GET  /api/mentorship/my-requests
- *   POST /api/mentorship/request
- */
+
+
+
+
+
+
+
 
 function MentorAvatar({ name, img }) {
   return img ? (
@@ -44,7 +44,7 @@ const statusTones = {
 export default function Mentorship() {
   const navigate = useNavigate();
   const [actionError, setActionError] = useState("");
-  const [sendingId, setSendingId] = useState(null); // tracks which card's button is mid-request
+  const [sendingId, setSendingId] = useState(null); 
   const [visibleRequestCount, setVisibleRequestCount] = useState(
     UI_LIMITS.MENTORSHIP_REQUEST_PAGE_SIZE
   );
@@ -76,8 +76,8 @@ export default function Mentorship() {
     setActionError("");
     try {
       await sendMentorshipRequest({ alumniDocId: mentor.alumniDocId }).unwrap();
-      // "MentorshipRequests" tag invalidates above, so `requests` refetches
-      // with the new one already populated — no manual prepend needed.
+      
+      
     } catch (err) {
       setActionError(err?.data?.message || "Could not send request");
     } finally {
@@ -85,15 +85,15 @@ export default function Mentorship() {
     }
   };
 
-  // Returns the status of this mentor's request ("pending" | "accepted" |
-  // "completed" | "declined"), or undefined if no request has been sent yet.
-  // r.alumni._id is included automatically by populate (even with a select
-  // string), so this comparison works as long as ids are stringified on both sides.
+  
+  
+  
+  
   const getRequestStatus = (alumniUserId) =>
     requests.find((request) => request.alumni?._id?.toString() === alumniUserId?.toString())?.status;
 
-  // Creates (or finds an existing) conversation with this mentor, then
-  // jumps to the Messages page with that conversation pre-selected.
+  
+  
   const handleStartChat = async (mentor) => {
     setActionError("");
     try {
@@ -121,7 +121,7 @@ export default function Mentorship() {
       )}
 
       <div className="grid lg:grid-cols-3 gap-6">
-        {/* Left: Recommended Mentors */}
+        
         <div className="lg:col-span-2">
           <div className="flex items-center justify-between mb-5">
             <div className="flex items-center gap-2">
@@ -141,7 +141,7 @@ export default function Mentorship() {
                 const isSending = sendingId === mentor.alumniUserId;
                 const status = getRequestStatus(mentor.alumniUserId);
                 const canChat = status === MENTORSHIP_STATUS.ACCEPTED || status === MENTORSHIP_STATUS.COMPLETED;
-                // Only "pending" locks the button — a decline lets the student try again.
+                
                 const isLocked = isSending || status === MENTORSHIP_STATUS.PENDING || canChat;
 
                 const buttonLabel = isSending
@@ -185,7 +185,7 @@ export default function Mentorship() {
                     <div className="flex-1" />
 
                     <div className="flex items-center justify-end gap-2 border-t border-gray-100 pt-4">
-                      {/* Chat is only possible once the alumni has accepted the request */}
+                      
                       {canChat && (
                         <button
                           onClick={() => handleStartChat(mentor)}
@@ -214,7 +214,7 @@ export default function Mentorship() {
           )}
         </div>
 
-        {/* Right: Request Status + Weekly Tip */}
+        
         <div className="flex flex-col gap-6">
           <div className="bg-white rounded-2xl p-5">
             <div className="flex items-center gap-2 mb-4">
@@ -228,9 +228,9 @@ export default function Mentorship() {
               <EmptyState message="No requests sent yet." className="py-4" />
             ) : (
               <>
-                {/* Scrollable list — caps at ~4 rows tall (each row ~68px),
-                    so anything within the current "page" scrolls instead of
-                    stretching the card. */}
+                
+
+
                 <div className="flex flex-col max-h-[280px] overflow-y-auto pr-1">
                   {visibleRequests.map((request, index) => (
                     <div
@@ -287,7 +287,7 @@ export default function Mentorship() {
         </div>
       </div>
 
-      {/* Become a mentor CTA */}
+      
       <div className="mt-8 bg-primary rounded-2xl p-10 flex flex-wrap items-center justify-between gap-8">
         <div className="max-w-md">
           <h2 className="text-2xl font-semibold text-white mb-3">

@@ -20,15 +20,15 @@ import {
   FileText,
 } from "lucide-react";
 
-// Files come back from the backend as relative paths (e.g. "/uploads/avatars/xyz.png"),
-// so build a full URL for <img src> when it doesn't already start with "http".
-// Stale blob: URLs (from old preview-only code) can never load after a
-// refresh, so they're treated as invalid and fall back to initials.
 
-/**
- * Alumni Profile — read-only View Mode. File: src/pages/dashboard/alumni/AlumniProfile.jsx
- * "Edit Profile" sends the user to /dashboard/alumni/profile/edit.
- */
+
+
+
+
+
+
+
+
 export default function AlumniProfile() {
   const navigate = useNavigate();
 
@@ -97,7 +97,7 @@ export default function AlumniProfile() {
         </div>
       )}
 
-      {/* Header banner */}
+      
       <div className="bg-white rounded-2xl overflow-hidden mb-6">
         <div className="h-32 bg-gradient-to-r from-primary to-dark" />
         <div className="px-6 pb-6">
@@ -136,9 +136,9 @@ export default function AlumniProfile() {
       </div>
 
       <div className="grid lg:grid-cols-3 gap-6">
-        {/* Left column */}
+        
         <div className="lg:col-span-2 flex flex-col gap-6">
-          {/* Bio */}
+          
           <div className="bg-white rounded-2xl p-6">
             <h2 className="text-lg font-semibold text-dark mb-3">Bio</h2>
             <p className="text-sm text-gray-600 leading-relaxed">
@@ -146,7 +146,7 @@ export default function AlumniProfile() {
             </p>
           </div>
 
-          {/* Resume / CV */}
+          
           <div className="bg-white rounded-2xl p-6">
             <h2 className="text-lg font-semibold text-dark mb-3">Resume / CV</h2>
             {fileUrl(resumeUrl) ? (
@@ -164,7 +164,7 @@ export default function AlumniProfile() {
             )}
           </div>
 
-          {/* Experience */}
+          
           <div className="bg-white rounded-2xl p-6">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-semibold text-dark">Experience</h2>
@@ -282,9 +282,9 @@ export default function AlumniProfile() {
           </div>
         </div>
 
-        {/* Right column */}
+        
         <div className="flex flex-col gap-6">
-          {/* Skills */}
+          
           <div className="bg-white rounded-2xl p-6">
             <h2 className="text-lg font-semibold text-dark mb-3">Skills</h2>
             <div className="flex flex-wrap gap-2 mb-4">
@@ -319,7 +319,7 @@ export default function AlumniProfile() {
             </div>
           </div>
 
-          {/* Education */}
+          
           <div className="bg-white rounded-2xl p-6">
             <h2 className="text-lg font-semibold text-dark mb-4">Education</h2>
             {education.length === 0 && (
@@ -341,7 +341,7 @@ export default function AlumniProfile() {
             </div>
           </div>
 
-          {/* Networking */}
+          
           {openToNetworking && (
             <div className="bg-dark rounded-2xl p-5 text-white">
               <p className="text-xs uppercase tracking-wide text-gray-300 mb-2">Networking</p>

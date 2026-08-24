@@ -3,17 +3,17 @@ import { Navigate } from "react-router-dom";
 import { ROLE_HOME_ROUTES, ROUTES } from "../consts/appConstants";
 
 
-/**
- * Wrap any dashboard route with this.
- * - Not logged in           -> redirect to /login
- * - Logged in, wrong role   -> redirect to their own dashboard
- * - Logged in, correct role -> render the page
- *
- * Usage:
- *   <ProtectedRoute allowedRoles={[ROLES.STUDENT]}>
- *     <StudentDashboard />
- *   </ProtectedRoute>
- */
+
+
+
+
+
+
+
+
+
+
+
 export default function ProtectedRoute({ allowedRoles, children }) {
   const { user } = useSelector((state) => state.auth);
 

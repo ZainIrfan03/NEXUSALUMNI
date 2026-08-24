@@ -86,9 +86,9 @@ export default function AlumniDashboard() {
 
   const handlePostOpportunity = (event) => {
     event.preventDefault();
-    // This quick-form doesn't collect "company", which the backend
-    // requires — so it hands off to the full Post a Job page with
-    // whatever's filled in here already, instead of failing on submit.
+    
+    
+    
     navigate(ROUTES.ALUMNI.NEW_JOB, { state: { prefill: quickPost } });
   };
 
@@ -97,7 +97,7 @@ export default function AlumniDashboard() {
 
   return (
     <div className="p-8 max-w-6xl mx-auto flex flex-col gap-8">
-      {/* Welcome header */}
+      
       <div>
         <h1 className="text-3xl font-bold text-gray-900">
           Welcome back, {user?.fullName || "there"}
@@ -113,7 +113,7 @@ export default function AlumniDashboard() {
         </div>
       )}
 
-      {/* Top row: stats + mentorship requests */}
+      
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="flex flex-col gap-6">
           <DashboardStatCard label="Students Mentored" value={studentsMentored} icon={GraduationCap} />
@@ -152,9 +152,9 @@ export default function AlumniDashboard() {
         </div>
       </div>
 
-      {/* Bottom row: post opportunity + share success story */}
+      
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Post Opportunity */}
+        
         <form
           onSubmit={handlePostOpportunity}
           className="bg-white rounded-xl border border-gray-200 p-6 flex flex-col gap-4"
@@ -224,7 +224,7 @@ export default function AlumniDashboard() {
           </button>
         </form>
 
-        {/* Share Success Story */}
+        
         <div className="bg-white rounded-xl border border-gray-200 p-6 flex flex-col gap-4">
           <div className="flex items-center gap-2">
             <span className="w-8 h-8 rounded-full bg-blue-50 text-primary flex items-center justify-center">

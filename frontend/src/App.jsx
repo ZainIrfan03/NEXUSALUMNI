@@ -34,7 +34,7 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Public pages: Navbar + Footer wrap everything inside */}
+        
         <Route element={<PublicLayout />}>
           <Route path={ROUTES.HOME} element={<Home />} />
           <Route path={ROUTES.ABOUT} element={<About />} />
@@ -45,7 +45,7 @@ function App() {
          <Route element={<DashboardLayout />}>
           {studentRoutes}
           {alumniRoutes}
-{/* TODO: facultyRoutes and adminRoutes — see backlog */}
+
         </Route>
       </Routes>
     </BrowserRouter>

@@ -17,7 +17,7 @@ import {
   Loader2,
 } from "lucide-react";
 
-// Formats a date as "2h ago", "5d ago", etc. for the activity feed
+
 const timeAgo = (dateString) => {
   const seconds = Math.floor((Date.now() - new Date(dateString)) / 1000);
   if (seconds < 60) return "just now";
@@ -29,7 +29,7 @@ const timeAgo = (dateString) => {
   return `${days}d ago`;
 };
 
-// Icon shown per activity type, since the backend only sends type + text
+
 const activityIcons = { connection: UserPlus, job: Briefcase };
 
 export default function StudentDashboard() {
@@ -37,7 +37,7 @@ export default function StudentDashboard() {
   const { user } = useSelector((state) => state.auth);
   const firstName = user?.fullName?.split(" ")[0] || "there";
 
-  // Time-based greeting: Good morning / afternoon / evening
+  
   const hour = new Date().getHours();
   const greeting = hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
 
@@ -45,10 +45,10 @@ export default function StudentDashboard() {
   const { data: activity = [], isLoading: loadingActivity } = useGetRecentActivityQuery();
   const { data: recommendedMentors, isLoading: loadingMentors } = useGetRecommendedMentorsQuery();
 
-  // Dashboard only shows a top-2 preview; role+company combined the same
-  // way the old inline fetchMentors() mapper did (the shared hook's
-  // transformResponse keeps them as separate fields for Mentorship.jsx's
-  // own layout).
+  
+  
+  
+  
   const mentors = (recommendedMentors ?? []).slice(0, UI_LIMITS.DASHBOARD_PREVIEW_COUNT).map((mentor) => ({
     name: mentor.name,
     role: [mentor.role, mentor.company].filter(Boolean).join(", "),
@@ -63,7 +63,7 @@ export default function StudentDashboard() {
 
   return (
     <div className="flex flex-col gap-6">
-      {/* Welcome hero */}
+      
       <div className="relative rounded-2xl overflow-hidden py-6">
         <div className="grid md:grid-cols-[1fr_auto] gap-8 items-center">
           <div>
@@ -103,7 +103,7 @@ export default function StudentDashboard() {
             </div>
           </div>
 
-          {/* Decorative illustration */}
+          
           <div className="hidden md:flex relative h-44 w-44 items-center justify-center shrink-0">
             <div className="absolute inset-0 bg-gradient-to-br from-blue-100 to-white rounded-[2.5rem] blur-xl opacity-70" />
             <div className="relative h-32 w-32 bg-white rounded-[2rem] shadow-sm flex items-center justify-center">
@@ -113,7 +113,7 @@ export default function StudentDashboard() {
         </div>
       </div>
 
-      {/* Stat cards */}
+      
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {stats.map(({ label, value, icon: Icon }) => (
           <div key={label} className="bg-white rounded-2xl p-5 flex items-center gap-4">
@@ -130,9 +130,9 @@ export default function StudentDashboard() {
         ))}
       </div>
 
-      {/* Activity + Mentors */}
+      
       <div className="grid lg:grid-cols-3 gap-6">
-        {/* Recent Activity */}
+        
         <div className="lg:col-span-2 bg-white rounded-2xl p-6">
           <div className="flex items-center justify-between mb-5">
             <h2 className="text-lg font-semibold text-dark">Recent Activity</h2>
@@ -176,7 +176,7 @@ export default function StudentDashboard() {
           </div>
         </div>
 
-        {/* Recommended Mentors */}
+        
         <div className="bg-white rounded-2xl p-6">
           <div className="flex items-center justify-between mb-5">
             <h2 className="text-lg font-semibold text-dark leading-tight">

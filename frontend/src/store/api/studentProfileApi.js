@@ -1,26 +1,26 @@
 import { baseApi } from "./baseApi";
 import { TAGS } from "../../consts/appConstants";
 
-/**
- * Student Profile API — covers:
- *   GET    /student/profile
- *   PUT    /student/profile
- *   POST   /student/profile/avatar     (multipart)
- *   POST   /student/profile/resume     (multipart)
- *   POST   /student/profile/experience
- *   POST   /student/profile/education
- *   DELETE /student/profile/education/:educationId
- *
- * deleteExperience exists on the backend but has no UI hook in either
- * MyProfile.jsx or EditProfile.jsx yet — left out for now, same as
- * messagesApi starting minimal; add it here if a "remove role" button
- * shows up later.
- *
- * Every mutation invalidates TAGS.STUDENT_PROFILE, so MyProfile.jsx and
- * EditProfile.jsx share one cache entry — save on the edit page, and the
- * read-only view refetches with the new data the moment you navigate back,
- * no passing data between routes needed.
- */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export const studentProfileApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     getMyProfile: builder.query({

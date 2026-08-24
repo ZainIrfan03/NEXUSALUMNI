@@ -14,9 +14,9 @@ import {
   Send,
 } from "lucide-react";
 
-// Files come back from the backend as relative paths (e.g. "/uploads/avatars/xyz.png"),
-// so build a full URL for <img src>. Stale blob: URLs (from old preview-only
-// code) can never load after a refresh, so they're treated as invalid.
+
+
+
 
 const DEPARTMENT_LABELS = {
   cs: "Computer Science",
@@ -25,25 +25,25 @@ const DEPARTMENT_LABELS = {
   design: "Design",
 };
 
-// Session is stored as a string like "2021-2025" — the graduation year
-// is the second half of that range.
+
+
 const getGraduationYear = (session) => {
   if (!session) return null;
   const parts = session.split("-");
   return parts[parts.length - 1].trim();
 };
 
-/**
- * Student Profile View (read-only) — file: src/pages/dashboard/alumni/StudentProfileView.jsx
- * Opened from studentDirectory.jsx via "View Profile" -> /dashboard/alumni/directory/:id
- * :id is the Student document's own _id.
- *
- * The "Message" button only appears when the backend confirms `isMentee: true`
- * (an accepted MentorshipRequest exists between this alumni and this student).
- * Alumni cannot message students who aren't their accepted mentees — this is
- * also enforced server-side in messageController.js's startConversation, so
- * hiding the button here is a UX nicety, not the actual security boundary.
- */
+
+
+
+
+
+
+
+
+
+
+
 export default function StudentProfileView() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -54,8 +54,8 @@ export default function StudentProfileView() {
 
   const error = actionError || (queryError && "Could not load this profile.");
 
-  // Creates (or finds an existing) conversation with this student, then
-  // navigates to the alumni Messages page with that conversation pre-selected.
+  
+  
   const handleMessage = async () => {
     const studentUserId = student?.user?._id;
     if (!studentUserId) return;
@@ -119,7 +119,7 @@ export default function StudentProfileView() {
         </div>
       )}
 
-      {/* Header banner */}
+      
       <div className="bg-white rounded-2xl overflow-hidden mb-6">
         <div className="h-28 bg-gradient-to-r from-primary to-dark" />
         <div className="px-6 pb-6">
@@ -157,7 +157,7 @@ export default function StudentProfileView() {
               )}
             </div>
 
-            {/* Only shown once this alumni has accepted this student as a mentee */}
+            
             {isMentee && (
               <button
                 onClick={handleMessage}
@@ -176,7 +176,7 @@ export default function StudentProfileView() {
       </div>
 
       <div className="grid lg:grid-cols-3 gap-6">
-        {/* Left column */}
+        
         <div className="lg:col-span-2 flex flex-col gap-6">
           <div className="bg-white rounded-2xl p-6">
             <h2 className="text-lg font-semibold text-dark mb-3">Bio</h2>
@@ -241,7 +241,7 @@ export default function StudentProfileView() {
           </div>
         </div>
 
-        {/* Right column */}
+        
         <div className="flex flex-col gap-6">
           <div className="bg-white rounded-2xl p-6">
             <h2 className="text-lg font-semibold text-dark mb-3">Skills</h2>

@@ -55,7 +55,7 @@ function StudentCard({ student, onViewProfile, onMessage, messagingId }) {
           View Profile →
         </button>
 
-        {/* Only accepted mentees get a quick-message shortcut on the card */}
+        
         {student.isMentee && (
           <button
             onClick={() => onMessage(student)}
@@ -137,10 +137,10 @@ export default function StudentDirectory() {
     setPage(1);
   };
 
-  // Starts (or resumes) a chat directly from the card — only ever called
-  // for students with isMentee: true. The backend still double-checks the
-  // accepted-mentorship rule in startConversation, so this can't be abused
-  // even if isMentee were spoofed client-side.
+  
+  
+  
+  
   const handleMessage = async (student) => {
     if (!student.userId) return;
     setActionError("");
@@ -159,7 +159,7 @@ export default function StudentDirectory() {
 
   return (
     <div>
-      {/* Header */}
+      
       <div className="flex flex-wrap items-start justify-between gap-4 mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Student Directory</h1>
@@ -168,7 +168,7 @@ export default function StudentDirectory() {
       </div>
 
       <div className="grid lg:grid-cols-4 gap-6">
-        {/* Filters sidebar */}
+        
         <div className="flex flex-col gap-4">
           <div className="bg-white rounded-xl border border-gray-200 p-5">
             <div className="flex items-center gap-2 mb-4">
@@ -241,7 +241,7 @@ export default function StudentDirectory() {
           </div>
         </div>
 
-        {/* Results */}
+        
         <div className="lg:col-span-3">
           <div className="flex items-center justify-between mb-4">
             <p className="text-sm text-gray-500">
@@ -287,7 +287,7 @@ export default function StudentDirectory() {
             </div>
           )}
 
-          {/* Pagination */}
+          
           <div className="flex items-center justify-center gap-2 mt-8">
             <button
               onClick={() => setPage((currentPage) => Math.max(1, currentPage - 1))}

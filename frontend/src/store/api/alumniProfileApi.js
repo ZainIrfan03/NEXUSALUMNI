@@ -1,25 +1,25 @@
 import { baseApi } from "./baseApi";
 import { TAGS } from "../../consts/appConstants";
 
-/**
- * Alumni Profile API — covers:
- *   GET    /alumni/profile
- *   PUT    /alumni/profile
- *   POST   /alumni/profile/avatar     (multipart)
- *   POST   /alumni/profile/resume     (multipart)
- *   POST   /alumni/profile/experience
- *   POST   /alumni/profile/education
- *   DELETE /alumni/profile/education/:educationId
- *
- * Mirrors studentProfileApi.js. deleteExperience exists on the backend
- * but has no UI hook in either AlumniProfile.jsx or AlumniEditProfile.jsx
- * yet — left out for now, same reasoning as the student side.
- *
- * Every mutation invalidates TAGS.ALUMNI_PROFILE, so AlumniProfile.jsx (view)
- * and AlumniEditProfile.jsx (edit) share one cache entry — save on the
- * edit page, and the read-only view refetches with the new data the
- * moment you navigate back, no passing data between routes needed.
- */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export const alumniProfileApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     getMyAlumniProfile: builder.query({
