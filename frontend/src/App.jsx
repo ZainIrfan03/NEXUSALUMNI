@@ -1,6 +1,4 @@
-import { useEffect } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { useDispatch, useSelector } from "react-redux";
 import PublicLayout from "./layouts/PublicLayout";
 import Home from "./pages/Home";
 import About from "./pages/About";
@@ -11,20 +9,11 @@ import DashboardLayout from "./layouts/DashboardLayout";
 import studentRoutes from "./routes/StudentRoutes";
 import alumniRoutes from "./routes/AlumniRoutes";
 import { ROUTES } from "./consts/appConstants";
-import { logout, setCredentials } from "./store/slice/authSlice";
-import { useGetCurrentUserQuery } from "./store/api/authApi";
 import LoadingSpinner from "./components/common/LoadingSpinner";
+import useAuthSession from "./hooks/useAuthSession";
 
 function App() {
-  const dispatch = useDispatch();
-  const { authChecked } = useSelector((state) => state.auth);
-  const session = useGetCurrentUserQuery(undefined, { skip: authChecked });
-
-  useEffect(() => {
-    if (authChecked) return;
-    if (session.isSuccess) dispatch(setCredentials(session.data));
-    if (session.isError) dispatch(logout());
-  }, [authChecked, dispatch, session.data, session.isError, session.isSuccess]);
+  const authChecked = useAuthSession();
 
   if (!authChecked) {
     return (
