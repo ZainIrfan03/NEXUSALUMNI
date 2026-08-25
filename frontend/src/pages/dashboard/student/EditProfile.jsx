@@ -4,7 +4,7 @@ import {
   useUpdateMyProfileMutation,
   useUploadAvatarMutation,
   useUploadResumeMutation,
-} from "../../../hooks/studentProfileHooks";
+} from "../../../store/api/studentProfileApi";
 import { ROUTES } from "../../../consts/appConstants";
 
 export default function EditProfile() {

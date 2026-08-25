@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useGetAlumniDirectoryQuery } from "../../../hooks/studentDirectoryHooks";
+import { useGetAlumniDirectoryQuery } from "../../../store/api/studentDirectoryApi";
 import {
   ChevronDown,
   LayoutGrid,

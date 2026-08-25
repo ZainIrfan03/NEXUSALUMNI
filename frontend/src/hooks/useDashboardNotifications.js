@@ -7,8 +7,8 @@ import {
   TAGS,
 } from "../consts/appConstants";
 import { baseApi } from "../store/api/baseApi";
-import { useGetUnreadMessageCountQuery } from "./messagesHooks";
-import { useGetMyApplicationsQuery } from "./studentJobsHooks";
+import { useGetUnreadMessageCountQuery } from "../store/api/messagesApi";
+import { useGetMyApplicationsQuery } from "../store/api/studentJobsApi";
 import { connectSocket } from "../utils/socket";
 
 export default function useDashboardNotifications(user) {

@@ -1,5 +1,5 @@
-import { useGetMyAlumniProfileQuery } from "./alumniProfileHooks";
-import { useGetMyProfileQuery } from "./studentProfileHooks";
+import { useGetMyAlumniProfileQuery } from "../store/api/alumniProfileApi";
+import { useGetMyProfileQuery } from "../store/api/studentProfileApi";
 import { ROLES } from "../consts/appConstants";
 
 export default function useDashboardProfile(user) {

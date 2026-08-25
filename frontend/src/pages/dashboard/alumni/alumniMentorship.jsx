@@ -4,8 +4,8 @@ import {
   useGetMentorshipOverviewQuery,
   useAcceptMentorshipRequestMutation,
   useRejectMentorshipRequestMutation,
-} from "../../../hooks/alumniMentorshipHooks";
-import { useStartConversationMutation } from "../../../hooks/messagesHooks";
+} from "../../../store/api/alumniMentorshipApi";
+import { useStartConversationMutation } from "../../../store/api/messagesApi";
 import { getImageUrl as fileUrl } from "../../../utils/getImageUrl";
 import LoadingSpinner from "../../../components/common/LoadingSpinner";
 import { ROUTES } from "../../../consts/appConstants";

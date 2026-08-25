@@ -3,8 +3,8 @@ import { useNavigate } from "react-router-dom";
 import {
   useGetDashboardStatsQuery,
   useGetRecentActivityQuery,
-} from "../../../hooks/studentDashboardHooks";
-import { useGetRecommendedMentorsQuery } from "../../../hooks/studentMentorshipHooks";
+} from "../../../store/api/studentDashboardApi";
+import { useGetRecommendedMentorsQuery } from "../../../store/api/studentMentorshipApi";
 import UserAvatar from "../../../components/common/UserAvatar";
 import { ROUTES, UI_LIMITS } from "../../../consts/appConstants";
 import {

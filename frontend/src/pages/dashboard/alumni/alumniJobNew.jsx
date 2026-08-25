@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { useCreateJobMutation } from "../../../hooks/alumniJobsHooks";
+import { useCreateJobMutation } from "../../../store/api/alumniJobsApi";
 import { Briefcase, ArrowLeft, Loader2 } from "lucide-react";
 import {
   EXPERIENCE_LEVELS,

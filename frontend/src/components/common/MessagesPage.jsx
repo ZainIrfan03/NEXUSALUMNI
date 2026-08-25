@@ -5,14 +5,14 @@ import { getImageUrl as fileUrl } from "../../utils/getImageUrl";
 import LoadingSpinner from "./LoadingSpinner";
 import EmptyState from "./EmptyState";
 import UserAvatar from "./UserAvatar";
-import { messagesApi } from "../../store/api/messagesApi";
 import {
   useGetConversationsQuery,
   useGetMessagesQuery,
   useSendFileMessageMutation,
   useDeleteConversationMutation,
   useMarkConversationReadMutation,
-} from "../../hooks/messagesHooks";
+  messagesApi,
+} from "../../store/api/messagesApi";
 import { SOCKET_EVENTS, TYPING_TIMEOUT_MS } from "../../consts/appConstants";
 
 import {

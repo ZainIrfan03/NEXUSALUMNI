@@ -6,7 +6,7 @@ import {
   useDeleteMyJobMutation,
   useUpdateApplicationStatusMutation,
   useScheduleInterviewMutation,
-} from "../../../hooks/alumniJobsHooks";
+} from "../../../store/api/alumniJobsApi";
 import {
   APPLICATION_STATUS,
   ROUTES,

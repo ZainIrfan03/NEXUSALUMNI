@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import {
   useGetMyAlumniProfileQuery,
   useAddAlumniExperienceMutation,
-} from "../../../hooks/alumniProfileHooks";
+} from "../../../store/api/alumniProfileApi";
 import { getImageUrl as fileUrl } from "../../../utils/getImageUrl";
 import LoadingSpinner from "../../../components/common/LoadingSpinner";
 import { ROUTES } from "../../../consts/appConstants";

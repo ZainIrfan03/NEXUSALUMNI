@@ -1,11 +1,11 @@
 import { useState } from "react";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { useGetAlumniOverviewQuery } from "../../../hooks/alumniDashboardHooks";
+import { useGetAlumniOverviewQuery } from "../../../store/api/alumniDashboardApi";
 import {
   useAcceptMentorshipRequestMutation,
   useRejectMentorshipRequestMutation,
-} from "../../../hooks/alumniMentorshipHooks";
+} from "../../../store/api/alumniMentorshipApi";
 import {
   GraduationCap,
   Briefcase,
