@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useGetCurrentUserQuery } from "../store/api/authApi";
+import { useGetCurrentUserQuery } from "./authHooks";
 import { logout, setCredentials } from "../store/slice/authSlice";
 
 export default function useAuthSession() {

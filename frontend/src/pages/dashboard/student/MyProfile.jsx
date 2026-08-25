@@ -5,7 +5,7 @@ import {
   useAddExperienceMutation,
   useAddEducationMutation,
   useDeleteEducationMutation,
-} from "../../../store/api/studentProfileApi";
+} from "../../../hooks/studentProfileHooks";
 import { getImageUrl as fileUrl } from "../../../utils/getImageUrl";
 import LoadingSpinner from "../../../components/common/LoadingSpinner";
 import { ROUTES } from "../../../consts/appConstants";

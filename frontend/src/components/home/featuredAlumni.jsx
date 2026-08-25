@@ -3,7 +3,7 @@ import { getImageUrl as fileUrl } from "../../utils/getImageUrl";
 import LoadingSpinner from "../common/LoadingSpinner";
 import EmptyState from "../common/EmptyState";
 import { UI_LIMITS } from "../../consts/appConstants";
-import { useGetFeaturedAlumniQuery } from "../../store/api/publicApi";
+import { useGetFeaturedAlumniQuery } from "../../hooks/publicHooks";
 
 export default function FeaturedAlumni() {
   const { data, isLoading } = useGetFeaturedAlumniQuery(

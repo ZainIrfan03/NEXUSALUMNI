@@ -7,7 +7,7 @@ import { UI_LIMITS } from "../consts/appConstants";
 import {
   useGetStoryCategoriesQuery,
   useLazyGetSuccessStoriesQuery,
-} from "../store/api/publicApi";
+} from "../hooks/publicHooks";
 
 const initialsOf = (name = "") =>
   name

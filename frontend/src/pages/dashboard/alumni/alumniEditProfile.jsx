@@ -4,7 +4,7 @@ import {
   useUpdateMyAlumniProfileMutation,
   useUploadAlumniAvatarMutation,
   useUploadAlumniResumeMutation,
-} from "../../../store/api/alumniProfileApi";
+} from "../../../hooks/alumniProfileHooks";
 import { ROUTES } from "../../../consts/appConstants";
 
 export default function AlumniEditProfile() {

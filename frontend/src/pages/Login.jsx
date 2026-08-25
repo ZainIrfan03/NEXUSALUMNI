@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { Mail, Lock, Eye, EyeOff, ArrowRight } from "lucide-react";
 import { setCredentials } from "../store/slice/authSlice";
-import { useLoginMutation } from "../store/api/authApi";
+import { useLoginMutation } from "../hooks/authHooks";
 import { ROLE_HOME_ROUTES } from "../consts/appConstants";
 
 export default function Login() {

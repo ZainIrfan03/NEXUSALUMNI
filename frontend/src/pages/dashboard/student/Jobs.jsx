@@ -9,7 +9,7 @@ import {
   useApplyToJobMutation,
   useToggleSaveJobMutation,
   useRespondToInterviewMutation,
-} from "../../../store/api/studentJobsApi";
+} from "../../../hooks/studentJobsHooks";
 import {
   APPLICATION_STATUS,
   EXPERIENCE_LEVELS,

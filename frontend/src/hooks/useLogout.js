@@ -1,7 +1,7 @@
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { ROUTES } from "../consts/appConstants";
-import { useEndSessionMutation } from "../store/api/authApi";
+import { useEndSessionMutation } from "./authHooks";
 import { logout } from "../store/slice/authSlice";
 import { disconnectSocket } from "../utils/socket";
 

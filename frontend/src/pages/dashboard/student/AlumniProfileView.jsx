@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useGetAlumniByIdQuery } from "../../../store/api/studentDirectoryApi";
+import { useGetAlumniByIdQuery } from "../../../hooks/studentDirectoryHooks";
 import {
   useGetMyRequestsQuery,
   useSendMentorshipRequestMutation,
-} from "../../../store/api/studentMentorshipApi";
+} from "../../../hooks/studentMentorshipHooks";
 import { getImageUrl as fileUrl } from "../../../utils/getImageUrl";
 import { MENTORSHIP_STATUS } from "../../../consts/appConstants";
 import LoadingSpinner from "../../../components/common/LoadingSpinner";

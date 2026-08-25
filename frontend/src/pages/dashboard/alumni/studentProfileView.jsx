@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useGetStudentByIdQuery } from "../../../store/api/alumniDirectoryApi";
+import { useGetStudentByIdQuery } from "../../../hooks/alumniDirectoryHooks";
 import { ROUTES } from "../../../consts/appConstants";
-import { useStartConversationMutation } from "../../../store/api/messagesApi";
+import { useStartConversationMutation } from "../../../hooks/messagesHooks";
 import { getImageUrl as fileUrl } from "../../../utils/getImageUrl";
 import LoadingSpinner from "../../../components/common/LoadingSpinner";
 import {

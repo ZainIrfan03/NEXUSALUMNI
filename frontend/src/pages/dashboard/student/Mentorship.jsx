@@ -8,8 +8,8 @@ import {
   useGetRecommendedMentorsQuery,
   useGetMyRequestsQuery,
   useSendMentorshipRequestMutation,
-} from "../../../store/api/studentMentorshipApi";
-import { useStartConversationMutation } from "../../../store/api/messagesApi";
+} from "../../../hooks/studentMentorshipHooks";
+import { useStartConversationMutation } from "../../../hooks/messagesHooks";
 import {
   MENTORSHIP_STATUS,
   ROUTES,

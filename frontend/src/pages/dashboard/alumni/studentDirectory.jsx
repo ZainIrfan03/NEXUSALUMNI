@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useGetStudentDirectoryQuery } from "../../../store/api/alumniDirectoryApi";
+import { useGetStudentDirectoryQuery } from "../../../hooks/alumniDirectoryHooks";
 import { ROUTES } from "../../../consts/appConstants";
-import { useStartConversationMutation } from "../../../store/api/messagesApi";
+import { useStartConversationMutation } from "../../../hooks/messagesHooks";
 import {
   Filter,
   UserPlus,
