@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import LoadingSpinner from "../../../components/common/LoadingSpinner";
 import EmptyState from "../../../components/common/EmptyState";
 import StatusBadge from "../../../components/common/StatusBadge";
@@ -301,14 +301,14 @@ export default function Jobs() {
                             </p>
                           )}
                           <div className="flex flex-wrap gap-2 mt-3">
-                            <a
-                              href={application.interview.meetingUrl}
+                            <Link
+                              to={application.interview.meetingUrl}
                               target="_blank"
                               rel="noreferrer"
                               className="inline-flex items-center gap-1.5 bg-primary text-white rounded-lg px-3 py-2 text-xs font-semibold"
                             >
                               <Video size={13} /> Join Interview
-                            </a>
+                            </Link>
                             {application.interview.response !==
                               INTERVIEW_RESPONSE.CONFIRMED && (
                               <button

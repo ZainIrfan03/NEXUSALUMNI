@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Compass, Clock3, GraduationCap, MessageCircle } from "lucide-react";
 import LoadingSpinner from "../../../components/common/LoadingSpinner";
 import EmptyState from "../../../components/common/EmptyState";
@@ -122,9 +122,9 @@ export default function Mentorship() {
               <Compass size={18} className="text-primary" />
               <h2 className="font-semibold text-dark">Recommended Mentors</h2>
             </div>
-            <a href="#" className="text-sm font-medium text-primary">
+            <Link to="#" className="text-sm font-medium text-primary">
               View All Leaders
-            </a>
+            </Link>
           </div>
 
           {loadingMentors ? (

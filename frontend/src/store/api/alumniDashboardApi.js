@@ -10,4 +10,5 @@ export const alumniDashboardApi = baseApi.injectEndpoints({
   }),
 });
 
+
 export const { useGetAlumniOverviewQuery } = alumniDashboardApi;

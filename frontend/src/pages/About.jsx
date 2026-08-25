@@ -5,12 +5,12 @@ import LeadershipTeam from "../components/about/LeadershipTeam";
 
 function About() {
   return (
-    <div>
+    <>
       <AboutHero />
       <OurVision />
       <OurImpact />
       <LeadershipTeam />
-    </div>
+    </>
   );
 }
 

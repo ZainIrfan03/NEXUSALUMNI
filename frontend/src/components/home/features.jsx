@@ -1,27 +1,4 @@
-import { TrendingUp, Compass, Briefcase, Users } from "lucide-react";
-
-const features = [
-  {
-    icon: TrendingUp,
-    title: "Accelerated Career Growth",
-    desc: "Access exclusive resources, executive coaching, and pathways tailored for high-achieving alumni aiming for leadership.",
-  },
-  {
-    icon: Compass,
-    title: "1:1 Mentorship",
-    desc: "Connect with seasoned industry veterans or guide recent graduates.",
-  },
-  {
-    icon: Briefcase,
-    title: "Exclusive Jobs",
-    desc: "Curated roles from top-tier companies seeking verified alumni talent.",
-  },
-  {
-    icon: Users,
-    title: "Global Networking Events",
-    desc: "Join local chapters, virtual summits, and industry-specific mixers happening worldwide.",
-  },
-];
+import { features } from "../../data";
 
 export default function Features() {
   return (

@@ -4,6 +4,7 @@ import { useRegisterMutation } from "../store/api/authApi";
 import {
   ROLES,
   EMAIL_REGEX,
+  PASSWORD_MAX_LENGTH,
   PASSWORD_MIN_LENGTH,
   FULL_NAME_MAX_LENGTH,
 } from "../consts/appConstants";
@@ -30,6 +31,8 @@ export default function Register() {
 
   const handleChange = (event) => {
     const { name, value } = event.target;
+    if (name === "password" && value.length > PASSWORD_MAX_LENGTH) return;
+
     setForm((prev) => ({ ...prev, [name]: value }));
 
     setFieldErrors((prev) => {
@@ -54,6 +57,8 @@ export default function Register() {
       if (name === "password") {
         if (value && value.length < PASSWORD_MIN_LENGTH) {
           next.password = `Password must be at least ${PASSWORD_MIN_LENGTH} characters.`;
+        } else if (value.length > PASSWORD_MAX_LENGTH) {
+          next.password = `Password must not exceed ${PASSWORD_MAX_LENGTH} characters.`;
         } else if (value && (!/[A-Za-z]/.test(value) || !/[0-9]/.test(value))) {
           next.password = "Password must include both letters and numbers.";
         } else {
@@ -73,6 +78,8 @@ export default function Register() {
 
   const handleConfirmPasswordChange = (event) => {
     const value = event.target.value;
+    if (value.length > PASSWORD_MAX_LENGTH) return;
+
     setConfirmPassword(value);
 
     setFieldErrors((prev) => {
@@ -105,6 +112,8 @@ export default function Register() {
       errors.password = "Password is required.";
     } else if (form.password.length < PASSWORD_MIN_LENGTH) {
       errors.password = `Password must be at least ${PASSWORD_MIN_LENGTH} characters.`;
+    } else if (form.password.length > PASSWORD_MAX_LENGTH) {
+      errors.password = `Password must not exceed ${PASSWORD_MAX_LENGTH} characters.`;
     } else if (
       !/[A-Za-z]/.test(form.password) ||
       !/[0-9]/.test(form.password)
@@ -203,7 +212,11 @@ export default function Register() {
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+        <form
+          onSubmit={handleSubmit}
+          className="flex flex-col gap-5"
+          noValidate
+        >
           <div>
             <label className="block text-sm font-medium text-dark mb-1.5">
               Full Name
@@ -215,8 +228,6 @@ export default function Register() {
               onChange={handleChange}
               placeholder="Enter your full name"
               className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-primary transition-colors"
-              maxLength={FULL_NAME_MAX_LENGTH}
-              required
             />
             {fieldErrors.fullName && (
               <p className="text-red-500 text-xs mt-1">
@@ -240,7 +251,6 @@ export default function Register() {
                   : "you@email.com"
               }
               className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-primary transition-colors"
-              required
             />
             {fieldErrors.email && (
               <p className="text-red-500 text-xs mt-1">{fieldErrors.email}</p>
@@ -256,9 +266,8 @@ export default function Register() {
               name="password"
               value={form.password}
               onChange={handleChange}
-              placeholder={`Create a password (min. ${PASSWORD_MIN_LENGTH} characters, letters + numbers)`}
+              placeholder={`${PASSWORD_MIN_LENGTH}-${PASSWORD_MAX_LENGTH} characters, letters + numbers`}
               className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-primary transition-colors"
-              required
             />
             {fieldErrors.password && (
               <p className="text-red-500 text-xs mt-1">
@@ -278,7 +287,6 @@ export default function Register() {
               onChange={handleConfirmPasswordChange}
               placeholder="Re-enter your password"
               className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-primary transition-colors"
-              required
             />
             {fieldErrors.confirmPassword && (
               <p className="text-red-500 text-xs mt-1">
@@ -299,7 +307,6 @@ export default function Register() {
                     value={form.department}
                     onChange={handleChange}
                     className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-primary transition-colors text-gray-600"
-                    required
                   >
                     <option value="">Select</option>
                     <option value="cs">Computer Science</option>
@@ -324,7 +331,6 @@ export default function Register() {
                     onChange={handleChange}
                     placeholder="e.g. 2021-2025"
                     className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-primary transition-colors"
-                    required
                   />
                   {fieldErrors.session && (
                     <p className="text-red-500 text-xs mt-1">
@@ -345,7 +351,6 @@ export default function Register() {
                   onChange={handleChange}
                   placeholder="Enter your roll number"
                   className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-primary transition-colors"
-                  required
                 />
                 {fieldErrors.rollNumber && (
                   <p className="text-red-500 text-xs mt-1">
@@ -370,7 +375,6 @@ export default function Register() {
                     onChange={handleChange}
                     placeholder="e.g. 2018"
                     className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-primary transition-colors"
-                    required
                   />
                   {fieldErrors.graduationYear && (
                     <p className="text-red-500 text-xs mt-1">
@@ -389,7 +393,6 @@ export default function Register() {
                     onChange={handleChange}
                     placeholder="e.g. Product Manager"
                     className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-primary transition-colors"
-                    required
                   />
                   {fieldErrors.jobTitle && (
                     <p className="text-red-500 text-xs mt-1">
@@ -410,7 +413,6 @@ export default function Register() {
                   onChange={handleChange}
                   placeholder="Enter your current company"
                   className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-primary transition-colors"
-                  required
                 />
                 {fieldErrors.company && (
                   <p className="text-red-500 text-xs mt-1">

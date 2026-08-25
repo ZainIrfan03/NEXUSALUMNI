@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   useGetMyJobsQuery,
   useGetJobApplicantsQuery,
@@ -555,8 +555,8 @@ export default function AlumniJobs() {
                           )}
                         </p>
                         {applicant.resumeUrl && (
-                          <a
-                            href={fileUrl(applicant.resumeUrl)}
+                          <Link
+                            to={fileUrl(applicant.resumeUrl)}
                             target="_blank"
                             rel="noreferrer"
                             onClick={(event) => event.stopPropagation()}
@@ -564,7 +564,7 @@ export default function AlumniJobs() {
                             className="inline-flex items-center gap-1 text-xs font-medium text-primary mt-1 hover:underline"
                           >
                             <FileText size={11} /> View submitted resume
-                          </a>
+                          </Link>
                         )}
                         {applicant.interview &&
                           applicant.status === APPLICATION_STATUS.INTERVIEW && (

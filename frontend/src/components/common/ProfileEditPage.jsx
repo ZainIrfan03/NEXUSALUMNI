@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { getImageUrl as fileUrl } from "../../utils/getImageUrl";
 import { REDIRECT_DELAY_MS } from "../../consts/appConstants";
 import LoadingSpinner from "./LoadingSpinner";
@@ -330,14 +330,14 @@ export default function ProfileEditPage({
             {resumeUrl && !resumeFile && (
               <div className="flex items-center gap-2 bg-gray-100 rounded-lg px-4 py-2 text-sm text-dark mt-3">
                 <FileText size={14} />
-                <a
-                  href={fileUrl(resumeUrl)}
+                <Link
+                  to={fileUrl(resumeUrl)}
                   target="_blank"
                   rel="noreferrer"
                   className="flex-1 truncate text-primary hover:underline"
                 >
                   View current resume
-                </a>
+                </Link>
                 <button type="button" onClick={() => setResumeUrl("")}>
                   <Trash2 size={14} className="text-red-500" />
                 </button>

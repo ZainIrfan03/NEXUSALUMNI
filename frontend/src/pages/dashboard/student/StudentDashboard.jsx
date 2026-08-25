@@ -1,5 +1,5 @@
 import { useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   useGetDashboardStatsQuery,
   useGetRecentActivityQuery,
@@ -148,9 +148,9 @@ export default function StudentDashboard() {
         <div className="lg:col-span-2 bg-white rounded-2xl p-6">
           <div className="flex items-center justify-between mb-5">
             <h2 className="text-lg font-semibold text-dark">Recent Activity</h2>
-            <a href="#" className="text-sm font-medium text-primary">
+            <Link to="#" className="text-sm font-medium text-primary">
               View All
-            </a>
+            </Link>
           </div>
           <div className="flex flex-col">
             {loadingActivity ? (

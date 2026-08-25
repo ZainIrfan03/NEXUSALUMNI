@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useLocation } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { getImageUrl as fileUrl } from "../../utils/getImageUrl";
 import LoadingSpinner from "./LoadingSpinner";
 import EmptyState from "./EmptyState";
@@ -361,8 +361,8 @@ export default function MessagesPage() {
                     >
                       {chatMessage.fileUrl &&
                         chatMessage.fileType === "image" && (
-                          <a
-                            href={fileUrl(chatMessage.fileUrl)}
+                          <Link
+                            to={fileUrl(chatMessage.fileUrl)}
                             target="_blank"
                             rel="noopener noreferrer"
                           >
@@ -371,12 +371,12 @@ export default function MessagesPage() {
                               alt={chatMessage.fileName || "attachment"}
                               className="max-w-[220px] max-h-[220px] rounded-xl mb-1 object-cover border border-gray-100"
                             />
-                          </a>
+                          </Link>
                         )}
                       {chatMessage.fileUrl &&
                         chatMessage.fileType === "file" && (
-                          <a
-                            href={fileUrl(chatMessage.fileUrl)}
+                          <Link
+                            to={fileUrl(chatMessage.fileUrl)}
                             target="_blank"
                             rel="noopener noreferrer"
                             className={`flex items-center gap-2 px-3 py-2.5 rounded-xl mb-1 text-sm max-w-[240px] ${
@@ -389,7 +389,7 @@ export default function MessagesPage() {
                             <span className="truncate">
                               {chatMessage.fileName}
                             </span>
-                          </a>
+                          </Link>
                         )}
                       {chatMessage.text && (
                         <div

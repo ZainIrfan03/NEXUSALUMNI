@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { Link, useParams, useNavigate } from "react-router-dom";
 import { useGetStudentByIdQuery } from "../../../store/api/alumniDirectoryApi";
 import { ROUTES } from "../../../consts/appConstants";
 import { useStartConversationMutation } from "../../../store/api/messagesApi";
@@ -175,15 +175,15 @@ export default function StudentProfileView() {
               Resume / CV
             </h2>
             {fileUrl(resumeUrl) ? (
-              <a
-                href={fileUrl(resumeUrl)}
+              <Link
+                to={fileUrl(resumeUrl)}
                 target="_blank"
                 rel="noreferrer"
                 className="inline-flex items-center gap-2 text-sm font-medium text-primary bg-blue-50 rounded-xl px-4 py-2.5 hover:bg-blue-100 transition-colors"
               >
                 <FileText size={16} />
                 View Resume
-              </a>
+              </Link>
             ) : (
               <p className="text-sm text-gray-400">No resume uploaded yet.</p>
             )}

@@ -1,4 +1,5 @@
 import { Link2, Share2, Mail, Phone, MapPin } from "lucide-react";
+import { Link } from "react-router-dom";
 
 export default function Footer() {
   return (
@@ -33,24 +34,24 @@ export default function Footer() {
           <h4 className="text-sm font-semibold text-dark mb-4">Quick Links</h4>
           <ul className="flex flex-col gap-3 text-sm text-gray-500">
             <li>
-              <a href="#" className="hover:text-primary transition-colors">
+              <Link to="#" className="hover:text-primary transition-colors">
                 About Us
-              </a>
+              </Link>
             </li>
             <li>
-              <a href="#" className="hover:text-primary transition-colors">
+              <Link to="#" className="hover:text-primary transition-colors">
                 Alumni Directory
-              </a>
+              </Link>
             </li>
             <li>
-              <a href="#" className="hover:text-primary transition-colors">
+              <Link to="#" className="hover:text-primary transition-colors">
                 Events Calendar
-              </a>
+              </Link>
             </li>
             <li>
-              <a href="#" className="hover:text-primary transition-colors">
+              <Link to="#" className="hover:text-primary transition-colors">
                 Job Board
-              </a>
+              </Link>
             </li>
           </ul>
         </div>
@@ -59,24 +60,24 @@ export default function Footer() {
           <h4 className="text-sm font-semibold text-dark mb-4">Resources</h4>
           <ul className="flex flex-col gap-3 text-sm text-gray-500">
             <li>
-              <a href="#" className="hover:text-primary transition-colors">
+              <Link to="#" className="hover:text-primary transition-colors">
                 Mentorship Program
-              </a>
+              </Link>
             </li>
             <li>
-              <a href="#" className="hover:text-primary transition-colors">
+              <Link to="#" className="hover:text-primary transition-colors">
                 Career Coaching
-              </a>
+              </Link>
             </li>
             <li>
-              <a href="#" className="hover:text-primary transition-colors">
+              <Link to="#" className="hover:text-primary transition-colors">
                 Webinars & Courses
-              </a>
+              </Link>
             </li>
             <li>
-              <a href="#" className="hover:text-primary transition-colors">
+              <Link to="#" className="hover:text-primary transition-colors">
                 Alumni Benefits
-              </a>
+              </Link>
             </li>
           </ul>
         </div>
@@ -101,15 +102,15 @@ export default function Footer() {
         <div className="mx-auto max-w-7xl px-6 py-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-gray-500">
           <span>© 2024 Alumni Nexus University. All rights reserved.</span>
           <div className="flex items-center gap-6">
-            <a href="#" className="hover:text-primary transition-colors">
+            <Link to="#" className="hover:text-primary transition-colors">
               Privacy Policy
-            </a>
-            <a href="#" className="hover:text-primary transition-colors">
+            </Link>
+            <Link to="#" className="hover:text-primary transition-colors">
               Terms of Service
-            </a>
-            <a href="#" className="hover:text-primary transition-colors">
+            </Link>
+            <Link to="#" className="hover:text-primary transition-colors">
               Cookie Policy
-            </a>
+            </Link>
           </div>
         </div>
       </div>

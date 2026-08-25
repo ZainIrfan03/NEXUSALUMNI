@@ -1,4 +1,5 @@
 import { ArrowRight } from "lucide-react";
+import { Link } from "react-router-dom";
 import { getImageUrl as fileUrl } from "../../utils/getImageUrl";
 import LoadingSpinner from "../common/LoadingSpinner";
 import EmptyState from "../common/EmptyState";
@@ -29,12 +30,12 @@ export default function FeaturedAlumni() {
               Meet leaders shaping the future across industries.
             </p>
           </div>
-          <a
-            href="#"
+          <Link
+            to="#"
             className="hidden sm:flex items-center gap-1 text-sm font-medium text-primary hover:opacity-80 transition-opacity whitespace-nowrap"
           >
             View All Alumni <ArrowRight size={15} />
-          </a>
+          </Link>
         </div>
 
         {isLoading ? (

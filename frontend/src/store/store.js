@@ -8,7 +8,6 @@ export const store = configureStore({
     auth: authReducer,
     [baseApi.reducerPath]: baseApi.reducer,
   },
-
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware()
       .prepend(authListenerMiddleware.middleware)

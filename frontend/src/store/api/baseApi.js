@@ -6,5 +6,6 @@ export const baseApi = createApi({
   reducerPath: "api",
   baseQuery: baseQueryWithAuth,
   tagTypes: Object.values(TAGS),
+  keepUnusedDataFor: 120, 
   endpoints: () => ({}),
 });

@@ -4,7 +4,12 @@ import { useDispatch } from "react-redux";
 import { Mail, Lock, Eye, EyeOff, ArrowRight } from "lucide-react";
 import { setCredentials } from "../store/slice/authSlice";
 import { useLoginMutation } from "../store/api/authApi";
-import { ROLE_HOME_ROUTES } from "../consts/appConstants";
+import {
+  EMAIL_REGEX,
+  PASSWORD_MAX_LENGTH,
+  PASSWORD_MIN_LENGTH,
+  ROLE_HOME_ROUTES,
+} from "../consts/appConstants";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -16,15 +21,45 @@ export default function Login() {
   const [error, setError] = useState("");
 
   const handleChange = (event) => {
-    setForm({ ...form, [event.target.name]: event.target.value });
+    const { name, value } = event.target;
+    if (name === "password" && value.length > PASSWORD_MAX_LENGTH) return;
+
+    setForm({ ...form, [name]: value });
   };
 
   const handleSubmit = async (event) => {
     event.preventDefault();
     setError("");
 
+    const email = form.email.trim();
+
+    if (!email) {
+      setError("Email is required.");
+      return;
+    }
+
+    if (!EMAIL_REGEX.test(email)) {
+      setError("Enter a valid email address.");
+      return;
+    }
+
+    if (!form.password) {
+      setError("Password is required.");
+      return;
+    }
+
+    if (
+      form.password.length < PASSWORD_MIN_LENGTH ||
+      form.password.length > PASSWORD_MAX_LENGTH
+    ) {
+      setError(
+        `Password must be between ${PASSWORD_MIN_LENGTH} and ${PASSWORD_MAX_LENGTH} characters.`,
+      );
+      return;
+    }
+
     try {
-      const data = await login({ ...form, keepSignedIn }).unwrap();
+      const data = await login({ ...form, email, keepSignedIn }).unwrap();
       dispatch(setCredentials(data));
       navigate(ROLE_HOME_ROUTES[data.role] || "/");
     } catch (err) {
@@ -48,7 +83,11 @@ export default function Login() {
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+        <form
+          onSubmit={handleSubmit}
+          className="flex flex-col gap-5"
+          noValidate
+        >
           <div>
             <label className="block text-sm font-medium text-dark mb-1.5">
               University Email
@@ -62,7 +101,6 @@ export default function Login() {
                 onChange={handleChange}
                 placeholder="name@university.edu"
                 className="w-full py-2.5 text-sm outline-none"
-                required
               />
             </div>
           </div>
@@ -86,7 +124,6 @@ export default function Login() {
                 onChange={handleChange}
                 placeholder="••••••••"
                 className="w-full py-2.5 text-sm outline-none"
-                required
               />
               <button
                 type="button"

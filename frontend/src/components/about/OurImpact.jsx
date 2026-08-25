@@ -1,9 +1,4 @@
-const stats = [
-  { value: "15k+", label: "ACTIVE ALUMNI" },
-  { value: "50k", label: "CONNECTIONS MADE" },
-  { value: "850", label: "MENTORSHIPS" },
-  { value: "120", label: "COUNTRIES" },
-];
+import { stats } from "../../data";
 
 export default function OurImpact() {
   return (

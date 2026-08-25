@@ -135,6 +135,7 @@ export const INTERVIEW_RESPONSE = {
 
 export const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 export const PASSWORD_MIN_LENGTH = 8;
+export const PASSWORD_MAX_LENGTH = 10;
 export const FULL_NAME_MAX_LENGTH = 15;
 
 export const TYPING_TIMEOUT_MS = 2000;

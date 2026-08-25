@@ -1,20 +1,6 @@
 import { Quote } from "lucide-react";
 import UserAvatar from "../common/UserAvatar";
-
-const stories = [
-  {
-    quote:
-      "The mentorship program connected me with a senior VP in my target industry. Her guidance was instrumental in helping me navigate my career transition and land my current leadership role.",
-    name: "Jessica Lee",
-    role: "Product Manager at InnovateTech",
-  },
-  {
-    quote:
-      "Through a local alumni chapter event, I met my future co-founder. The network provided not only the connections but also the initial funding leads that got our startup off the ground.",
-    name: "Marcus Johnson",
-    role: "Co-Founder of GreenEnergy Solutions",
-  },
-];
+import { stories } from "../../data";
 
 export default function SuccessStories() {
   return (
