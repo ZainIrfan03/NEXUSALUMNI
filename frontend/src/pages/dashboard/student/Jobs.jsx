@@ -14,10 +14,15 @@ import {
   APPLICATION_STATUS,
   EXPERIENCE_LEVELS,
   INTERVIEW_RESPONSE,
-  JOB_TYPES,
   ROUTES,
   UI_LIMITS,
 } from "../../../consts/appConstants";
+import {
+  APPLICATION_STATUS_META,
+  JOB_DEPARTMENT_OPTIONS,
+  JOB_SORT_OPTIONS,
+  JOB_TYPE_TABS,
+} from "../../../consts/jobConstants";
 import {
   Bookmark,
   Briefcase,
@@ -37,30 +42,6 @@ import {
   Video,
   X,
 } from "lucide-react";
-
-const TYPE_TABS = ["All Jobs", ...Object.values(JOB_TYPES)];
-const DEPARTMENTS = [
-  "Engineering",
-  "Design",
-  "Marketing",
-  "Sales",
-  "Operations",
-  "Other",
-];
-const STATUS_TONES = {
-  [APPLICATION_STATUS.APPLIED]: "neutral",
-  [APPLICATION_STATUS.IN_REVIEW]: "warning",
-  [APPLICATION_STATUS.INTERVIEW]: "info",
-  [APPLICATION_STATUS.ACCEPTED]: "success",
-  [APPLICATION_STATUS.REJECTED]: "danger",
-};
-const STATUS_LABELS = {
-  [APPLICATION_STATUS.APPLIED]: "Applied",
-  [APPLICATION_STATUS.IN_REVIEW]: "In Review",
-  [APPLICATION_STATUS.INTERVIEW]: "Interview",
-  [APPLICATION_STATUS.ACCEPTED]: "Accepted",
-  [APPLICATION_STATUS.REJECTED]: "Rejected",
-};
 
 export default function Jobs() {
   const navigate = useNavigate();
@@ -356,9 +337,13 @@ export default function Jobs() {
                   </div>
                   <StatusBadge
                     label={
-                      STATUS_LABELS[application.status] || application.status
+                      APPLICATION_STATUS_META[application.status]?.label ||
+                      application.status
                     }
-                    tone={STATUS_TONES[application.status] || "neutral"}
+                    tone={
+                      APPLICATION_STATUS_META[application.status]?.tone ||
+                      "neutral"
+                    }
                   />
                 </article>
               ))}
@@ -418,7 +403,7 @@ export default function Jobs() {
                   className="border border-gray-200 rounded-lg px-3 py-2 text-sm"
                 >
                   <option value="">All departments</option>
-                  {DEPARTMENTS.map((item) => (
+                  {JOB_DEPARTMENT_OPTIONS.map((item) => (
                     <option key={item} value={item}>
                       {item}
                     </option>
@@ -447,9 +432,11 @@ export default function Jobs() {
                   }}
                   className="border border-gray-200 rounded-lg px-3 py-2 text-sm"
                 >
-                  <option value="newest">Newest first</option>
-                  <option value="oldest">Oldest first</option>
-                  <option value="deadline">Deadline soon</option>
+                  {JOB_SORT_OPTIONS.map(({ value, label }) => (
+                    <option key={value} value={value}>
+                      {label}
+                    </option>
+                  ))}
                 </select>
                 <button
                   onClick={clearFilters}
@@ -462,7 +449,7 @@ export default function Jobs() {
             )}
 
             <div className="flex flex-wrap gap-2 mb-5">
-              {TYPE_TABS.map((type) => (
+              {JOB_TYPE_TABS.map((type) => (
                 <button
                   key={type}
                   onClick={() => {

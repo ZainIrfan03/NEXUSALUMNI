@@ -7,21 +7,10 @@ import {
   JOB_TYPES,
   ROUTES,
 } from "../../../consts/appConstants";
-
-const TYPE_OPTIONS = [
-  JOB_TYPES.FULL_TIME,
-  JOB_TYPES.PART_TIME,
-  JOB_TYPES.INTERNSHIP,
-  JOB_TYPES.REMOTE,
-];
-const DEPARTMENT_OPTIONS = [
-  "Engineering",
-  "Design",
-  "Marketing",
-  "Sales",
-  "Operations",
-  "Other",
-];
+import {
+  JOB_DEPARTMENT_OPTIONS,
+  JOB_TYPE_OPTIONS,
+} from "../../../consts/jobConstants";
 
 export default function AlumniJobNew() {
   const navigate = useNavigate();
@@ -162,7 +151,7 @@ export default function AlumniJobNew() {
               className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-primary transition-colors"
             >
               <option value="">Select department</option>
-              {DEPARTMENT_OPTIONS.map((dept) => (
+              {JOB_DEPARTMENT_OPTIONS.map((dept) => (
                 <option key={dept} value={dept}>
                   {dept}
                 </option>
@@ -181,7 +170,7 @@ export default function AlumniJobNew() {
               className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-primary transition-colors"
               required
             >
-              {TYPE_OPTIONS.map((type) => (
+              {JOB_TYPE_OPTIONS.map((type) => (
                 <option key={type} value={type}>
                   {type}
                 </option>

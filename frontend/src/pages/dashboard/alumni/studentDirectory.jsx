@@ -2,6 +2,12 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useGetStudentDirectoryQuery } from "../../../store/api/alumniDirectoryApi";
 import { ROUTES } from "../../../consts/appConstants";
+import {
+  ACADEMIC_DEPARTMENT_OPTIONS,
+  GRADUATION_YEAR_OPTIONS,
+  STUDENT_DIRECTORY_SORT_OPTIONS,
+  STUDENT_SKILL_OPTIONS,
+} from "../../../consts/directoryConstants";
 import { useStartConversationMutation } from "../../../store/api/messagesApi";
 import {
   Filter,
@@ -12,14 +18,6 @@ import {
   Send,
 } from "lucide-react";
 import { getImageUrl } from "../../../utils/getImageUrl";
-
-const SKILL_OPTIONS = [
-  "Python",
-  "Data Analysis",
-  "UI/UX Design",
-  "Public Speaking",
-];
-const YEAR_OPTIONS = ["2024", "2025", "2026", "2027"];
 
 function StudentCard({ student, onViewProfile, onMessage, messagingId }) {
   const avatar = getImageUrl(student.avatarUrl);
@@ -204,17 +202,20 @@ export default function StudentDirectory() {
               className="mt-1 mb-4 w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
             >
               <option value="all">All Departments</option>
-              <option value="cs">Computer Science</option>
-              <option value="business">Business Admin</option>
-              <option value="design">Visual Design</option>
-              <option value="engineering">Mechanical Engineering</option>
+              {ACADEMIC_DEPARTMENT_OPTIONS.map(
+                ({ value, directoryLabel }) => (
+                  <option key={value} value={value}>
+                    {directoryLabel}
+                  </option>
+                ),
+              )}
             </select>
 
             <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
               Skills
             </label>
             <div className="flex flex-col gap-2 mt-2 mb-4">
-              {SKILL_OPTIONS.map((skill) => (
+              {STUDENT_SKILL_OPTIONS.map((skill) => (
                 <label
                   key={skill}
                   className="flex items-center gap-2 text-sm text-gray-700"
@@ -233,7 +234,7 @@ export default function StudentDirectory() {
               Year
             </label>
             <div className="grid grid-cols-2 gap-2 mt-2 mb-4">
-              {YEAR_OPTIONS.map((year) => (
+              {GRADUATION_YEAR_OPTIONS.map((year) => (
                 <button
                   key={year}
                   onClick={() => toggleYear(year)}
@@ -281,9 +282,11 @@ export default function StudentDirectory() {
                 onChange={(event) => setSortBy(event.target.value)}
                 className="font-semibold text-gray-900 border-none outline-none bg-transparent"
               >
-                <option value="recent">Recent Activity</option>
-                <option value="name">Name</option>
-                <option value="year">Graduation Year</option>
+                {STUDENT_DIRECTORY_SORT_OPTIONS.map(({ value, label }) => (
+                  <option key={value} value={value}>
+                    {label}
+                  </option>
+                ))}
               </select>
             </div>
           </div>

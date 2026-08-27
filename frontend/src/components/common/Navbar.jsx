@@ -1,12 +1,7 @@
 import { useState } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import { Menu, X } from "lucide-react";
-
-const links = [
-  { label: "Home", path: "/" },
-  { label: "About", path: "/about" },
-  { label: "Success Stories", path: "/success-stories" },
-];
+import { PUBLIC_NAV_LINKS } from "../../consts/publicNavigation";
 
 export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -31,7 +26,7 @@ export default function Navbar() {
 
         <div className="hidden md:flex items-center gap-10 ml-auto">
           <nav className="flex items-center gap-8 text-sm font-medium">
-            {links.map(({ label, path }) => (
+            {PUBLIC_NAV_LINKS.map(({ label, path }) => (
               <NavLink
                 key={path}
                 to={path}
@@ -79,7 +74,7 @@ export default function Navbar() {
 
       {mobileOpen && (
         <div className="md:hidden px-6 pb-5 flex flex-col gap-4 text-sm font-medium">
-          {links.map(({ label, path }) => (
+          {PUBLIC_NAV_LINKS.map(({ label, path }) => (
             <NavLink
               key={path}
               to={path}

@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import DashboardStatCard from "../../../components/common/DashboardStatCard";
 import { JOB_TYPES, ROUTES } from "../../../consts/appConstants";
+import { JOB_TYPE_OPTIONS } from "../../../consts/jobConstants";
 
 function MentorshipRequestCard({ request, onAccept, onDecline }) {
   const studentName = request.student?.fullName || "Unknown student";
@@ -201,12 +202,7 @@ export default function AlumniDashboard() {
               }
               className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm"
             >
-              {[
-                JOB_TYPES.FULL_TIME,
-                JOB_TYPES.INTERNSHIP,
-                JOB_TYPES.PART_TIME,
-                JOB_TYPES.REMOTE,
-              ].map((type) => (
+              {JOB_TYPE_OPTIONS.map((type) => (
                 <option key={type}>{type}</option>
               ))}
             </select>

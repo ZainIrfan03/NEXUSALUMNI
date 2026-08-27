@@ -10,8 +10,10 @@ import {
 } from "lucide-react";
 import LoadingSpinner from "../../../components/common/LoadingSpinner";
 import { ROUTES, UI_LIMITS } from "../../../consts/appConstants";
-
-const departments = ["Engineering", "Marketing", "Product"];
+import {
+  ALUMNI_DIRECTORY_DEPARTMENTS,
+  INDUSTRY_OPTIONS,
+} from "../../../consts/directoryConstants";
 
 function AlumniAvatar({ name, img, size = "h-20 w-20" }) {
   return img ? (
@@ -98,11 +100,9 @@ export default function Directory() {
               }
               className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none appearance-none focus:border-primary transition-colors"
             >
-              <option>All Industries</option>
-              <option>Technology</option>
-              <option>Finance</option>
-              <option>Healthcare</option>
-              <option>Law</option>
+              {INDUSTRY_OPTIONS.map((industry) => (
+                <option key={industry}>{industry}</option>
+              ))}
             </select>
             <ChevronDown
               size={15}
@@ -112,7 +112,7 @@ export default function Directory() {
 
           <p className="text-sm font-medium text-dark mb-2">Department</p>
           <div className="flex flex-col gap-2 mb-5">
-            {departments.map((dept) => (
+            {ALUMNI_DIRECTORY_DEPARTMENTS.map((dept) => (
               <label
                 key={dept}
                 className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer"

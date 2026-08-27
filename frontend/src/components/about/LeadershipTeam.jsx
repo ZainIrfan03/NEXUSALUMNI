@@ -1,4 +1,4 @@
-import { team } from "../../data";
+import { LEADERSHIP_TEAM } from "../../consts/publicContent";
 
 export default function LeadershipTeam() {
   return (
@@ -11,7 +11,7 @@ export default function LeadershipTeam() {
         <div className="border-t border-gray-100 mb-12" />
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
-          {team.map((member) => (
+          {LEADERSHIP_TEAM.map((member) => (
             <div key={member.name}>
               <img
                 src={member.img}

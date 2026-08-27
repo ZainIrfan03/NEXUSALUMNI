@@ -1,4 +1,4 @@
-import { features } from "../../data";
+import { FEATURES } from "../../consts/publicContent";
 
 export default function Features() {
   return (
@@ -13,7 +13,7 @@ export default function Features() {
         </p>
 
         <div className="grid sm:grid-cols-2 gap-6">
-          {features.map(({ icon: Icon, title, desc }) => (
+          {FEATURES.map(({ icon: Icon, title, desc }) => (
             <div
               key={title}
               className="bg-white border border-gray-100 rounded-2xl p-8"

@@ -1,6 +1,6 @@
 import { Quote } from "lucide-react";
 import UserAvatar from "../common/UserAvatar";
-import { stories } from "../../data";
+import { SUCCESS_STORIES } from "../../consts/publicContent";
 
 export default function SuccessStories() {
   return (
@@ -12,7 +12,7 @@ export default function SuccessStories() {
         </p>
 
         <div className="grid sm:grid-cols-2 gap-6">
-          {stories.map((s) => (
+          {SUCCESS_STORIES.map((s) => (
             <div
               key={s.name}
               className="bg-white border border-gray-100 rounded-2xl p-8 flex flex-col"

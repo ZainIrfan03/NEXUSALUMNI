@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import { useGetStudentByIdQuery } from "../../../store/api/alumniDirectoryApi";
 import { ROUTES } from "../../../consts/appConstants";
+import { ACADEMIC_DEPARTMENT_LABELS } from "../../../consts/directoryConstants";
 import { useStartConversationMutation } from "../../../store/api/messagesApi";
 import { getImageUrl as fileUrl } from "../../../utils/getImageUrl";
 import LoadingSpinner from "../../../components/common/LoadingSpinner";
@@ -13,13 +14,6 @@ import {
   FileText,
   Send,
 } from "lucide-react";
-
-const DEPARTMENT_LABELS = {
-  cs: "Computer Science",
-  business: "Business",
-  engineering: "Engineering",
-  design: "Design",
-};
 
 const getGraduationYear = (session) => {
   if (!session) return null;
@@ -86,7 +80,7 @@ export default function StudentProfileView() {
   } = student || {};
 
   const graduationYear = getGraduationYear(session);
-  const degreeLabel = DEPARTMENT_LABELS[department] || department;
+  const degreeLabel = ACADEMIC_DEPARTMENT_LABELS[department] || department;
 
   return (
     <div>

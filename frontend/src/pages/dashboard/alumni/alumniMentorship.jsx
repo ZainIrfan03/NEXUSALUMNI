@@ -9,6 +9,7 @@ import { useStartConversationMutation } from "../../../store/api/messagesApi";
 import { getImageUrl as fileUrl } from "../../../utils/getImageUrl";
 import LoadingSpinner from "../../../components/common/LoadingSpinner";
 import { ROUTES } from "../../../consts/appConstants";
+import { MENTEE_PROGRESS_STYLES } from "../../../consts/statusConstants";
 import { ClipboardList, Users, Send } from "lucide-react";
 
 function PersonAvatar({ name, img, className }) {
@@ -22,12 +23,6 @@ function PersonAvatar({ name, img, className }) {
     </div>
   );
 }
-
-const STATUS_STYLES = {
-  "On Track": "bg-green-500",
-  Idle: "bg-gray-400",
-  "At Risk": "bg-red-500",
-};
 
 function RequestCard({ request, onAccept, onReject }) {
   return (
@@ -247,7 +242,7 @@ export default function AlumniMentorship() {
                 <td className="px-5 py-4">
                   <span className="flex items-center gap-2 text-sm text-gray-700">
                     <span
-                      className={`h-2 w-2 rounded-full ${STATUS_STYLES[mentee.status] || "bg-gray-400"}`}
+                      className={`h-2 w-2 rounded-full ${MENTEE_PROGRESS_STYLES[mentee.status] || "bg-gray-400"}`}
                     />
                     {mentee.status}
                   </span>

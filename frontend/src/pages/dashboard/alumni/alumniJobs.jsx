@@ -13,6 +13,12 @@ import {
   SOCKET_EVENTS,
   UI_LIMITS,
 } from "../../../consts/appConstants";
+import {
+  APPLICANT_STATUS_OPTIONS,
+  APPLICATION_STATUS_META,
+  INTERVIEW_DURATION_OPTIONS,
+  JOB_STATUS_TONES,
+} from "../../../consts/jobConstants";
 import { connectSocket } from "../../../utils/socket";
 import { getImageUrl as fileUrl } from "../../../utils/getImageUrl";
 import LoadingSpinner from "../../../components/common/LoadingSpinner";
@@ -74,27 +80,6 @@ function AvatarStack({ applicants = [], count }) {
     </div>
   );
 }
-
-const JOB_STATUS_TONES = {
-  Active: "info",
-  Closed: "neutral",
-  Draft: "warning",
-};
-
-const APPLICANT_STATUS_TONES = {
-  [APPLICATION_STATUS.APPLIED]: "neutral",
-  [APPLICATION_STATUS.IN_REVIEW]: "warning",
-  [APPLICATION_STATUS.INTERVIEW]: "info",
-  [APPLICATION_STATUS.ACCEPTED]: "success",
-  [APPLICATION_STATUS.REJECTED]: "danger",
-};
-const APPLICANT_STATUS_LABELS = {
-  [APPLICATION_STATUS.APPLIED]: "Applied",
-  [APPLICATION_STATUS.IN_REVIEW]: "In Review",
-  [APPLICATION_STATUS.INTERVIEW]: "Interview",
-  [APPLICATION_STATUS.ACCEPTED]: "Accepted",
-  [APPLICATION_STATUS.REJECTED]: "Rejected",
-};
 
 export default function AlumniJobs() {
   const navigate = useNavigate();
@@ -592,11 +577,11 @@ export default function AlumniJobs() {
                       <div className="flex items-center gap-2 shrink-0">
                         <StatusBadge
                           label={
-                            APPLICANT_STATUS_LABELS[applicant.status] ||
+                            APPLICATION_STATUS_META[applicant.status]?.label ||
                             applicant.status
                           }
                           tone={
-                            APPLICANT_STATUS_TONES[applicant.status] ||
+                            APPLICATION_STATUS_META[applicant.status]?.tone ||
                             "neutral"
                           }
                         />
@@ -610,21 +595,11 @@ export default function AlumniJobs() {
                           onKeyDown={(event) => event.stopPropagation()}
                           className="text-xs border border-gray-200 rounded-lg px-2 py-1.5 text-gray-600 disabled:opacity-50"
                         >
-                          <option value={APPLICATION_STATUS.APPLIED}>
-                            Applied
-                          </option>
-                          <option value={APPLICATION_STATUS.IN_REVIEW}>
-                            Move to Review
-                          </option>
-                          <option value={APPLICATION_STATUS.INTERVIEW}>
-                            Schedule Interview
-                          </option>
-                          <option value={APPLICATION_STATUS.ACCEPTED}>
-                            Accept
-                          </option>
-                          <option value={APPLICATION_STATUS.REJECTED}>
-                            Reject
-                          </option>
+                          {APPLICANT_STATUS_OPTIONS.map(({ value, label }) => (
+                            <option key={value} value={value}>
+                              {label}
+                            </option>
+                          ))}
                         </select>
                       </div>
                     </div>
@@ -708,10 +683,11 @@ export default function AlumniJobs() {
                   }
                   className="mt-1.5 w-full border border-gray-200 rounded-lg px-3 py-2.5 font-normal"
                 >
-                  <option value={30}>30 minutes</option>
-                  <option value={45}>45 minutes</option>
-                  <option value={60}>60 minutes</option>
-                  <option value={90}>90 minutes</option>
+                  {INTERVIEW_DURATION_OPTIONS.map((minutes) => (
+                    <option key={minutes} value={minutes}>
+                      {minutes} minutes
+                    </option>
+                  ))}
                 </select>
               </label>
               <label className="text-sm font-medium text-gray-700 sm:col-span-2">

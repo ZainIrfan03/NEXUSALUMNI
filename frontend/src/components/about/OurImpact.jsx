@@ -1,4 +1,4 @@
-import { stats } from "../../data";
+import { IMPACT_STATS } from "../../consts/publicContent";
 
 export default function OurImpact() {
   return (
@@ -7,7 +7,7 @@ export default function OurImpact() {
         <h2 className="text-3xl font-bold text-dark mb-14">Our Impact</h2>
 
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-10">
-          {stats.map((s) => (
+          {IMPACT_STATS.map((s) => (
             <div key={s.label}>
               <p className="text-4xl sm:text-5xl font-bold text-primary mb-2">
                 {s.value}

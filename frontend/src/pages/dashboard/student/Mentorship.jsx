@@ -15,6 +15,7 @@ import {
   ROUTES,
   UI_LIMITS,
 } from "../../../consts/appConstants";
+import { MENTORSHIP_STATUS_TONES } from "../../../consts/statusConstants";
 
 function MentorAvatar({ name, img }) {
   return img ? (
@@ -29,13 +30,6 @@ function MentorAvatar({ name, img }) {
     </div>
   );
 }
-
-const statusTones = {
-  [MENTORSHIP_STATUS.PENDING]: "warning",
-  [MENTORSHIP_STATUS.ACCEPTED]: "success",
-  [MENTORSHIP_STATUS.COMPLETED]: "info",
-  [MENTORSHIP_STATUS.DECLINED]: "danger",
-};
 
 export default function Mentorship() {
   const navigate = useNavigate();
@@ -267,7 +261,9 @@ export default function Mentorship() {
                       </div>
                       <StatusBadge
                         label={request.status.toUpperCase()}
-                        tone={statusTones[request.status] || "neutral"}
+                        tone={
+                          MENTORSHIP_STATUS_TONES[request.status] || "neutral"
+                        }
                         className="text-[10px] px-2 py-1 whitespace-nowrap"
                       />
                     </div>

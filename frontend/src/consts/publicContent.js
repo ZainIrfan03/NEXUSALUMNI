@@ -1,5 +1,6 @@
-import { TrendingUp, Compass, Briefcase, Users } from "lucide-react";
-export const features = [
+import { Briefcase, Compass, TrendingUp, Users } from "lucide-react";
+
+export const FEATURES = [
   {
     icon: TrendingUp,
     title: "Accelerated Career Growth",
@@ -22,8 +23,7 @@ export const features = [
   },
 ];
 
-
-export const stories = [
+export const SUCCESS_STORIES = [
   {
     quote:
       "The mentorship program connected me with a senior VP in my target industry. Her guidance was instrumental in helping me navigate my career transition and land my current leadership role.",
@@ -38,16 +38,14 @@ export const stories = [
   },
 ];
 
-
-export const stats = [
+export const IMPACT_STATS = [
   { value: "15k+", label: "ACTIVE ALUMNI" },
   { value: "50k", label: "CONNECTIONS MADE" },
   { value: "850", label: "MENTORSHIPS" },
   { value: "120", label: "COUNTRIES" },
 ];
 
-
-export const team = [
+export const LEADERSHIP_TEAM = [
   {
     name: "Dr. Sarah Jenkins",
     role: "Executive Director",
@@ -58,7 +56,7 @@ export const team = [
     name: "Marcus Chen",
     role: "Head of Product",
     desc: "Overseeing platform development and user experience.",
-    img: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&q=80",
+    img: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2?w=400&q=80",
   },
   {
     name: "Elena Rodriguez",

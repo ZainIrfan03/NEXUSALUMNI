@@ -8,6 +8,7 @@ import {
   PASSWORD_MIN_LENGTH,
   FULL_NAME_MAX_LENGTH,
 } from "../consts/appConstants";
+import { ACADEMIC_DEPARTMENT_OPTIONS } from "../consts/directoryConstants";
 
 export default function Register() {
   const navigate = useNavigate();
@@ -309,10 +310,11 @@ export default function Register() {
                     className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-primary transition-colors text-gray-600"
                   >
                     <option value="">Select</option>
-                    <option value="cs">Computer Science</option>
-                    <option value="business">Business</option>
-                    <option value="engineering">Engineering</option>
-                    <option value="design">Design</option>
+                    {ACADEMIC_DEPARTMENT_OPTIONS.map(({ value, label }) => (
+                      <option key={value} value={value}>
+                        {label}
+                      </option>
+                    ))}
                   </select>
                   {fieldErrors.department && (
                     <p className="text-red-500 text-xs mt-1">
