@@ -1,19 +1,9 @@
-import { useState, useEffect, useRef } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { Link, useLocation } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { getImageUrl as fileUrl } from "../../utils/getImageUrl";
 import LoadingSpinner from "./LoadingSpinner";
 import EmptyState from "./EmptyState";
 import UserAvatar from "./UserAvatar";
-import {
-  useGetConversationsQuery,
-  useGetMessagesQuery,
-  useSendFileMessageMutation,
-  useDeleteConversationMutation,
-  useMarkConversationReadMutation,
-  messagesApi,
-} from "../../store/api/messagesApi";
-import { SOCKET_EVENTS, TYPING_TIMEOUT_MS } from "../../consts/appConstants";
+import useMessagesPage from "./MessagesPage/useMessagesPage";
 
 import {
   Search,
@@ -31,214 +21,16 @@ import {
   FileText,
   X,
 } from "lucide-react";
-import { connectSocket, getSocket } from "../../utils/socket";
 
 export default function MessagesPage() {
-  const dispatch = useDispatch();
-  const { user } = useSelector((state) => state.auth);
-  const location = useLocation();
-  const incomingConversationId = location.state?.conversationId;
-
-  const { data: conversations = [], isLoading: loadingConvos } =
-    useGetConversationsQuery(undefined, { refetchOnMountOrArgChange: true });
-
-  const [selectedConversationId, setActiveId] = useState(null);
-  const [draft, setDraft] = useState("");
-  const [typing, setTyping] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [deleting, setDeleting] = useState(false);
-  const [attachError, setAttachError] = useState("");
-  const bottomRef = useRef(null);
-  const menuRef = useRef(null);
-  const fileInputRef = useRef(null);
-  const imageInputRef = useRef(null);
-
-  const activeId = conversations.some(
-    (conversation) => conversation._id === selectedConversationId,
-  )
-    ? selectedConversationId
-    : conversations.some(
-          (conversation) => conversation._id === incomingConversationId,
-        )
-      ? incomingConversationId
-      : conversations[0]?._id || null;
-  const activeIdRef = useRef(activeId);
-
-  const { data: messages = [], isLoading: loadingMessages } =
-    useGetMessagesQuery(activeId, {
-      skip: !activeId,
-    });
-  const [sendFileMessage, { isLoading: uploading }] =
-    useSendFileMessageMutation();
-  const [deleteConversationMutation] = useDeleteConversationMutation();
-  const [markConversationRead] = useMarkConversationReadMutation();
-
-  const activeConvo = conversations.find(
-    (conversation) => conversation._id === activeId,
-  );
-  const otherPerson = activeConvo?.participants.find(
-    (participant) => participant._id !== user._id,
-  );
-
-  useEffect(() => {
-    if (!activeId) return;
-    markConversationRead(activeId)
-      .unwrap()
-      .catch(() => {});
-  }, [activeId, markConversationRead]);
-
-  useEffect(() => {
-    activeIdRef.current = activeId;
-  }, [activeId]);
-
-  useEffect(() => {
-    const socket = connectSocket();
-
-    const handleReceiveMessage = (msg) => {
-      dispatch(
-        messagesApi.util.updateQueryData(
-          "getMessages",
-          msg.conversation,
-          (draftMessages) => {
-            draftMessages.push(msg);
-          },
-        ),
-      );
-      dispatch(
-        messagesApi.util.updateQueryData(
-          "getConversations",
-          undefined,
-          (draftConvos) => {
-            const convo = draftConvos.find((c) => c._id === msg.conversation);
-            if (convo) {
-              convo.lastMessage =
-                msg.text || (msg.fileName ? `📎 ${msg.fileName}` : "");
-              convo.updatedAt = new Date().toISOString();
-            }
-            draftConvos.sort(
-              (a, b) => new Date(b.updatedAt) - new Date(a.updatedAt),
-            );
-          },
-        ),
-      );
-      if (msg.conversation === activeIdRef.current) {
-        markConversationRead(msg.conversation)
-          .unwrap()
-          .catch(() => {});
-      }
-    };
-
-    const handleMessageSent = (msg) => {
-      dispatch(
-        messagesApi.util.updateQueryData(
-          "getMessages",
-          msg.conversation,
-          (draftMessages) => {
-            draftMessages.push(msg);
-          },
-        ),
-      );
-    };
-
-    const handleTypingEvent = ({ conversationId }) => {
-      if (conversationId === activeIdRef.current) {
-        setTyping(true);
-        setTimeout(() => setTyping(false), TYPING_TIMEOUT_MS);
-      }
-    };
-
-    socket.on(SOCKET_EVENTS.RECEIVE_MESSAGE, handleReceiveMessage);
-    socket.on(SOCKET_EVENTS.MESSAGE_SENT, handleMessageSent);
-    socket.on(SOCKET_EVENTS.TYPING, handleTypingEvent);
-
-    return () => {
-      socket.off(SOCKET_EVENTS.RECEIVE_MESSAGE, handleReceiveMessage);
-      socket.off(SOCKET_EVENTS.MESSAGE_SENT, handleMessageSent);
-      socket.off(SOCKET_EVENTS.TYPING, handleTypingEvent);
-    };
-  }, [dispatch, markConversationRead]);
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (menuRef.current && !menuRef.current.contains(event.target)) {
-        setMenuOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
-  useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
-
-  const handleSend = () => {
-    if (!draft.trim() || !activeConvo || !otherPerson) return;
-    const socket = getSocket();
-    socket.emit(SOCKET_EVENTS.SEND_MESSAGE, {
-      conversationId: activeId,
-      text: draft,
-    });
-    setDraft("");
-  };
-
-  const handleTyping = () => {
-    if (!otherPerson) return;
-    getSocket()?.emit(SOCKET_EVENTS.TYPING, { conversationId: activeId });
-  };
-
-  const handleKeyDown = (event) => {
-    if (event.key === "Enter" && !event.shiftKey) {
-      event.preventDefault();
-      handleSend();
-    }
-  };
-
-  const handleFilePicked = async (event) => {
-    const file = event.target.files?.[0];
-    event.target.value = "";
-    if (!file || !activeConvo || !otherPerson) return;
-
-    setAttachError("");
-    try {
-      const formData = new FormData();
-      formData.append("file", file);
-
-      const message = await sendFileMessage({
-        conversationId: activeId,
-        formData,
-      }).unwrap();
-
-      getSocket()?.emit(SOCKET_EVENTS.FILE_MESSAGE_SENT, {
-        messageId: message._id,
-      });
-    } catch (err) {
-      setAttachError(err.data?.message || "Upload failed. Try a smaller file.");
-    }
-  };
-
-  const handleDeleteChat = async () => {
-    if (!activeId) return;
-    const confirmed = window.confirm(
-      "Delete this entire conversation? This can't be undone.",
-    );
-    if (!confirmed) return;
-
-    setMenuOpen(false);
-    setDeleting(true);
-    try {
-      await deleteConversationMutation(activeId).unwrap();
-      const remaining = conversations.filter(
-        (conversation) => conversation._id !== activeId,
-      );
-      setActiveId(remaining.length > 0 ? remaining[0]._id : null);
-    } catch (err) {
-      console.error(err);
-      alert(err.data?.message || "Couldn't delete this conversation.");
-    } finally {
-      setDeleting(false);
-    }
-  };
+  const model = useMessagesPage();
+  const {
+    activeConvo, activeId, attachError, bottomRef, conversations, deleting,
+    draft, fileInputRef, handleDeleteChat, handleFilePicked, handleKeyDown,
+    handleSend, handleTyping, imageInputRef, loadingConvos, loadingMessages,
+    menuOpen, menuRef, messages, otherPerson, setActiveId, setAttachError,
+    setDraft, setMenuOpen, typing, uploading, user,
+  } = model;
 
   return (
     <div className="flex h-[calc(100vh-105px)] bg-white rounded-2xl overflow-hidden">

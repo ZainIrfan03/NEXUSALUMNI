@@ -1,14 +1,8 @@
-import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import {
-  useGetMyProfileQuery,
-  useAddExperienceMutation,
-  useAddEducationMutation,
-  useDeleteEducationMutation,
-} from "../../../store/api/studentProfileApi";
 import { getImageUrl as fileUrl } from "../../../utils/getImageUrl";
 import LoadingSpinner from "../../../components/common/LoadingSpinner";
 import { ROUTES } from "../../../consts/appConstants";
+import useMyProfile from "./MyProfile/useMyProfile";
 import {
   Pencil,
   MapPin,
@@ -25,75 +19,21 @@ export default function MyProfile() {
   const navigate = useNavigate();
 
   const {
-    data: profile,
-    isLoading: loading,
-    error: queryError,
-  } = useGetMyProfileQuery();
-  const [addExperience] = useAddExperienceMutation();
-  const [addEducation] = useAddEducationMutation();
-  const [deleteEducation] = useDeleteEducationMutation();
-
-  const [actionError, setActionError] = useState("");
-  const error = actionError || (queryError && "Could not load profile.");
-
-  const [showRoleForm, setShowRoleForm] = useState(false);
-  const [roleForm, setRoleForm] = useState({
-    title: "",
-    company: "",
-    startDate: "",
-    endDate: "",
-    current: false,
-    description: "",
-  });
-
-  const [showEduForm, setShowEduForm] = useState(false);
-  const [eduForm, setEduForm] = useState({
-    school: "",
-    degree: "",
-    year: "",
-  });
-
-  const handleAddRole = async (event) => {
-    event.preventDefault();
-    if (!roleForm.title || !roleForm.company) return;
-    setActionError("");
-    try {
-      await addExperience(roleForm).unwrap();
-      setRoleForm({
-        title: "",
-        company: "",
-        startDate: "",
-        endDate: "",
-        current: false,
-        description: "",
-      });
-      setShowRoleForm(false);
-    } catch (err) {
-      setActionError(err.data?.message || "Could not add role.");
-    }
-  };
-
-  const handleAddEducation = async (event) => {
-    event.preventDefault();
-    if (!eduForm.school || !eduForm.degree) return;
-    setActionError("");
-    try {
-      await addEducation(eduForm).unwrap();
-      setEduForm({ school: "", degree: "", year: "" });
-      setShowEduForm(false);
-    } catch (err) {
-      setActionError(err.data?.message || "Could not add education.");
-    }
-  };
-
-  const handleDeleteEducation = async (educationId) => {
-    setActionError("");
-    try {
-      await deleteEducation(educationId).unwrap();
-    } catch (err) {
-      setActionError(err.data?.message || "Could not remove education.");
-    }
-  };
+    eduForm,
+    error,
+    handleAddEducation,
+    handleAddRole,
+    handleDeleteEducation,
+    loading,
+    profile,
+    roleForm,
+    setEduForm,
+    setRoleForm,
+    setShowEduForm,
+    setShowRoleForm,
+    showEduForm,
+    showRoleForm,
+  } = useMyProfile();
 
   if (loading) {
     return <LoadingSpinner label="Loading profile..." className="py-20" />;

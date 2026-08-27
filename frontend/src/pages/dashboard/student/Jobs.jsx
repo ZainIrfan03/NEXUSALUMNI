@@ -1,21 +1,12 @@
-import { useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import LoadingSpinner from "../../../components/common/LoadingSpinner";
 import EmptyState from "../../../components/common/EmptyState";
 import StatusBadge from "../../../components/common/StatusBadge";
-import {
-  useGetJobsQuery,
-  useGetMyApplicationsQuery,
-  useApplyToJobMutation,
-  useToggleSaveJobMutation,
-  useRespondToInterviewMutation,
-} from "../../../store/api/studentJobsApi";
 import {
   APPLICATION_STATUS,
   EXPERIENCE_LEVELS,
   INTERVIEW_RESPONSE,
   ROUTES,
-  UI_LIMITS,
 } from "../../../consts/appConstants";
 import {
   APPLICATION_STATUS_META,
@@ -42,127 +33,18 @@ import {
   Video,
   X,
 } from "lucide-react";
+import useStudentJobs from "./Jobs/useStudentJobs";
 
 export default function Jobs() {
-  const navigate = useNavigate();
-  const locationState = useLocation();
-  const [selectedView, setSelectedView] = useState("browse");
-  const view = locationState.state?.jobsView || selectedView;
-  const [activeType, setActiveType] = useState("All Jobs");
-  const [searchInput, setSearchInput] = useState("");
-  const [search, setSearch] = useState("");
-  const [location, setLocation] = useState("");
-  const [department, setDepartment] = useState("");
-  const [experienceLevel, setExperienceLevel] = useState("");
-  const [sort, setSort] = useState("newest");
-  const [showFilters, setShowFilters] = useState(false);
-  const [page, setPage] = useState(1);
-  const [selectedJobId, setSelectedJobId] = useState(null);
-  const [applyingJobId, setApplyingJobId] = useState(null);
-  const [savingJobId, setSavingJobId] = useState(null);
-  const [actionError, setActionError] = useState("");
-  const [resumeRequired, setResumeRequired] = useState(false);
-  const [renderTime] = useState(() => Date.now());
-
-  const queryParams = {
-    page,
-    pageSize: UI_LIMITS.JOBS_PAGE_SIZE,
-    type: activeType,
-    search: search || undefined,
-    location: location || undefined,
-    department: department || undefined,
-    experienceLevel: experienceLevel || undefined,
-    sort,
-    savedOnly: view === "saved" ? true : undefined,
-  };
-
   const {
-    data: jobsData,
-    isLoading: loadingJobs,
-    error: jobsError,
-  } = useGetJobsQuery(queryParams, { skip: view === "applications" });
-  const { data: applicationData, isLoading: loadingApplications } =
-    useGetMyApplicationsQuery();
-  const [applyToJob] = useApplyToJobMutation();
-  const [toggleSaveJob] = useToggleSaveJobMutation();
-  const [respondToInterview] = useRespondToInterviewMutation();
-  const [respondingApplicationId, setRespondingApplicationId] = useState(null);
-
-  const jobs = jobsData?.jobs || [];
-  const applications = applicationData?.applications || [];
-  const stats = applicationData?.stats || {};
-  const selectedJob = jobs.find((job) => job._id === selectedJobId) || null;
-  const error =
-    actionError ||
-    jobsError?.data?.message ||
-    (jobsError ? "Failed to load jobs" : "");
-
-  const resetPage = () => setPage(1);
-  const selectView = (nextView) => {
-    setSelectedView(nextView);
-    if (locationState.state?.jobsView) {
-      navigate(ROUTES.STUDENT.JOBS, { replace: true, state: {} });
-    }
-    setSelectedJobId(null);
-    resetPage();
-  };
-
-  const submitSearch = (event) => {
-    event.preventDefault();
-    setSearch(searchInput.trim());
-    resetPage();
-  };
-
-  const clearFilters = () => {
-    setSearchInput("");
-    setSearch("");
-    setLocation("");
-    setDepartment("");
-    setExperienceLevel("");
-    setSort("newest");
-    setActiveType("All Jobs");
-    resetPage();
-  };
-
-  const handleApply = async (jobId) => {
-    setApplyingJobId(jobId);
-    setActionError("");
-    setResumeRequired(false);
-    try {
-      await applyToJob(jobId).unwrap();
-    } catch (err) {
-      setResumeRequired(err?.data?.code === "RESUME_REQUIRED");
-      setActionError(err?.data?.message || "Could not submit your application");
-    } finally {
-      setApplyingJobId(null);
-    }
-  };
-
-  const handleToggleSave = async (jobId) => {
-    setSavingJobId(jobId);
-    setActionError("");
-    try {
-      await toggleSaveJob(jobId).unwrap();
-    } catch (err) {
-      setActionError(err?.data?.message || "Could not update saved jobs");
-    } finally {
-      setSavingJobId(null);
-    }
-  };
-
-  const handleInterviewResponse = async (applicationId, response) => {
-    setRespondingApplicationId(applicationId);
-    setActionError("");
-    try {
-      await respondToInterview({ applicationId, response }).unwrap();
-    } catch (err) {
-      setActionError(
-        err?.data?.message || "Could not update your interview response",
-      );
-    } finally {
-      setRespondingApplicationId(null);
-    }
-  };
+    activeType, applications, applyingJobId, clearFilters, department, error,
+    experienceLevel, handleApply, handleInterviewResponse, handleToggleSave,
+    jobs, jobsData, loadingApplications, loadingJobs, location, navigate, page,
+    renderTime, resetPage, respondingApplicationId, resumeRequired, savingJobId,
+    searchInput, selectView, selectedJob, setActiveType, setDepartment,
+    setExperienceLevel, setLocation, setPage, setSearchInput, setSelectedJobId,
+    setShowFilters, setSort, showFilters, sort, stats, submitSearch, view,
+  } = useStudentJobs();
 
   const tracking = [
     { label: "Applied", value: stats.applied || 0, icon: Send },
