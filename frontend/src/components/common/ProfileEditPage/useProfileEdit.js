@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { REDIRECT_DELAY_MS } from "../../../consts/appConstants";
 
@@ -29,11 +29,14 @@ export default function useProfileEdit({
   const [resumeFile, setResumeFile] = useState(null);
   const [error, setError] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
-  const [hasSeeded, setHasSeeded] = useState(false);
-  const [seededProfile, setSeededProfile] = useState(null);
+  const hasSeededRef = useRef(false);
+  const seededProfileRef = useRef(null);
 
-  if (profile && profile !== seededProfile && (!seedOnce || !hasSeeded)) {
-    setSeededProfile(profile);
+  useEffect(() => {
+    if (!profile || profile === seededProfileRef.current) return;
+    if (seedOnce && hasSeededRef.current) return;
+
+    seededProfileRef.current = profile;
     setForm({
       fullName: profile.user?.fullName || "",
       location: profile.location || "",
@@ -45,8 +48,8 @@ export default function useProfileEdit({
     setResumeUrl(profile.resumeUrl || "");
     setAvatarUrl(profile.avatarUrl || "");
     setIsPublic(profile.isPublic ?? true);
-    if (seedOnce) setHasSeeded(true);
-  }
+    if (seedOnce) hasSeededRef.current = true;
+  }, [profile, seedOnce]);
 
   const handleChange = (event) =>
     setForm((current) => ({
