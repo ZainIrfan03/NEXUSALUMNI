@@ -1,6 +1,6 @@
 const Alumni = require("../models/Alumni");
 const MentorshipRequest = require("../models/MentorshipRequest");
-const { HTTP_STATUS } = require("../utils/constants");
+const { HTTP_STATUS, MENTORSHIP_STATUS } = require("../constants");
 
 // @route  GET /api/mentorship/recommended
 // Returns alumni who are public and open to mentoring, for the student-side
@@ -33,7 +33,7 @@ const sendMentorshipRequest = async (req, res) => {
   const existingPending = await MentorshipRequest.findOne({
     student: studentUserId,
     alumni: alumni.user,
-    status: "pending",
+    status: MENTORSHIP_STATUS.PENDING,
   });
   if (existingPending) {
     return res.status(HTTP_STATUS.BAD_REQUEST).json({ message: "You already have a pending request with this mentor" });

@@ -1,13 +1,13 @@
 const Job = require("../models/Job");
 const Application = require("../models/Application");
 const Student = require("../models/Student");
-const AppError = require("../utils/AppError");
+const AppError = require("../errors/AppError");
 const {
   HTTP_STATUS,
   JOB_STATUS,
   APPLICATION_STATUS,
   SOCKET_EVENTS,
-} = require("../utils/constants");
+} = require("../constants");
 
 const escapeRegExp = (value = "") => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 

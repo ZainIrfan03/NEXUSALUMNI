@@ -1,5 +1,5 @@
 const mongoose = require("mongoose");
-const { JOB_TYPE, JOB_STATUS, EXPERIENCE_LEVEL } = require("../utils/constants");
+const { JOB_TYPE, JOB_STATUS, EXPERIENCE_LEVEL } = require("../constants");
 
 /**
  * Job — posted by an Alumni, browsed/applied to by Students.

@@ -1,6 +1,6 @@
 const MentorshipRequest = require("../models/MentorshipRequest");
 const Student = require("../models/Student");
-const { HTTP_STATUS } = require("../utils/constants");
+const { HTTP_STATUS, MENTORSHIP_STATUS } = require("../constants");
 
 // Maps a MentorshipRequest doc (with populated student.user) into the
 // shape the alumni-side frontend expects for a "request card".
@@ -42,10 +42,10 @@ const getMentorshipOverview = async (req, res) => {
   const alumniUserId = req.user.id;
 
   const [pendingDocs, acceptedDocs] = await Promise.all([
-    MentorshipRequest.find({ alumni: alumniUserId, status: "pending" })
+    MentorshipRequest.find({ alumni: alumniUserId, status: MENTORSHIP_STATUS.PENDING })
       .populate("student", "fullName")
       .sort({ createdAt: -1 }),
-    MentorshipRequest.find({ alumni: alumniUserId, status: "accepted" })
+    MentorshipRequest.find({ alumni: alumniUserId, status: MENTORSHIP_STATUS.ACCEPTED })
       .populate("student", "fullName")
       .sort({ updatedAt: -1 }),
   ]);
@@ -64,7 +64,7 @@ const getMentorshipOverview = async (req, res) => {
 const acceptRequest = async (req, res) => {
   const request = await MentorshipRequest.findOneAndUpdate(
     { _id: req.params.id, alumni: req.user.id },
-    { status: "accepted" },
+    { status: MENTORSHIP_STATUS.ACCEPTED },
     { new: true }
   );
 
@@ -79,7 +79,7 @@ const acceptRequest = async (req, res) => {
 const rejectRequest = async (req, res) => {
   const request = await MentorshipRequest.findOneAndUpdate(
     { _id: req.params.id, alumni: req.user.id },
-    { status: "declined" },
+    { status: MENTORSHIP_STATUS.DECLINED },
     { new: true }
   );
 

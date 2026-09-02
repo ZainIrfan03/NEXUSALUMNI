@@ -3,7 +3,7 @@ const {
   ROLES,
   PASSWORD_MIN_LENGTH,
   FULL_NAME_MAX_LENGTH,
-} = require("../utils/constants");
+} = require("../constants");
 
 // Only student/alumni may self-register (mirrors the check already done
 // inside registerUser, but rejecting here means it never even reaches

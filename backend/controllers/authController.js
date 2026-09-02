@@ -4,7 +4,7 @@ const mongoose = require("mongoose");
 const User = require("../models/User");
 const Student = require("../models/Student");
 const Alumni = require("../models/Alumni");
-const AppError = require("../utils/AppError");
+const AppError = require("../errors/AppError");
 const {
   HTTP_STATUS,
   AUTH_COOKIE_NAME,
@@ -12,8 +12,8 @@ const {
   JWT_PERSISTENT_EXPIRY,
   JWT_SESSION_EXPIRY,
   AUTH_COOKIE_MAX_AGE_MS,
-} = require("../utils/constants");
-const { JWT_SECRET } = require("../config/env");
+} = require("../constants");
+const { IS_PRODUCTION, JWT_SECRET } = require("../config/env");
 const generateToken = (id, role, keepSignedIn = true) => {
   return jwt.sign({ id, role }, JWT_SECRET, {
     expiresIn: keepSignedIn ? JWT_PERSISTENT_EXPIRY : JWT_SESSION_EXPIRY,
@@ -23,7 +23,7 @@ const generateToken = (id, role, keepSignedIn = true) => {
 const setLoginTokenCookie = (res, token, keepSignedIn) => {
   const options = {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
+    secure: IS_PRODUCTION,
     sameSite: "lax",
   };
   if (keepSignedIn) options.maxAge = AUTH_COOKIE_MAX_AGE_MS;
@@ -149,7 +149,7 @@ const loginUser = async (req, res) => {
 const logoutUser = (req, res) => {
   res.clearCookie(AUTH_COOKIE_NAME, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
+    secure: IS_PRODUCTION,
     sameSite: "lax",
   });
   res.json({ message: "Logged out successfully" });

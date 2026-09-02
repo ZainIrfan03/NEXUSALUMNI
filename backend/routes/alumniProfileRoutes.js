@@ -11,36 +11,69 @@ const {
 } = require("../controllers/alumniProfileController");
 const { protect, authorize } = require("../middleware/authMiddleware");
 const { uploadAvatar, uploadResume } = require("../middleware/uploadMiddleware");
+const validate = require("../middleware/validate");
+const { ROLES } = require("../constants");
+const { validateMongoIdParam } = require("../validators/paramValidators");
+const {
+  addEducationValidators,
+  addExperienceValidators,
+  updateProfileValidators,
+} = require("../validators/profileValidators");
 const router = express.Router();
 
-router.get("/", protect, authorize("alumni"), getMyProfile);
-router.put("/", protect, authorize("alumni"), updateMyProfile);
-router.post("/experience", protect, authorize("alumni"), addExperience);
+router.get("/", protect, authorize(ROLES.ALUMNI), getMyProfile);
+router.put(
+  "/",
+  protect,
+  authorize(ROLES.ALUMNI),
+  updateProfileValidators,
+  validate,
+  updateMyProfile,
+);
+router.post(
+  "/experience",
+  protect,
+  authorize(ROLES.ALUMNI),
+  addExperienceValidators,
+  validate,
+  addExperience,
+);
 router.delete(
   "/experience/:experienceId",
   protect,
-  authorize("alumni"),
+  authorize(ROLES.ALUMNI),
+  validateMongoIdParam("experienceId"),
+  validate,
   deleteExperience,
 );
-router.post("/education", protect, authorize("alumni"), addEducation);
+router.post(
+  "/education",
+  protect,
+  authorize(ROLES.ALUMNI),
+  addEducationValidators,
+  validate,
+  addEducation,
+);
 router.post(
   "/avatar",
   protect,
-  authorize("alumni"),
+  authorize(ROLES.ALUMNI),
   uploadAvatar.single("avatar"),
   uploadAvatarImage,
 );
 router.post(
   "/resume",
   protect,
-  authorize("alumni"),
+  authorize(ROLES.ALUMNI),
   uploadResume.single("resume"),
   uploadResumeFile,
 );
 router.delete(
   "/education/:educationId",
   protect,
-  authorize("alumni"),
+  authorize(ROLES.ALUMNI),
+  validateMongoIdParam("educationId"),
+  validate,
   deleteEducation,
 );
 

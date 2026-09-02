@@ -1,6 +1,7 @@
 const Alumni = require("../models/Alumni");
 const MentorshipRequest = require("../models/MentorshipRequest");
 const Job = require("../models/Job");
+const { MENTORSHIP_STATUS } = require("../constants");
 
 // @route  GET /api/student/dashboard
 // Powers the 4 stat cards on the Student Overview page.
@@ -9,7 +10,7 @@ const getStudentOverview = async (req, res) => {
 
   const [totalAlumni, pendingRequests, savedJobsCount] = await Promise.all([
     Alumni.countDocuments(),
-    MentorshipRequest.countDocuments({ student: studentId, status: "pending" }),
+    MentorshipRequest.countDocuments({ student: studentId, status: MENTORSHIP_STATUS.PENDING }),
     Job.countDocuments({ savedBy: studentId }),
   ]);
 

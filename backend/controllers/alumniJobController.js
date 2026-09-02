@@ -7,7 +7,7 @@ const {
   APPLICATION_STATUS,
   INTERVIEW_RESPONSE,
   SOCKET_EVENTS,
-} = require("../utils/constants");
+} = require("../constants");
 
 // Builds the { applicants: [{avatarUrl}], applicantCount } shown as the
 // avatar-stack + count in the postings table.

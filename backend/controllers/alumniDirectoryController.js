@@ -1,6 +1,10 @@
 const Student = require("../models/Student");
 const MentorshipRequest = require("../models/MentorshipRequest");
-const { HTTP_STATUS, DEPARTMENT_LABELS } = require("../utils/constants");
+const {
+  DEPARTMENT_LABELS,
+  HTTP_STATUS,
+  MENTORSHIP_STATUS,
+} = require("../constants");
 
 // Session is stored as a string like "2021-2025" — the graduation year
 // is the second half of that range.
@@ -68,7 +72,7 @@ const getStudentDirectory = async (req, res) => {
   // on this page, instead of N queries in the map below.
   const acceptedRequests = await MentorshipRequest.find({
     alumni: req.user.id,
-    status: "accepted",
+    status: MENTORSHIP_STATUS.ACCEPTED,
     student: { $in: pageStudents.map((s) => s.user?._id).filter(Boolean) },
   });
   const menteeUserIds = new Set(acceptedRequests.map((r) => r.student.toString()));
@@ -112,7 +116,7 @@ const getStudentById = async (req, res) => {
   const acceptedRequest = await MentorshipRequest.findOne({
     student: student.user._id,
     alumni: req.user.id,
-    status: "accepted",
+    status: MENTORSHIP_STATUS.ACCEPTED,
   });
 
   res.json({

@@ -1,0 +1,24 @@
+const AUTH_COOKIE_NAME = "token";
+const JWT_PERSISTENT_EXPIRY = "5d";
+const JWT_SESSION_EXPIRY = "1d";
+const AUTH_COOKIE_MAX_AGE_MS = 5 * 24 * 60 * 60 * 1000;
+
+const ROLES = {
+  STUDENT: "student",
+  ALUMNI: "alumni",
+  FACULTY: "faculty",
+  ADMIN: "admin",
+};
+
+const PASSWORD_MIN_LENGTH = 8;
+const FULL_NAME_MAX_LENGTH = 15;
+
+module.exports = {
+  AUTH_COOKIE_NAME,
+  JWT_PERSISTENT_EXPIRY,
+  JWT_SESSION_EXPIRY,
+  AUTH_COOKIE_MAX_AGE_MS,
+  ROLES,
+  PASSWORD_MIN_LENGTH,
+  FULL_NAME_MAX_LENGTH,
+};

@@ -10,7 +10,7 @@ const {
   MAX_RESUME_SIZE,
   MAX_CHAT_FILE_SIZE,
   UPLOAD_DIRS,
-} = require("../utils/constants");
+} = require("../constants");
 
 // Make sure these folders exist (create them if they don't)
 Object.values(UPLOAD_DIRS).forEach((dir) => {

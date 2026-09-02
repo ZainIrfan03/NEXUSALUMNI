@@ -1,5 +1,6 @@
 const MentorshipRequest = require("../models/MentorshipRequest");
 const Job = require("../models/Job");
+const { MENTORSHIP_STATUS } = require("../constants");
 
 // @route  GET /api/student/activity
 // Builds a merged, time-sorted "Recent Activity" feed for the Dashboard
@@ -11,7 +12,7 @@ const getStudentActivity = async (req, res) => {
   const studentId = req.user.id;
 
   const [acceptedRequests, recentJobs] = await Promise.all([
-    MentorshipRequest.find({ student: studentId, status: "accepted" })
+    MentorshipRequest.find({ student: studentId, status: MENTORSHIP_STATUS.ACCEPTED })
       .populate("alumni", "fullName")
       .sort({ updatedAt: -1 })
       .limit(5),

@@ -10,7 +10,7 @@
 // controller-specific recovery such as deleting an unpersisted upload.
 
 const multer = require("multer");
-const { HTTP_STATUS } = require("../utils/constants");
+const { HTTP_STATUS } = require("../constants");
 
 // Runs when no route matched the request at all.
 const notFound = (req, res, next) => {

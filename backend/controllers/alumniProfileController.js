@@ -1,6 +1,6 @@
 const Alumni = require("../models/Alumni");
 const User = require("../models/User");
-const { HTTP_STATUS } = require("../utils/constants");
+const { HTTP_STATUS } = require("../constants");
 
 // @route  GET /api/alumni/profile
 // Returns the logged-in alumni's full profile (User + Alumni joined).

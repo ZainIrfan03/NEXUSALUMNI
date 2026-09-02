@@ -1,5 +1,5 @@
 const mongoose = require("mongoose");
-const { MENTORSHIP_STATUS } = require("../utils/constants");
+const { MENTORSHIP_STATUS } = require("../constants");
 
 /**
  * MentorshipRequest — one document per "Send Request" click.

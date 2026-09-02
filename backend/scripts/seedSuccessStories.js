@@ -4,6 +4,7 @@
 
 require("dotenv").config();
 const mongoose = require("mongoose");
+const { MONGO_URI } = require("../config/env");
 const SuccessStory = require("../models/SuccessStory");
 
 const sampleStories = [
@@ -51,7 +52,7 @@ const sampleStories = [
 ];
 
 async function run() {
-  await mongoose.connect(process.env.MONGO_URI);
+  await mongoose.connect(MONGO_URI);
   console.log("Connected to MongoDB");
 
   await SuccessStory.deleteMany({});

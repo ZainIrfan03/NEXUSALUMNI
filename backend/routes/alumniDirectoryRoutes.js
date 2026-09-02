@@ -3,10 +3,11 @@ const { getStudentDirectory, getStudentById } = require("../controllers/alumniDi
 const { protect, authorize } = require("../middleware/authMiddleware");
 const { validateMongoIdParam } = require("../validators/paramValidators");
 const validate = require("../middleware/validate");
+const { ROLES } = require("../constants");
 
 const router = express.Router();
 
-router.get("/", protect, authorize("alumni"), getStudentDirectory);
-router.get("/:id", protect, authorize("alumni"), validateMongoIdParam("id"), validate, getStudentById);
+router.get("/", protect, authorize(ROLES.ALUMNI), getStudentDirectory);
+router.get("/:id", protect, authorize(ROLES.ALUMNI), validateMongoIdParam("id"), validate, getStudentById);
 
 module.exports = router;

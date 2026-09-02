@@ -1,6 +1,6 @@
 const { validationResult } = require("express-validator");
 const fs = require("fs");
-const { HTTP_STATUS } = require("../utils/constants");
+const { HTTP_STATUS } = require("../constants");
 
 // Drop this in AFTER a list of express-validator checks on any route.
 // Collects whatever those checks found wrong and, if anything failed,

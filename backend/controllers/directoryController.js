@@ -1,5 +1,5 @@
 const Alumni = require("../models/Alumni");
-const { HTTP_STATUS } = require("../utils/constants");
+const { HTTP_STATUS } = require("../constants");
 
 // @route  GET /api/directory/featured
 // Public (no auth) — used on the marketing Home page's "Featured Alumni"

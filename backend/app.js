@@ -1,222 +1,30 @@
-require("dotenv").config();
-const express = require("express");
-const http = require("http");
-const { Server } = require("socket.io");
-const jwt = require("jsonwebtoken");
-const cors = require("cors");
-const cookieParser = require("cookie-parser");
-const cookie = require("cookie");
-const connectDB = require("./config/db");
 const path = require("path");
-const {
-  SOCKET_EVENTS,
-  AUTH_COOKIE_NAME,
-  FRONTEND_URL,
-  SERVER_PORT,
-} = require("./utils/constants");
-const { JWT_SECRET } = require("./config/env");
-
-const directoryRoutes = require("./routes/directoryRoutes");
-const mentorshipRoutes = require("./routes/mentorshipRoutes");
-const authRoutes = require("./routes/authRoutes");
-const jobRoutes = require("./routes/jobRoutes");
-const studentProfileRoutes = require("./routes/studentProfileRoutes");
-const dashboardRoutes = require("./routes/dashboardRoutes");
-const alumniProfileRoutes = require("./routes/alumniProfileRoutes");
-const alumniDashboardRoutes = require("./routes/alumniDashboardRoutes");
-const alumniMentorshipRoutes = require("./routes/alumniMentorshipRoutes");
-const alumniJobRoutes = require("./routes/alumniJobRoutes");
-const alumniDirectoryRoutes = require("./routes/alumniDirectoryRoutes");
-const messageRoutes = require("./routes/messageRoutes");
-const Message = require("./models/Message");
-const Conversation = require("./models/Conversation");
-const User = require("./models/User");
-const activityRoutes = require("./routes/activityRoutes");
-const storyRoutes = require("./routes/storyRoutes");
-const uploadRoutes = require("./routes/uploadRoutes");
-const { notFound, errorHandler } = require("./middleware/errorHandler");
-
-connectDB(); // connect to MongoDB before anything else
+const cookieParser = require("cookie-parser");
+const cors = require("cors");
+const express = require("express");
+const { FRONTEND_URL } = require("./config/env");
+const { errorHandler, notFound } = require("./middleware/errorHandler");
+const registerRoutes = require("./routes");
 
 const app = express();
 
-
-// credentials: true is required so the browser is allowed to send/receive
-// the httpOnly auth cookie across origins (frontend on :5173, backend on :5000)
 app.use(cors({ origin: FRONTEND_URL, credentials: true }));
-app.use(express.json());  // parse JSON request bodies
-app.use(cookieParser());  // parse cookies into req.cookies
-// Avatars are intentionally public. Resumes and chat attachments are served
-// by authorization-aware routes; never expose the entire uploads tree.
-app.use("/uploads/avatars", express.static(path.join(__dirname, "uploads", "avatars")));
-app.use("/uploads", uploadRoutes);
+app.use(express.json());
+app.use(cookieParser());
 
-// Routes
-app.use("/api/auth", authRoutes);
-app.use("/api/directory", directoryRoutes);
-app.use("/api/stories", storyRoutes);
-app.use("/api/mentorship", mentorshipRoutes);
-app.use("/api/jobs", jobRoutes);
-app.use("/api/student/profile", studentProfileRoutes);
-app.use("/api/student/dashboard", dashboardRoutes);
-app.use("/api/student/activity", activityRoutes);
-app.use("/api/alumni/profile", alumniProfileRoutes);
-app.use("/api/alumni/dashboard", alumniDashboardRoutes);
-app.use("/api/alumni/mentorship", alumniMentorshipRoutes);
-app.use("/api/alumni/jobs", alumniJobRoutes);
-app.use("/api/alumni/directory", alumniDirectoryRoutes);
-app.use("/api/messages", messageRoutes);
+// Avatars are public. Resume and chat files stay behind protected routes.
+app.use(
+  "/uploads/avatars",
+  express.static(path.join(__dirname, "uploads", "avatars")),
+);
+
+registerRoutes(app);
 
 app.get("/", (req, res) => {
   res.send("Alumni Nexus API is running");
 });
 
-// Must come after all routes above: catches any request that didn't match
-// a route, and returns a clean JSON 404 instead of Express's default HTML page.
 app.use(notFound);
-
-// Must be the LAST app.use(): Express detects it as an error handler because
-// it takes 4 args (err, req, res, next). Any next(err) call from a route or
-// middleware — or any error a route forgets to try/catch and passes along —
-// lands here instead of crashing the process.
 app.use(errorHandler);
 
-// --- Socket.io setup ---
-// Express needs a raw http server so Socket.io can attach to the same port.
-const httpServer = http.createServer(app);
-const io = new Server(httpServer, {
-  cors: { origin: FRONTEND_URL, credentials: true },
-});
-app.set("io", io);
-
-// Runs once per client connection attempt, before "connection" fires.
-// Client must connect with { withCredentials: true } so the browser
-// includes the httpOnly "token" cookie in the handshake request headers
-// (socket.io doesn't parse cookies itself, so we do it manually here).
-io.use(async (socket, next) => {
-  const rawCookie = socket.handshake.headers.cookie;
-  const token = rawCookie ? cookie.parse(rawCookie)[AUTH_COOKIE_NAME] : null;
-
-  if (!token) return next(new Error("No token provided"));
-
-  try {
-    const decoded = jwt.verify(token, JWT_SECRET);
-    const user = await User.findById(decoded.id).select("_id");
-    if (!user) return next(new Error("Session user not found"));
-    socket.userId = user._id.toString();
-    next();
-  } catch (err) {
-    next(new Error("Invalid token"));
-  }
-});
-
-io.on("connection", (socket) => {
-  socket.join(socket.userId);
-  console.log(`User connected: ${socket.userId}`);
-
-  const getConversationRecipient = async (conversationId) => {
-    const conversation = await Conversation.findOne({
-      _id: conversationId,
-      participants: socket.userId,
-    }).select("participants");
-
-    if (!conversation || conversation.participants.length !== 2) return null;
-    return conversation.participants.find(
-      (participantId) => participantId.toString() !== socket.userId
-    )?.toString();
-  };
-
-  // Client emits this while the other person is typing
-  socket.on(SOCKET_EVENTS.TYPING, async ({ conversationId } = {}) => {
-    try {
-      const recipientId = await getConversationRecipient(conversationId);
-      if (!recipientId) return;
-      io.to(recipientId).emit(SOCKET_EVENTS.TYPING, {
-        conversationId,
-        fromUserId: socket.userId,
-      });
-    } catch {
-      // Invalid or unauthorized typing events are intentionally ignored.
-    }
-  });
-
-  // Client emits this to send a message
-  socket.on(SOCKET_EVENTS.SEND_MESSAGE, async ({ conversationId, text } = {}) => {
-    try {
-      if (typeof text !== "string" || !text.trim() || text.length > 4000) {
-        return socket.emit(SOCKET_EVENTS.MESSAGE_ERROR, {
-          message: "Message must contain between 1 and 4000 characters",
-        });
-      }
-
-      const conversation = await Conversation.findOne({
-        _id: conversationId,
-        participants: socket.userId,
-      });
-
-      if (!conversation || conversation.participants.length !== 2) {
-        return socket.emit(SOCKET_EVENTS.MESSAGE_ERROR, {
-          message: "Not authorized to send messages in this conversation",
-        });
-      }
-
-      const recipientId = conversation.participants.find(
-        (participantId) => participantId.toString() !== socket.userId
-      )?.toString();
-      if (!recipientId) {
-        return socket.emit(SOCKET_EVENTS.MESSAGE_ERROR, {
-          message: "Conversation recipient not found",
-        });
-      }
-
-      const message = await Message.create({
-        conversation: conversationId,
-        sender: socket.userId,
-        text: text.trim(),
-      });
-
-      await Conversation.findByIdAndUpdate(conversationId, {
-        lastMessage: message.text,
-        lastMessageAt: new Date(),
-      });
-
-      // The recipient comes from the stored conversation, never the client.
-      io.to(recipientId).emit(SOCKET_EVENTS.RECEIVE_MESSAGE, message);
-
-      // Echo back to the sender so their UI updates from the same
-      // saved document instead of a separate optimistic message
-      socket.emit(SOCKET_EVENTS.MESSAGE_SENT, message);
-    } catch (error) {
-      socket.emit(SOCKET_EVENTS.MESSAGE_ERROR, { message: "Failed to send message" });
-    }
-  });
-
-  // Attachment messages are saved via the REST endpoint (multer needs a
-  // regular HTTP request), not the "sendMessage" socket event above — so
-  // once the frontend gets the saved message back from that REST call, it
-  // emits this event just to relay it live to the other participant.
-  socket.on(SOCKET_EVENTS.FILE_MESSAGE_SENT, async ({ messageId } = {}) => {
-    try {
-      // Reload it so clients cannot forge the sender, attachment or contents.
-      const message = await Message.findOne({
-        _id: messageId,
-        sender: socket.userId,
-      });
-      if (!message) return;
-
-      const recipientId = await getConversationRecipient(message.conversation);
-      if (!recipientId) return;
-      io.to(recipientId).emit(SOCKET_EVENTS.RECEIVE_MESSAGE, message);
-    } catch {
-      socket.emit(SOCKET_EVENTS.MESSAGE_ERROR, {
-        message: "Failed to relay attachment message",
-      });
-    }
-  });
-
-  socket.on("disconnect", () => {
-    console.log(`User disconnected: ${socket.userId}`);
-  });
-});
-
-httpServer.listen(SERVER_PORT, () => console.log(`Server running on port ${SERVER_PORT}`));
+module.exports = app;

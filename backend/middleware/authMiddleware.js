@@ -1,7 +1,7 @@
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 const { JWT_SECRET } = require("../config/env");
-const { AUTH_COOKIE_NAME, HTTP_STATUS } = require("../utils/constants");
+const { AUTH_COOKIE_NAME, HTTP_STATUS } = require("../constants");
 
 // Verifies the JWT from the httpOnly "token" cookie and attaches the
 // decoded { id, role } to req.user for use in protected routes.

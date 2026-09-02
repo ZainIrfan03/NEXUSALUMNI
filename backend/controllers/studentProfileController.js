@@ -2,7 +2,7 @@ const Student = require("../models/Student");
 const User = require("../models/User");
 const fs = require("fs");
 const path = require("path");
-const { HTTP_STATUS } = require("../utils/constants");
+const { HTTP_STATUS } = require("../constants");
 
 // @route  GET /api/student/profile
 // Returns the logged-in student's full profile (User + Student joined).

@@ -4,7 +4,7 @@ const {
   JOB_STATUS,
   EXPERIENCE_LEVEL,
   INTERVIEW_RESPONSE,
-} = require("../utils/constants");
+} = require("../constants");
 
 // @route POST /api/jobs — alumni creating a new posting
 const createJobValidators = [

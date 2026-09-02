@@ -1,5 +1,5 @@
 const mongoose = require("mongoose");
-const { APPLICATION_STATUS, INTERVIEW_RESPONSE } = require("../utils/constants");
+const { APPLICATION_STATUS, INTERVIEW_RESPONSE } = require("../constants");
 
 const interviewSchema = new mongoose.Schema(
   {

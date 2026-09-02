@@ -13,13 +13,14 @@ const {
 } = require("../validators/alumniJobValidators");
 const { validateMongoIdParam } = require("../validators/paramValidators");
 const validate = require("../middleware/validate");
+const { ROLES } = require("../constants");
 const router = express.Router();
 
-router.get("/", protect, authorize("alumni"), getMyJobs);
+router.get("/", protect, authorize(ROLES.ALUMNI), getMyJobs);
 router.get(
   "/:id/applicants",
   protect,
-  authorize("alumni"),
+  authorize(ROLES.ALUMNI),
   validateMongoIdParam("id"),
   validate,
   getJobApplicants
@@ -27,7 +28,7 @@ router.get(
 router.patch(
   "/applications/:applicationId/interview",
   protect,
-  authorize("alumni"),
+  authorize(ROLES.ALUMNI),
   validateMongoIdParam("applicationId"),
   scheduleInterviewValidators,
   validate,
@@ -36,7 +37,7 @@ router.patch(
 router.patch(
   "/applications/:applicationId/status",
   protect,
-  authorize("alumni"),
+  authorize(ROLES.ALUMNI),
   validateMongoIdParam("applicationId"),
   updateApplicationStatusValidators,
   validate,
@@ -45,7 +46,7 @@ router.patch(
 router.delete(
   "/:id",
   protect,
-  authorize("alumni"),
+  authorize(ROLES.ALUMNI),
   validateMongoIdParam("id"),
   validate,
   deleteMyJob

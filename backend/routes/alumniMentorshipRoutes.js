@@ -7,13 +7,14 @@ const {
 const { protect, authorize } = require("../middleware/authMiddleware");
 const { validateMongoIdParam } = require("../validators/paramValidators");
 const validate = require("../middleware/validate");
+const { ROLES } = require("../constants");
 const router = express.Router();
 
-router.get("/", protect, authorize("alumni"), getMentorshipOverview);
+router.get("/", protect, authorize(ROLES.ALUMNI), getMentorshipOverview);
 router.post(
   "/requests/:id/accept",
   protect,
-  authorize("alumni"),
+  authorize(ROLES.ALUMNI),
   validateMongoIdParam("id"),
   validate,
   acceptRequest
@@ -21,7 +22,7 @@ router.post(
 router.post(
   "/requests/:id/reject",
   protect,
-  authorize("alumni"),
+  authorize(ROLES.ALUMNI),
   validateMongoIdParam("id"),
   validate,
   rejectRequest

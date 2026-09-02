@@ -1,5 +1,5 @@
 const mongoose = require("mongoose");
-const { ROLES } = require("../utils/constants");
+const { ROLES } = require("../constants");
 
 /**
  * Base User model — common to every account regardless of role.

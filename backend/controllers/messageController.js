@@ -5,7 +5,7 @@ const Message = require("../models/Message");
 const MentorshipRequest = require("../models/MentorshipRequest");
 const Student = require("../models/Student");
 const Alumni = require("../models/Alumni");
-const { HTTP_STATUS, UPLOAD_DIRS } = require("../utils/constants");
+const { HTTP_STATUS, MENTORSHIP_STATUS, ROLES, UPLOAD_DIRS } = require("../constants");
 
 const removeFileIfPresent = async (filePath) => {
   if (!filePath) return;
@@ -111,13 +111,13 @@ const startConversation = async (req, res) => {
   const myId = req.user.id;
   const myRole = req.user.role;
 
-  const studentUserId = myRole === "student" ? myId : otherUserId;
-  const alumniUserId = myRole === "alumni" ? myId : otherUserId;
+  const studentUserId = myRole === ROLES.STUDENT ? myId : otherUserId;
+  const alumniUserId = myRole === ROLES.ALUMNI ? myId : otherUserId;
 
   const acceptedRequest = await MentorshipRequest.findOne({
     student: studentUserId,
     alumni: alumniUserId,
-    status: "accepted",
+    status: MENTORSHIP_STATUS.ACCEPTED,
   });
 
   if (!acceptedRequest) {

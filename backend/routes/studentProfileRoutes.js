@@ -18,23 +18,24 @@ const {
 } = require("../validators/profileValidators");
 const { validateMongoIdParam } = require("../validators/paramValidators");
 const validate = require("../middleware/validate");
+const { ROLES } = require("../constants");
 const router = express.Router();
 
-router.get("/", protect, authorize("student"), getMyProfile);
-router.put("/", protect, authorize("student"), updateProfileValidators, validate, updateMyProfile);
+router.get("/", protect, authorize(ROLES.STUDENT), getMyProfile);
+router.put("/", protect, authorize(ROLES.STUDENT), updateProfileValidators, validate, updateMyProfile);
 
 // Avatar/resume upload — multipart/form-data, handled by multer before the controller
 router.post(
   "/avatar",
   protect,
-  authorize("student"),
+  authorize(ROLES.STUDENT),
   uploadAvatar.single("avatar"),
   uploadAvatarImage
 );
 router.post(
   "/resume",
   protect,
-  authorize("student"),
+  authorize(ROLES.STUDENT),
   uploadResume.single("resume"),
   uploadResumeFile
 );
@@ -42,7 +43,7 @@ router.post(
 router.post(
   "/experience",
   protect,
-  authorize("student"),
+  authorize(ROLES.STUDENT),
   addExperienceValidators,
   validate,
   addExperience
@@ -50,7 +51,7 @@ router.post(
 router.delete(
   "/experience/:experienceId",
   protect,
-  authorize("student"),
+  authorize(ROLES.STUDENT),
   validateMongoIdParam("experienceId"),
   validate,
   deleteExperience
@@ -58,7 +59,7 @@ router.delete(
 router.post(
   "/education",
   protect,
-  authorize("student"),
+  authorize(ROLES.STUDENT),
   addEducationValidators,
   validate,
   addEducation
@@ -66,7 +67,7 @@ router.post(
 router.delete(
   "/education/:educationId",
   protect,
-  authorize("student"),
+  authorize(ROLES.STUDENT),
   validateMongoIdParam("educationId"),
   validate,
   deleteEducation
