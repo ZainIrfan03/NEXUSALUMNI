@@ -1,13 +1,10 @@
 const MentorshipRequest = require("../models/MentorshipRequest");
 const Job = require("../models/Job");
 const { MENTORSHIP_STATUS } = require("../constants");
-// Powers the stat cards + "Incoming Mentorship Requests" preview on the
-// Alumni Dashboard page.
 const getAlumniOverview = async (req, res) => {
   const alumniUserId = req.user.id;
 
   const [studentsMentored, jobsPosted, pendingRequests] = await Promise.all([
-    // "Students mentored" = distinct students whose request was accepted
     MentorshipRequest.distinct("student", {
       alumni: alumniUserId,
       status: MENTORSHIP_STATUS.ACCEPTED,

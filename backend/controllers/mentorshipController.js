@@ -1,8 +1,6 @@
 const Alumni = require("../models/Alumni");
 const MentorshipRequest = require("../models/MentorshipRequest");
 const { HTTP_STATUS, MENTORSHIP_STATUS } = require("../constants");
-// Returns alumni who are public and open to mentoring, for the student-side
-// "Recommended Mentors" grid.
 const getRecommendedMentors = async (req, res) => {
   const mentors = await Alumni.find({ isPublic: true, openToMentorship: true })
     .populate("user", "fullName email")
@@ -10,7 +8,6 @@ const getRecommendedMentors = async (req, res) => {
 
   res.json(mentors);
 };
-// Creates a mentorship request from the logged-in student to that alumni.
 const sendMentorshipRequest = async (req, res) => {
   const { alumniId, message } = req.body;
   const studentUserId = req.user.id;
@@ -24,7 +21,6 @@ const sendMentorshipRequest = async (req, res) => {
     return res.status(HTTP_STATUS.NOT_FOUND).json({ message: "Alumni not found" });
   }
 
-  // Don't let a student spam the same alumni while a request is still pending.
   const existingPending = await MentorshipRequest.findOne({
     student: studentUserId,
     alumni: alumni.user,
@@ -42,8 +38,6 @@ const sendMentorshipRequest = async (req, res) => {
 
   res.status(HTTP_STATUS.CREATED).json(request);
 };
-// Returns every mentorship request the logged-in student has sent, newest first —
-// powers the "Request Status" panel.
 const getMyRequests = async (req, res) => {
   const requests = await MentorshipRequest.find({ student: req.user.id })
     .populate("alumni", "fullName email")

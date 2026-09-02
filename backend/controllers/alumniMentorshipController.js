@@ -2,8 +2,6 @@ const MentorshipRequest = require("../models/MentorshipRequest");
 const Student = require("../models/Student");
 const { HTTP_STATUS, MENTORSHIP_STATUS } = require("../constants");
 
-// Maps a MentorshipRequest doc (with populated student.user) into the
-// shape the alumni-side frontend expects for a "request card".
 const formatRequest = async (reqDoc) => {
   const studentProfile = await Student.findOne({ user: reqDoc.student._id });
   return {
@@ -17,7 +15,6 @@ const formatRequest = async (reqDoc) => {
   };
 };
 
-// Maps an accepted MentorshipRequest into the "current mentee" table row shape.
 const formatMentee = async (reqDoc) => {
   const studentProfile = await Student.findOne({ user: reqDoc.student._id });
   return {
@@ -35,7 +32,6 @@ const formatMentee = async (reqDoc) => {
     avatarUrl: studentProfile?.avatarUrl,
   };
 };
-// Returns active mentee count, pending requests, and the current mentees table.
 const getMentorshipOverview = async (req, res) => {
   const alumniUserId = req.user.id;
 

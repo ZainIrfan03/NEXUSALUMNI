@@ -9,8 +9,6 @@ const {
   SOCKET_EVENTS,
 } = require("../constants");
 
-// Builds the { applicants: [{avatarUrl}], applicantCount } shown as the
-// avatar-stack + count in the postings table.
 const attachApplicantInfo = async (job) => {
   const applications = await Application.find({ job: job._id })
     .populate("student", "fullName")
@@ -40,7 +38,6 @@ const attachApplicantInfo = async (job) => {
     applicantCount,
   };
 };
-// Returns this alumni's own postings (paginated) plus summary stats.
 const getMyJobs = async (req, res) => {
   const alumniUserId = req.user.id;
   const page = Number(req.query.page) || 1;
@@ -84,7 +81,6 @@ const getMyJobs = async (req, res) => {
     },
   });
 };
-// Only the alumni who posted the job can delete it.
 const deleteMyJob = async (req, res) => {
   const job = await Job.findOneAndDelete({
     _id: req.params.id,
@@ -95,13 +91,10 @@ const deleteMyJob = async (req, res) => {
     return res.status(HTTP_STATUS.NOT_FOUND).json({ message: "Job not found" });
   }
 
-  // Clean up related applications so they don't dangle
   await Application.deleteMany({ job: req.params.id });
 
   res.json({ message: "Job deleted" });
 };
-// Only the alumni who posted the job can see its applicants.
-// Powers the "View Applicants" modal on the postings table.
 const getJobApplicants = async (req, res) => {
   const job = await Job.findOne({ _id: req.params.id, postedBy: req.user.id });
   if (!job) {
@@ -139,9 +132,6 @@ const getJobApplicants = async (req, res) => {
 
   res.json({ job: { _id: job._id, title: job.title }, applicants });
 };
-// Moves an applicant through the pipeline (e.g. "Move to Review",
-// "Schedule Interview") from the applicants modal. Only the alumni who
-// posted the underlying job can update it.
 const updateApplicationStatus = async (req, res) => {
   const { status } = req.body;
   if (!Object.values(APPLICATION_STATUS).includes(status)) {

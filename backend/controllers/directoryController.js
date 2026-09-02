@@ -1,9 +1,5 @@
 const Alumni = require("../models/Alumni");
 const { HTTP_STATUS } = require("../constants");
-// Public (no auth) — used on the marketing Home page's "Featured Alumni"
-// section, so it can't reuse getAlumniDirectory (that route requires login).
-// Picks a small set of alumni with a complete public profile so the
-// homepage never shows blank names/roles.
 const getFeaturedAlumni = async (req, res) => {
   const limit = Math.min(Number(req.query.limit) || 4, 12);
 
@@ -18,23 +14,15 @@ const getFeaturedAlumni = async (req, res) => {
 
   res.json({ results: alumni });
 };
-// @query  ?industry=&department=&fromYear=&toYear=&location=&page=&limit=
-// Returns paginated alumni profiles (joined with their base User info).
 const getAlumniDirectory = async (req, res) => {
   const { fromYear, toYear, page = 1, limit = 6 } = req.query;
 
-  // Directory results must respect the profile owner's privacy setting.
-  // Keep this restriction server-side because frontend filtering can be
-  // bypassed by calling the API directly.
   const filter = { isPublic: true };
   if (fromYear || toYear) {
     filter.graduationYear = {};
     if (fromYear) filter.graduationYear.$gte = fromYear;
     if (toYear) filter.graduationYear.$lte = toYear;
   }
-  // NOTE: department/industry/location filters need those fields added
-  // to the Alumni model first — add them there, then filter here the
-  // same way as graduationYear above.
 
   const skip = (Number(page) - 1) * Number(limit);
 
@@ -53,12 +41,7 @@ const getAlumniDirectory = async (req, res) => {
     totalPages: Math.ceil(total / Number(limit)),
   });
 };
-// Returns one alumni's full public profile — used by the "View Profile"
-// button on the student-side Directory page.
-// :id is the Alumni document's own _id (same id used in the directory list).
 const getAlumniById = async (req, res) => {
-  // Use the same privacy rule as the list endpoint so a private profile
-  // cannot be opened by guessing or reusing its document id.
   const alumni = await Alumni.findOne({
     _id: req.params.id,
     isPublic: true,

@@ -29,9 +29,6 @@ const setLoginTokenCookie = (res, token, keepSignedIn) => {
   if (keepSignedIn) options.maxAge = AUTH_COOKIE_MAX_AGE_MS;
   res.cookie(AUTH_COOKIE_NAME, token, options);
 };
-// Public registration — only "student" and "alumni" are allowed here.
-// Creates the base User first, then the matching profile document
-// (Student or Alumni) that references that User's _id.
 const registerUser = async (req, res) => {
   try {
     const {
@@ -39,11 +36,9 @@ const registerUser = async (req, res) => {
       email,
       password,
       role,
-      // student fields
       department,
       session,
       rollNumber,
-      // alumni fields
       graduationYear,
       company,
       jobTitle,
@@ -53,7 +48,6 @@ const registerUser = async (req, res) => {
       return res.status(HTTP_STATUS.BAD_REQUEST).json({ message: "Missing required fields" });
     }
 
-    // Admin/Faculty are never created through this open endpoint.
     const allowedPublicRoles = [ROLES.STUDENT, ROLES.ALUMNI];
     if (!allowedPublicRoles.includes(role)) {
       return res.status(HTTP_STATUS.FORBIDDEN).json({
@@ -66,8 +60,6 @@ const registerUser = async (req, res) => {
 
     let user;
 
-    // User + role profile are one unit of work. If either insert fails, MongoDB
-    // rolls both back so an account can never exist without its profile.
     await mongoose.connection.transaction(async (dbSession) => {
       const existingUser = await User.findOne({ email }).session(dbSession);
       if (existingUser) {
@@ -106,15 +98,12 @@ const registerUser = async (req, res) => {
       role: user.role,
     });
   } catch (error) {
-    // Preserve the friendly response if two registrations race past the
-    // pre-insert lookup and MongoDB's unique email index rejects one.
     if (error.code === 11000) {
       throw new AppError("Email already registered", HTTP_STATUS.BAD_REQUEST);
     }
     throw error;
   }
 };
-// Logs in any role (student, alumni, faculty, admin) — same User collection.
 const loginUser = async (req, res) => {
   const { email, password, keepSignedIn = false } = req.body;
 
@@ -138,8 +127,6 @@ const loginUser = async (req, res) => {
     role: user.role,
   });
 };
-// Clears the httpOnly auth cookie. Options passed to clearCookie must match
-// the options used in setTokenCookie or the browser won't remove it.
 const logoutUser = (req, res) => {
   res.clearCookie(AUTH_COOKIE_NAME, {
     httpOnly: true,
@@ -148,7 +135,6 @@ const logoutUser = (req, res) => {
   });
   res.json({ message: "Logged out successfully" });
 };
-// Verifies the JWT cookie and returns fresh identity data from the database.
 const getCurrentUser = async (req, res) => {
   const user = await User.findById(req.user.id).select("fullName email role");
   if (!user) {

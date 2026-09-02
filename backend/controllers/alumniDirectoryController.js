@@ -6,19 +6,11 @@ const {
   MENTORSHIP_STATUS,
 } = require("../constants");
 
-// Session is stored as a string like "2021-2025" — the graduation year
-// is the second half of that range.
 const getGraduationYear = (session) => {
   if (!session) return null;
   const parts = session.split("-");
   return parts[parts.length - 1].trim();
 };
-// @query  ?department=&skills=&years=&sortBy=&page=
-// Returns a paginated, filterable list of students for alumni to browse.
-// `skills` and `years` arrive as comma-separated strings from the frontend.
-// Each student includes `isMentee: boolean` — true only if THIS alumni has
-// an accepted MentorshipRequest with them, so the frontend can show a
-// "Message" icon on the card only for accepted mentees.
 const getStudentDirectory = async (req, res) => {
   const {
     department = "all",
@@ -32,8 +24,6 @@ const getStudentDirectory = async (req, res) => {
   const skillList = skills ? skills.split(",").filter(Boolean) : [];
   const yearList = years ? years.split(",").filter(Boolean) : [];
 
-  // Only profiles that opted into directory visibility may be listed.
-  // This must be enforced by the API, not just hidden by the frontend.
   const filter = { isPublic: true };
   if (department && department !== "all") {
     filter.department = department;
@@ -42,8 +32,6 @@ const getStudentDirectory = async (req, res) => {
     filter.skills = { $in: skillList };
   }
   if (yearList.length) {
-    // session is a "2021-2025" style string — match any of the
-    // selected years appearing anywhere in that range.
     filter.session = { $regex: yearList.join("|"), $options: "i" };
   }
 
@@ -58,7 +46,6 @@ const getStudentDirectory = async (req, res) => {
       (getGraduationYear(b.session) || "").localeCompare(getGraduationYear(a.session) || "")
     );
   } else {
-    // "recent" — newest profiles first
     students.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
   }
 
@@ -66,8 +53,6 @@ const getStudentDirectory = async (req, res) => {
   const start = (Number(page) - 1) * pageSize;
   const pageStudents = students.slice(start, start + pageSize);
 
-  // One query for all accepted requests this alumni has with the students
-  // on this page, instead of N queries in the map below.
   const acceptedRequests = await MentorshipRequest.find({
     alumni: req.user.id,
     status: MENTORSHIP_STATUS.ACCEPTED,
@@ -89,17 +74,7 @@ const getStudentDirectory = async (req, res) => {
 
   res.json({ students: formatted, totalCount });
 };
-// Returns one student's full public profile — used by the "View Profile"
-// button on the alumni-side Student Directory page.
-// :id is the Student document's own _id (same id used in the directory list).
-//
-// Also includes `isMentee: boolean` — true only if THIS alumni has an
-// accepted MentorshipRequest with this student. The frontend uses this to
-// decide whether to show the "Message" button (alumni can only chat with
-// their accepted mentees, not any student in the directory).
 const getStudentById = async (req, res) => {
-  // Match the directory list's privacy rule so direct profile URLs do not
-  // expose a student who has made their profile private.
   const student = await Student.findOne({
     _id: req.params.id,
     isPublic: true,

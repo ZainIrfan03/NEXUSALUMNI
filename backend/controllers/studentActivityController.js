@@ -1,11 +1,6 @@
 const MentorshipRequest = require("../models/MentorshipRequest");
 const Job = require("../models/Job");
 const { MENTORSHIP_STATUS } = require("../constants");
-// Builds a merged, time-sorted "Recent Activity" feed for the Dashboard
-// out of real events: accepted mentorship requests + newly posted jobs.
-//
-// NOTE: Announcements and Courses need their own models before they can
-// be added here — this only covers what we actually have data for.
 const getStudentActivity = async (req, res) => {
   const studentId = req.user.id;
 
