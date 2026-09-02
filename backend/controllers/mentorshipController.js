@@ -1,49 +1,21 @@
-const Alumni = require("../models/Alumni");
-const MentorshipRequest = require("../models/MentorshipRequest");
-const { HTTP_STATUS, MENTORSHIP_STATUS, PAGINATION } = require("../constants");
+const { HTTP_STATUS } = require("../constants");
+const mentorshipService = require("../services/mentorshipService");
+
 const getRecommendedMentors = async (req, res) => {
-  const mentors = await Alumni.find({ isPublic: true, openToMentorship: true })
-    .populate("user", "fullName email")
-    .limit(PAGINATION.RECOMMENDED_MENTORS_LIMIT);
-
-  res.json(mentors);
+  res.json(await mentorshipService.getRecommendedMentors());
 };
+
 const sendMentorshipRequest = async (req, res) => {
-  const { alumniId, message } = req.body;
-  const studentUserId = req.user.id;
-
-  if (!alumniId) {
-    return res.status(HTTP_STATUS.BAD_REQUEST).json({ message: "alumniId is required" });
-  }
-
-  const alumni = await Alumni.findById(alumniId);
-  if (!alumni) {
-    return res.status(HTTP_STATUS.NOT_FOUND).json({ message: "Alumni not found" });
-  }
-
-  const existingPending = await MentorshipRequest.findOne({
-    student: studentUserId,
-    alumni: alumni.user,
-    status: MENTORSHIP_STATUS.PENDING,
+  const request = await mentorshipService.sendRequest({
+    alumniId: req.body.alumniId,
+    message: req.body.message,
+    studentUserId: req.user.id,
   });
-  if (existingPending) {
-    return res.status(HTTP_STATUS.BAD_REQUEST).json({ message: "You already have a pending request with this mentor" });
-  }
-
-  const request = await MentorshipRequest.create({
-    student: studentUserId,
-    alumni: alumni.user,
-    message,
-  });
-
   res.status(HTTP_STATUS.CREATED).json(request);
 };
-const getMyRequests = async (req, res) => {
-  const requests = await MentorshipRequest.find({ student: req.user.id })
-    .populate("alumni", "fullName email")
-    .sort({ createdAt: -1 });
 
-  res.json(requests);
+const getMyRequests = async (req, res) => {
+  res.json(await mentorshipService.getStudentRequests(req.user.id));
 };
 
-module.exports = { getRecommendedMentors, sendMentorshipRequest, getMyRequests };
+module.exports = { getMyRequests, getRecommendedMentors, sendMentorshipRequest };

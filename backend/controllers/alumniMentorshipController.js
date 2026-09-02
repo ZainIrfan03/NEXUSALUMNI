@@ -1,87 +1,20 @@
-const MentorshipRequest = require("../models/MentorshipRequest");
-const Student = require("../models/Student");
-const {
-  HTTP_STATUS,
-  MENTEE_PROGRESS,
-  MENTORSHIP_STATUS,
-} = require("../constants");
+const { MENTORSHIP_STATUS } = require("../constants");
+const mentorshipService = require("../services/mentorshipService");
 
-const formatRequest = async (reqDoc) => {
-  const studentProfile = await Student.findOne({ user: reqDoc.student._id });
-  return {
-    _id: reqDoc._id,
-    name: reqDoc.student.fullName,
-    major: studentProfile?.department || "",
-    classYear: studentProfile?.session?.split("-")[1] || studentProfile?.session || "",
-    tag: studentProfile?.skills?.[0] || null,
-    message: reqDoc.message,
-    avatarUrl: studentProfile?.avatarUrl,
-  };
-};
-
-const formatMentee = async (reqDoc) => {
-  const studentProfile = await Student.findOne({ user: reqDoc.student._id });
-  return {
-    _id: reqDoc._id, // the request id — used as the row key + for the Message link
-    studentUserId: reqDoc.student._id,
-    name: reqDoc.student.fullName,
-    department: studentProfile?.department || "",
-    yearLabel: studentProfile?.session ? `Session ${studentProfile.session}` : "",
-    status: MENTEE_PROGRESS.ON_TRACK,
-    lastInteraction: new Date(reqDoc.updatedAt).toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-    }),
-    avatarUrl: studentProfile?.avatarUrl,
-  };
-};
 const getMentorshipOverview = async (req, res) => {
-  const alumniUserId = req.user.id;
-
-  const [pendingDocs, acceptedDocs] = await Promise.all([
-    MentorshipRequest.find({ alumni: alumniUserId, status: MENTORSHIP_STATUS.PENDING })
-      .populate("student", "fullName")
-      .sort({ createdAt: -1 }),
-    MentorshipRequest.find({ alumni: alumniUserId, status: MENTORSHIP_STATUS.ACCEPTED })
-      .populate("student", "fullName")
-      .sort({ updatedAt: -1 }),
-  ]);
-
-  const requests = await Promise.all(pendingDocs.map(formatRequest));
-  const mentees = await Promise.all(acceptedDocs.map(formatMentee));
-
-  res.json({
-    activeMenteesCount: mentees.length,
-    requests,
-    mentees,
-  });
-};
-const acceptRequest = async (req, res) => {
-  const request = await MentorshipRequest.findOneAndUpdate(
-    { _id: req.params.id, alumni: req.user.id },
-    { status: MENTORSHIP_STATUS.ACCEPTED },
-    { new: true }
-  );
-
-  if (!request) {
-    return res.status(HTTP_STATUS.NOT_FOUND).json({ message: "Request not found" });
-  }
-
-  res.json(request);
-};
-const rejectRequest = async (req, res) => {
-  const request = await MentorshipRequest.findOneAndUpdate(
-    { _id: req.params.id, alumni: req.user.id },
-    { status: MENTORSHIP_STATUS.DECLINED },
-    { new: true }
-  );
-
-  if (!request) {
-    return res.status(HTTP_STATUS.NOT_FOUND).json({ message: "Request not found" });
-  }
-
-  res.json(request);
+  res.json(await mentorshipService.getAlumniOverview(req.user.id));
 };
 
-module.exports = { getMentorshipOverview, acceptRequest, rejectRequest };
+const updateStatus = (status) => async (req, res) => {
+  res.json(await mentorshipService.updateRequestStatus({
+    requestId: req.params.id,
+    alumniUserId: req.user.id,
+    status,
+  }));
+};
+
+module.exports = {
+  acceptRequest: updateStatus(MENTORSHIP_STATUS.ACCEPTED),
+  getMentorshipOverview,
+  rejectRequest: updateStatus(MENTORSHIP_STATUS.DECLINED),
+};

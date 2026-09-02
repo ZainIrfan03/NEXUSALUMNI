@@ -1,141 +1,73 @@
 const Student = require("../models/Student");
-const User = require("../models/User");
 const { HTTP_STATUS } = require("../constants");
+const profileService = require("../services/profileService");
 const { replaceProfileUpload } = require("../services/profileUploadService");
+
+const profileContext = (userId) => ({
+  ProfileModel: Student,
+  profileName: "Student",
+  userId,
+});
+
 const getMyProfile = async (req, res) => {
-  const student = await Student.findOne({ user: req.user.id }).populate(
-    "user",
-    "fullName email"
-  );
-
-  if (!student) {
-    return res.status(HTTP_STATUS.NOT_FOUND).json({ message: "Student profile not found" });
-  }
-
-  res.json(student);
+  res.json(await profileService.getProfile(profileContext(req.user.id)));
 };
+
 const updateMyProfile = async (req, res) => {
   const {
-    fullName,
-    location,
-    headline,
-    bio,
-    skills,
-    interests,
-    isPublic,
-    resumeUrl,
-    openToNetworking,
+    fullName, location, headline, bio, skills, interests, isPublic,
+    resumeUrl, openToNetworking,
   } = req.body;
-  if (fullName) {
-    await User.findByIdAndUpdate(req.user.id, { fullName });
-  }
-
-  const student = await Student.findOneAndUpdate(
-    { user: req.user.id },
-    { location, headline, bio, skills, interests, isPublic, resumeUrl, openToNetworking },
-    { new: true, runValidators: true }
-  ).populate("user", "fullName email");
-
-  if (!student) {
-    return res.status(HTTP_STATUS.NOT_FOUND).json({ message: "Student profile not found" });
-  }
-
-  res.json(student);
-};
-const uploadAvatarImage = async (req, res) => {
-  const avatarUrl = await replaceProfileUpload({
-    ProfileModel: Student,
-    userId: req.user.id,
-    file: req.file,
-    field: "avatarUrl",
-    profileName: "Student",
+  const profile = await profileService.updateProfile({
+    ...profileContext(req.user.id),
+    data: {
+      fullName, location, headline, bio, skills, interests, isPublic,
+      resumeUrl, openToNetworking,
+    },
   });
-
-  res.json({ avatarUrl });
+  res.json(profile);
 };
-const uploadResumeFile = async (req, res) => {
-  const resumeUrl = await replaceProfileUpload({
-    ProfileModel: Student,
-    userId: req.user.id,
-    file: req.file,
-    field: "resumeUrl",
-    profileName: "Student",
+
+const uploadProfileFile = (field) => async (req, res) => {
+  const url = await replaceProfileUpload({
+    ...profileContext(req.user.id), file: req.file, field,
   });
-
-  res.json({ resumeUrl });
+  res.json({ [field]: url });
 };
+
 const addExperience = async (req, res) => {
-  const { title, company, startDate, endDate, current, description } = req.body;
-
-  if (!title || !company) {
-    return res.status(HTTP_STATUS.BAD_REQUEST).json({ message: "title and company are required" });
-  }
-
-  const student = await Student.findOneAndUpdate(
-    { user: req.user.id },
-    { $push: { experience: { title, company, startDate, endDate, current, description } } },
-    { new: true, runValidators: true }
-  ).populate("user", "fullName email");
-
-  if (!student) {
-    return res.status(HTTP_STATUS.NOT_FOUND).json({ message: "Student profile not found" });
-  }
-
-  res.status(HTTP_STATUS.CREATED).json(student);
+  const profile = await profileService.addExperience({
+    ...profileContext(req.user.id), data: req.body,
+  });
+  res.status(HTTP_STATUS.CREATED).json(profile);
 };
+
 const deleteExperience = async (req, res) => {
-  const student = await Student.findOneAndUpdate(
-    { user: req.user.id },
-    { $pull: { experience: { _id: req.params.experienceId } } },
-    { new: true }
-  ).populate("user", "fullName email");
-
-  if (!student) {
-    return res.status(HTTP_STATUS.NOT_FOUND).json({ message: "Student profile not found" });
-  }
-
-  res.json(student);
+  res.json(await profileService.deleteExperience({
+    ...profileContext(req.user.id), experienceId: req.params.experienceId,
+  }));
 };
+
 const addEducation = async (req, res) => {
-  const { school, degree, year } = req.body;
-
-  if (!school || !degree) {
-    return res.status(HTTP_STATUS.BAD_REQUEST).json({ message: "school and degree are required" });
-  }
-
-  const student = await Student.findOneAndUpdate(
-    { user: req.user.id },
-    { $push: { education: { school, degree, year } } },
-    { new: true, runValidators: true }
-  ).populate("user", "fullName email");
-
-  if (!student) {
-    return res.status(HTTP_STATUS.NOT_FOUND).json({ message: "Student profile not found" });
-  }
-
-  res.status(HTTP_STATUS.CREATED).json(student);
+  const profile = await profileService.addEducation({
+    ...profileContext(req.user.id), data: req.body,
+  });
+  res.status(HTTP_STATUS.CREATED).json(profile);
 };
+
 const deleteEducation = async (req, res) => {
-  const student = await Student.findOneAndUpdate(
-    { user: req.user.id },
-    { $pull: { education: { _id: req.params.educationId } } },
-    { new: true }
-  ).populate("user", "fullName email");
-
-  if (!student) {
-    return res.status(HTTP_STATUS.NOT_FOUND).json({ message: "Student profile not found" });
-  }
-
-  res.json(student);
+  res.json(await profileService.deleteEducation({
+    ...profileContext(req.user.id), educationId: req.params.educationId,
+  }));
 };
 
 module.exports = {
+  addEducation,
+  addExperience,
+  deleteEducation,
+  deleteExperience,
   getMyProfile,
   updateMyProfile,
-  uploadAvatarImage,
-  uploadResumeFile,
-  addExperience,
-  deleteExperience,
-  addEducation,
-  deleteEducation,
+  uploadAvatarImage: uploadProfileFile("avatarUrl"),
+  uploadResumeFile: uploadProfileFile("resumeUrl"),
 };

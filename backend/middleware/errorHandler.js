@@ -6,8 +6,6 @@
 //   app.use(errorHandler);   // any err passed to next(err) -> consistent JSON response
 //
 // Express 5 automatically forwards rejected async route handlers here.
-// Controllers therefore only need local try/catch when they must perform
-// controller-specific recovery such as deleting an unpersisted upload.
 
 const multer = require("multer");
 const { HTTP_STATUS } = require("../constants");
@@ -81,6 +79,7 @@ const errorHandler = (err, req, res, next) => {
   const status = err.statusCode || HTTP_STATUS.SERVER_ERROR;
   res.status(status).json({
     message: status === HTTP_STATUS.SERVER_ERROR ? "Something went wrong on the server" : err.message,
+    ...(err.isOperational && err.code ? { code: err.code } : {}),
   });
 };
 

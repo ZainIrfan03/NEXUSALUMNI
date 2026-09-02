@@ -1,263 +1,60 @@
-const path = require("path");
-const Conversation = require("../models/Conversation");
-const Message = require("../models/Message");
-const MentorshipRequest = require("../models/MentorshipRequest");
-const Student = require("../models/Student");
-const Alumni = require("../models/Alumni");
-const { HTTP_STATUS, MENTORSHIP_STATUS, ROLES, UPLOAD_DIRS } = require("../constants");
-const { removeFileIfPresent } = require("../utils/fileStorage");
-// Counts unseen messages sent by other users across this user's conversations.
+const { HTTP_STATUS } = require("../constants");
+const messageService = require("../services/messageService");
+
 const getUnreadMessageCount = async (req, res) => {
-  const conversationIds = await Conversation.find({ participants: req.user.id }).distinct("_id");
-  const count = await Message.countDocuments({
-    conversation: { $in: conversationIds },
-    sender: { $ne: req.user.id },
-    seen: false,
-  });
-
-  res.json({ count });
+  res.json({ count: await messageService.getUnreadCount(req.user.id) });
 };
-// Marks only messages received by the current user as read.
+
 const markConversationRead = async (req, res) => {
-  const { conversationId } = req.params;
-  const conversation = await Conversation.exists({
-    _id: conversationId,
-    participants: req.user.id,
+  await messageService.markConversationRead({
+    conversationId: req.params.conversationId,
+    userId: req.user.id,
   });
-
-  if (!conversation) {
-    return res.status(HTTP_STATUS.FORBIDDEN).json({
-      message: "Not authorized to view this conversation",
-    });
-  }
-
-  await Message.updateMany(
-    {
-      conversation: conversationId,
-      sender: { $ne: req.user.id },
-      seen: false,
-    },
-    { $set: { seen: true } }
-  );
-
   res.json({ message: "Conversation marked as read" });
 };
-// List of the logged-in user's conversations (for the Inbox list).
+
 const getMyConversations = async (req, res) => {
-  const conversations = await Conversation.find({ participants: req.user.id })
-    .populate("participants", "fullName email role")
-    .sort({ lastMessageAt: -1 });
-
-  const participantIds = [
-    ...new Set(
-      conversations.flatMap((conversation) =>
-        conversation.participants
-          .filter(Boolean)
-          .map((participant) => participant._id.toString())
-      )
-    ),
-  ];
-
-  const [studentProfiles, alumniProfiles] = await Promise.all([
-    Student.find({ user: { $in: participantIds } }).select("user avatarUrl"),
-    Alumni.find({ user: { $in: participantIds } }).select("user avatarUrl"),
-  ]);
-
-  const avatarByUserId = new Map();
-  [...studentProfiles, ...alumniProfiles].forEach((profile) => {
-    if (profile.avatarUrl) {
-      avatarByUserId.set(profile.user.toString(), profile.avatarUrl);
-    }
-  });
-
-  const response = conversations.map((conversation) => ({
-    ...conversation.toObject(),
-    participants: conversation.participants.filter(Boolean).map((participant) => ({
-        ...participant.toObject(),
-        avatarUrl: avatarByUserId.get(participant._id.toString()) || null,
-      })),
-  }));
-
-  res.json(response);
+  res.json(await messageService.getConversations(req.user.id));
 };
-// Finds an existing 1:1 conversation or creates a new one —
-// called when a student clicks "Message" on an accepted mentor's card, or
-// an alumni clicks "Message" on an accepted mentee's profile.
-//
-// Chat is gated behind an accepted MentorshipRequest: whichever side is the
-// student and whichever is the alumni in this pair, there must be a
-// status: "accepted" request linking them. This stops alumni from
-// messaging students they haven't accepted as mentees (and vice versa).
+
 const startConversation = async (req, res) => {
-  const { otherUserId } = req.body;
-  const myId = req.user.id;
-  const myRole = req.user.role;
-
-  const studentUserId = myRole === ROLES.STUDENT ? myId : otherUserId;
-  const alumniUserId = myRole === ROLES.ALUMNI ? myId : otherUserId;
-
-  const acceptedRequest = await MentorshipRequest.findOne({
-    student: studentUserId,
-    alumni: alumniUserId,
-    status: MENTORSHIP_STATUS.ACCEPTED,
-  });
-
-  if (!acceptedRequest) {
-    return res.status(HTTP_STATUS.FORBIDDEN).json({
-      message: "You can only message an accepted mentor/mentee.",
-    });
-  }
-
-  let conversation = await Conversation.findOne({
-    participants: { $all: [myId, otherUserId], $size: 2 },
-  });
-
-  if (!conversation) {
-    conversation = await Conversation.create({ participants: [myId, otherUserId] });
-  }
-
-  res.json(conversation);
+  res.json(await messageService.startConversation({
+    otherUserId: req.body.otherUserId,
+    user: req.user,
+  }));
 };
-// Deletes a conversation and all its messages permanently.
-// Called from the three-dots menu -> "Delete Chat".
+
 const deleteConversation = async (req, res) => {
-  const { conversationId } = req.params;
-
-  const conversation = await Conversation.findById(conversationId);
-  if (!conversation) {
-    return res.status(HTTP_STATUS.NOT_FOUND).json({ message: "Conversation not found" });
-  }
-
-  const isParticipant = conversation.participants.some(
-    (p) => p.toString() === req.user.id
-  );
-  if (!isParticipant) {
-    return res.status(HTTP_STATUS.FORBIDDEN).json({ message: "Not authorized to delete this chat" });
-  }
-
-  const attachmentMessages = await Message.find({
-    conversation: conversationId,
-    fileUrl: { $ne: null },
-  }).select("fileUrl");
-
-  await Message.deleteMany({ conversation: conversationId });
-  await Conversation.findByIdAndDelete(conversationId);
-
-  const attachmentPaths = attachmentMessages
-    .map(({ fileUrl }) => path.join(UPLOAD_DIRS.CHAT, path.basename(fileUrl)))
-    .filter((filePath, index, allPaths) => allPaths.indexOf(filePath) === index);
-  const cleanupResults = await Promise.allSettled(
-    attachmentPaths.map(removeFileIfPresent)
-  );
-  cleanupResults.forEach((result, index) => {
-    if (result.status === "rejected") {
-      console.error(`Failed to delete chat attachment ${attachmentPaths[index]}:`, result.reason);
-    }
+  await messageService.deleteConversation({
+    conversationId: req.params.conversationId,
+    userId: req.user.id,
   });
-
   res.json({ message: "Conversation deleted" });
 };
-// Full message history for one conversation.
-// Only a participant of this conversation may read it.
+
 const getMessages = async (req, res) => {
-  const { conversationId } = req.params;
-
-  const conversation = await Conversation.findOne({
-    _id: conversationId,
-    participants: req.user.id,
-  });
-
-  if (!conversation) {
-    return res.status(HTTP_STATUS.FORBIDDEN).json({
-      message: "Not authorized to view this conversation",
-    });
-  }
-
-  const messages = await Message.find({ conversation: conversationId }).sort({
-    createdAt: 1,
-  });
-  res.json(messages);
+  res.json(await messageService.getMessages({
+    conversationId: req.params.conversationId,
+    userId: req.user.id,
+  }));
 };
-// Saves a message to the DB, with an optional attached image/file.
-// The socket layer (server.js) additionally emits it live to the other participant.
-// Only a participant of this conversation may send into it.
+
 const sendMessage = async (req, res) => {
-  let messageSaved = false;
-  try {
-    const { text } = req.body;
-    const { conversationId } = req.params;
-
-    const conversation = await Conversation.findOne({
-      _id: conversationId,
-      participants: req.user.id,
-    });
-
-    if (!conversation) {
-      // multer already wrote the uploaded file to disk before this
-      // controller ran — clean it up so an unauthorized attempt
-      // doesn't leave an orphaned file behind.
-      if (req.file) {
-        await removeFileIfPresent(req.file.path);
-      }
-      return res.status(HTTP_STATUS.FORBIDDEN).json({
-        message: "Not authorized to send messages in this conversation",
-      });
-    }
-
-    let fileUrl = null;
-    let fileType = null;
-    let fileName = null;
-
-    if (req.file) {
-      fileUrl = `/uploads/chat/${req.file.filename}`;
-      fileType = req.file.mimetype.startsWith("image/") ? "image" : "file";
-      fileName = req.file.originalname;
-    }
-
-    if (!text && !fileUrl) {
-      return res.status(HTTP_STATUS.BAD_REQUEST).json({ message: "Message text or file is required" });
-    }
-
-    const message = await Message.create({
-      conversation: conversationId,
-      sender: req.user.id,
-      text: text || "",
-      fileUrl,
-      fileType,
-      fileName,
-    });
-    messageSaved = true;
-
-    const lastMessagePreview =
-      text || (fileType === "image" ? "📷 Photo" : "📎 File");
-
-    await Conversation.findByIdAndUpdate(conversationId, {
-      lastMessage: lastMessagePreview,
-      lastMessageAt: new Date(),
-    });
-
-    res.status(HTTP_STATUS.CREATED).json(message);
-  } catch (error) {
-    // If persistence failed before a Message document was created, no database
-    // record owns the uploaded file and it must be removed.
-    if (req.file?.path && !messageSaved) {
-      try {
-        await removeFileIfPresent(req.file.path);
-      } catch (cleanupError) {
-        console.error(`Failed to clean unsaved chat upload ${req.file.path}:`, cleanupError);
-      }
-    }
-    // Cleanup is controller-specific; response formatting remains centralized.
-    throw error;
-  }
+  const message = await messageService.sendMessage({
+    conversationId: req.params.conversationId,
+    userId: req.user.id,
+    text: req.body.text,
+    file: req.file,
+  });
+  res.status(HTTP_STATUS.CREATED).json(message);
 };
 
 module.exports = {
-  getUnreadMessageCount,
-  markConversationRead,
-  getMyConversations,
-  startConversation,
   deleteConversation,
   getMessages,
+  getMyConversations,
+  getUnreadMessageCount,
+  markConversationRead,
   sendMessage,
+  startConversation,
 };
