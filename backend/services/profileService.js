@@ -24,7 +24,7 @@ const updateProfile = async ({ ProfileModel, profileName, userId, data }) => {
   const profile = await ProfileModel.findOneAndUpdate(
     { user: userId },
     profileData,
-    { new: true, runValidators: true },
+    { returnDocument: "after", runValidators: true },
   ).populate("user", "fullName email");
   return ensureProfile(profile, profileName);
 };
@@ -38,7 +38,7 @@ const addExperience = async ({ ProfileModel, profileName, userId, data }) => {
   const profile = await ProfileModel.findOneAndUpdate(
     { user: userId },
     { $push: { experience: { title, company, startDate, endDate, current, description } } },
-    { new: true, runValidators: true },
+    { returnDocument: "after", runValidators: true },
   ).populate("user", "fullName email");
   return ensureProfile(profile, profileName);
 };
@@ -47,7 +47,7 @@ const deleteExperience = async ({ ProfileModel, profileName, userId, experienceI
   const profile = await ProfileModel.findOneAndUpdate(
     { user: userId },
     { $pull: { experience: { _id: experienceId } } },
-    { new: true },
+    { returnDocument: "after" },
   ).populate("user", "fullName email");
   return ensureProfile(profile, profileName);
 };
@@ -61,7 +61,7 @@ const addEducation = async ({ ProfileModel, profileName, userId, data }) => {
   const profile = await ProfileModel.findOneAndUpdate(
     { user: userId },
     { $push: { education: { school, degree, year } } },
-    { new: true, runValidators: true },
+    { returnDocument: "after", runValidators: true },
   ).populate("user", "fullName email");
   return ensureProfile(profile, profileName);
 };
@@ -70,7 +70,7 @@ const deleteEducation = async ({ ProfileModel, profileName, userId, educationId 
   const profile = await ProfileModel.findOneAndUpdate(
     { user: userId },
     { $pull: { education: { _id: educationId } } },
-    { new: true },
+    { returnDocument: "after" },
   ).populate("user", "fullName email");
   return ensureProfile(profile, profileName);
 };

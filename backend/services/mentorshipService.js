@@ -93,7 +93,7 @@ const updateRequestStatus = async ({ requestId, alumniUserId, status }) => {
   const request = await MentorshipRequest.findOneAndUpdate(
     { _id: requestId, alumni: alumniUserId },
     { status },
-    { new: true },
+    { returnDocument: "after" },
   );
   if (!request) throw new AppError("Request not found", HTTP_STATUS.NOT_FOUND);
   return request;
