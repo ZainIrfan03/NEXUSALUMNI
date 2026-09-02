@@ -6,13 +6,15 @@ const {
   JOB_STATUS,
   APPLICATION_STATUS,
   INTERVIEW_RESPONSE,
+  JOB_STATS_WINDOW_MS,
+  PAGINATION,
   SOCKET_EVENTS,
 } = require("../constants");
 
 const attachApplicantInfo = async (job) => {
   const applications = await Application.find({ job: job._id })
     .populate("student", "fullName")
-    .limit(3);
+    .limit(PAGINATION.APPLICANT_PREVIEW_LIMIT);
 
   const applicants = await Promise.all(
     applications.map(async (app) => {
@@ -40,8 +42,9 @@ const attachApplicantInfo = async (job) => {
 };
 const getMyJobs = async (req, res) => {
   const alumniUserId = req.user.id;
-  const page = Number(req.query.page) || 1;
-  const pageSize = Number(req.query.pageSize) || 4;
+  const page = Number(req.query.page) || PAGINATION.DEFAULT_PAGE;
+  const pageSize =
+    Number(req.query.pageSize) || PAGINATION.ALUMNI_JOBS_PAGE_SIZE;
   const skip = (page - 1) * pageSize;
 
   const [jobDocs, totalCount, allMyJobs] = await Promise.all([
@@ -55,7 +58,7 @@ const getMyJobs = async (req, res) => {
 
   const jobs = await Promise.all(jobDocs.map(attachApplicantInfo));
 
-  const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+  const oneWeekAgo = new Date(Date.now() - JOB_STATS_WINDOW_MS);
   const newThisWeek = allMyJobs.filter((j) => j.createdAt >= oneWeekAgo).length;
 
   const jobIds = allMyJobs.map((j) => j._id);

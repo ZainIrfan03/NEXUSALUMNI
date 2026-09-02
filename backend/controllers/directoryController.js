@@ -1,7 +1,10 @@
 const Alumni = require("../models/Alumni");
-const { HTTP_STATUS } = require("../constants");
+const { HTTP_STATUS, PAGINATION } = require("../constants");
 const getFeaturedAlumni = async (req, res) => {
-  const limit = Math.min(Number(req.query.limit) || 4, 12);
+  const limit = Math.min(
+    Number(req.query.limit) || PAGINATION.FEATURED_ALUMNI_DEFAULT_LIMIT,
+    PAGINATION.FEATURED_ALUMNI_MAX_LIMIT,
+  );
 
   const alumni = await Alumni.find({
     isPublic: true,
@@ -15,7 +18,12 @@ const getFeaturedAlumni = async (req, res) => {
   res.json({ results: alumni });
 };
 const getAlumniDirectory = async (req, res) => {
-  const { fromYear, toYear, page = 1, limit = 6 } = req.query;
+  const {
+    fromYear,
+    toYear,
+    page = PAGINATION.DEFAULT_PAGE,
+    limit = PAGINATION.ALUMNI_DIRECTORY_PAGE_SIZE,
+  } = req.query;
 
   const filter = { isPublic: true };
   if (fromYear || toYear) {

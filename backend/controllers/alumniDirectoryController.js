@@ -2,8 +2,11 @@ const Student = require("../models/Student");
 const MentorshipRequest = require("../models/MentorshipRequest");
 const {
   DEPARTMENT_LABELS,
+  DIRECTORY_FILTER,
+  DIRECTORY_SORT,
   HTTP_STATUS,
   MENTORSHIP_STATUS,
+  PAGINATION,
 } = require("../constants");
 
 const getGraduationYear = (session) => {
@@ -13,19 +16,19 @@ const getGraduationYear = (session) => {
 };
 const getStudentDirectory = async (req, res) => {
   const {
-    department = "all",
+    department = DIRECTORY_FILTER.ALL_DEPARTMENTS,
     skills = "",
     years = "",
-    sortBy = "recent",
-    page = 1,
+    sortBy = DIRECTORY_SORT.RECENT,
+    page = PAGINATION.DEFAULT_PAGE,
   } = req.query;
 
-  const pageSize = 6;
+  const pageSize = PAGINATION.STUDENT_DIRECTORY_PAGE_SIZE;
   const skillList = skills ? skills.split(",").filter(Boolean) : [];
   const yearList = years ? years.split(",").filter(Boolean) : [];
 
   const filter = { isPublic: true };
-  if (department && department !== "all") {
+  if (department && department !== DIRECTORY_FILTER.ALL_DEPARTMENTS) {
     filter.department = department;
   }
   if (skillList.length) {
@@ -37,11 +40,11 @@ const getStudentDirectory = async (req, res) => {
 
   let students = await Student.find(filter).populate("user", "fullName email");
 
-  if (sortBy === "name") {
+  if (sortBy === DIRECTORY_SORT.NAME) {
     students.sort((a, b) =>
       (a.user?.fullName || "").localeCompare(b.user?.fullName || "")
     );
-  } else if (sortBy === "year") {
+  } else if (sortBy === DIRECTORY_SORT.YEAR) {
     students.sort((a, b) =>
       (getGraduationYear(b.session) || "").localeCompare(getGraduationYear(a.session) || "")
     );

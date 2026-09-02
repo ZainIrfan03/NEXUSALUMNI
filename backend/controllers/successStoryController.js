@@ -1,11 +1,18 @@
 const SuccessStory = require("../models/SuccessStory");
+const { PAGINATION, STORY_CATEGORY_FILTER } = require("../constants");
 const getStories = async (req, res) => {
   const { category, search } = req.query;
-  const page = Math.max(Number(req.query.page) || 1, 1);
-  const limit = Math.min(Number(req.query.limit) || 6, 24);
+  const page = Math.max(
+    Number(req.query.page) || PAGINATION.DEFAULT_PAGE,
+    PAGINATION.DEFAULT_PAGE,
+  );
+  const limit = Math.min(
+    Number(req.query.limit) || PAGINATION.SUCCESS_STORIES_DEFAULT_PAGE_SIZE,
+    PAGINATION.SUCCESS_STORIES_MAX_PAGE_SIZE,
+  );
 
   const filter = {};
-  if (category && category !== "All Categories") {
+  if (category && category !== STORY_CATEGORY_FILTER.ALL) {
     filter.category = category;
   }
   if (search) {

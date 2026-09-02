@@ -1,11 +1,20 @@
 const mongoose = require("mongoose");
-const { APPLICATION_STATUS, INTERVIEW_RESPONSE } = require("../constants");
+const {
+  APPLICATION_STATUS,
+  INTERVIEW_LIMITS,
+  INTERVIEW_RESPONSE,
+} = require("../constants");
 
 const interviewSchema = new mongoose.Schema(
   {
     scheduledAt: { type: Date, required: true },
     timezone: { type: String, required: true },
-    durationMinutes: { type: Number, min: 15, max: 240, default: 30 },
+    durationMinutes: {
+      type: Number,
+      min: INTERVIEW_LIMITS.MIN_DURATION_MINUTES,
+      max: INTERVIEW_LIMITS.MAX_DURATION_MINUTES,
+      default: INTERVIEW_LIMITS.DEFAULT_DURATION_MINUTES,
+    },
     meetingUrl: { type: String, required: true },
     instructions: { type: String },
     response: {

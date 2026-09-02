@@ -2,10 +2,14 @@ const fs = require("fs");
 const multer = require("multer");
 const path = require("path");
 const {
+  AVATAR_UPLOAD_TYPES,
+  CHAT_UPLOAD_TYPES,
+  FILE_SIGNATURES,
   HTTP_STATUS,
   MAX_AVATAR_SIZE,
   MAX_CHAT_FILE_SIZE,
   MAX_RESUME_SIZE,
+  RESUME_UPLOAD_TYPES,
   UPLOAD_DIRS,
 } = require("../constants");
 const AppError = require("../errors/AppError");
@@ -30,24 +34,6 @@ const createStorage = (directory, includeRandomSuffix = false) =>
     },
   });
 
-const avatarTypes = {
-  ".jpeg": ["image/jpeg"],
-  ".jpg": ["image/jpeg"],
-  ".png": ["image/png"],
-  ".webp": ["image/webp"],
-};
-
-const chatTypes = {
-  ...avatarTypes,
-  ".doc": ["application/msword"],
-  ".docx": [
-    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-    "application/zip",
-  ],
-  ".gif": ["image/gif"],
-  ".pdf": ["application/pdf"],
-};
-
 const createFileFilter = (allowedTypes, message) =>
   (req, file, callback) => {
     const extension = path.extname(file.originalname).toLowerCase();
@@ -60,7 +46,7 @@ const createFileFilter = (allowedTypes, message) =>
 const uploadAvatar = multer({
   storage: createStorage(UPLOAD_DIRS.AVATARS),
   fileFilter: createFileFilter(
-    avatarTypes,
+    AVATAR_UPLOAD_TYPES,
     "Only PNG, JPG, or WEBP image uploads are allowed.",
   ),
   limits: { fileSize: MAX_AVATAR_SIZE },
@@ -69,7 +55,7 @@ const uploadAvatar = multer({
 const uploadResume = multer({
   storage: createStorage(UPLOAD_DIRS.RESUMES),
   fileFilter: createFileFilter(
-    { ".pdf": ["application/pdf"] },
+    RESUME_UPLOAD_TYPES,
     "Only PDF files are allowed.",
   ),
   limits: { fileSize: MAX_RESUME_SIZE },
@@ -78,7 +64,7 @@ const uploadResume = multer({
 const uploadChat = multer({
   storage: createStorage(UPLOAD_DIRS.CHAT, true),
   fileFilter: createFileFilter(
-    chatTypes,
+    CHAT_UPLOAD_TYPES,
     "Only images, PDF, or DOC/DOCX files are allowed.",
   ),
   limits: { fileSize: MAX_CHAT_FILE_SIZE },
@@ -91,29 +77,29 @@ const hasValidSignature = (file, buffer) => {
   const extension = path.extname(file.originalname).toLowerCase();
 
   if ([".jpg", ".jpeg"].includes(extension)) {
-    return startsWith(buffer, [0xff, 0xd8, 0xff]);
+    return startsWith(buffer, FILE_SIGNATURES.JPEG);
   }
   if (extension === ".png") {
-    return startsWith(buffer, [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
+    return startsWith(buffer, FILE_SIGNATURES.PNG);
   }
   if (extension === ".webp") {
-    return buffer.subarray(0, 4).toString() === "RIFF" &&
-      buffer.subarray(8, 12).toString() === "WEBP";
+    return buffer.subarray(0, 4).toString() === FILE_SIGNATURES.RIFF_HEADER &&
+      buffer.subarray(8, 12).toString() === FILE_SIGNATURES.WEBP_HEADER;
   }
   if (extension === ".gif") {
-    return ["GIF87a", "GIF89a"].includes(buffer.subarray(0, 6).toString());
+    return FILE_SIGNATURES.GIF_HEADERS.includes(buffer.subarray(0, 6).toString());
   }
   if (extension === ".pdf") {
-    return buffer.subarray(0, 5).toString() === "%PDF-";
+    return buffer.subarray(0, 5).toString() === FILE_SIGNATURES.PDF_HEADER;
   }
   if (extension === ".doc") {
-    return startsWith(buffer, [0xd0, 0xcf, 0x11, 0xe0, 0xa1, 0xb1, 0x1a, 0xe1]);
+    return startsWith(buffer, FILE_SIGNATURES.DOC);
   }
   if (extension === ".docx") {
-    const isZip = startsWith(buffer, [0x50, 0x4b]);
+    const isZip = startsWith(buffer, FILE_SIGNATURES.ZIP);
     return isZip &&
-      buffer.includes(Buffer.from("[Content_Types].xml")) &&
-      buffer.includes(Buffer.from("word/"));
+      buffer.includes(Buffer.from(FILE_SIGNATURES.DOCX_CONTENT_TYPES_ENTRY)) &&
+      buffer.includes(Buffer.from(FILE_SIGNATURES.DOCX_WORD_DIRECTORY));
   }
 
   return false;

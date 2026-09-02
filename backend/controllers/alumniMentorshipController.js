@@ -1,6 +1,10 @@
 const MentorshipRequest = require("../models/MentorshipRequest");
 const Student = require("../models/Student");
-const { HTTP_STATUS, MENTORSHIP_STATUS } = require("../constants");
+const {
+  HTTP_STATUS,
+  MENTEE_PROGRESS,
+  MENTORSHIP_STATUS,
+} = require("../constants");
 
 const formatRequest = async (reqDoc) => {
   const studentProfile = await Student.findOne({ user: reqDoc.student._id });
@@ -23,7 +27,7 @@ const formatMentee = async (reqDoc) => {
     name: reqDoc.student.fullName,
     department: studentProfile?.department || "",
     yearLabel: studentProfile?.session ? `Session ${studentProfile.session}` : "",
-    status: "On Track", // TODO: replace with a real tracked field once check-ins exist
+    status: MENTEE_PROGRESS.ON_TRACK,
     lastInteraction: new Date(reqDoc.updatedAt).toLocaleDateString("en-US", {
       month: "short",
       day: "numeric",

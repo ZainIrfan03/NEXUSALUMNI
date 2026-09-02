@@ -1,10 +1,10 @@
 const Alumni = require("../models/Alumni");
 const MentorshipRequest = require("../models/MentorshipRequest");
-const { HTTP_STATUS, MENTORSHIP_STATUS } = require("../constants");
+const { HTTP_STATUS, MENTORSHIP_STATUS, PAGINATION } = require("../constants");
 const getRecommendedMentors = async (req, res) => {
   const mentors = await Alumni.find({ isPublic: true, openToMentorship: true })
     .populate("user", "fullName email")
-    .limit(20);
+    .limit(PAGINATION.RECOMMENDED_MENTORS_LIMIT);
 
   res.json(mentors);
 };

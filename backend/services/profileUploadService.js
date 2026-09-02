@@ -1,19 +1,6 @@
 const AppError = require("../errors/AppError");
-const { HTTP_STATUS, UPLOAD_DIRS } = require("../constants");
+const { HTTP_STATUS, PROFILE_UPLOAD_CONFIG } = require("../constants");
 const { removeFileIfPresent, removeStoredUpload } = require("../utils/fileStorage");
-
-const UPLOAD_CONFIG = {
-  avatarUrl: {
-    directory: UPLOAD_DIRS.AVATARS,
-    folder: "avatars",
-    missingFileMessage: "No image file uploaded",
-  },
-  resumeUrl: {
-    directory: UPLOAD_DIRS.RESUMES,
-    folder: "resumes",
-    missingFileMessage: "No PDF file uploaded",
-  },
-};
 
 const replaceProfileUpload = async ({
   ProfileModel,
@@ -22,7 +9,7 @@ const replaceProfileUpload = async ({
   field,
   profileName,
 }) => {
-  const config = UPLOAD_CONFIG[field];
+  const config = PROFILE_UPLOAD_CONFIG[field];
   if (!file) {
     throw new AppError(config.missingFileMessage, HTTP_STATUS.BAD_REQUEST);
   }

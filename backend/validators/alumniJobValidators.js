@@ -1,5 +1,5 @@
 const { body } = require("express-validator");
-const { APPLICATION_STATUS } = require("../constants");
+const { APPLICATION_STATUS, INTERVIEW_LIMITS } = require("../constants");
 const updateApplicationStatusValidators = [
   body("status")
     .notEmpty()
@@ -18,13 +18,20 @@ const scheduleInterviewValidators = [
     .withMessage("Interview must be scheduled in the future"),
   body("timezone").trim().notEmpty().withMessage("Timezone is required"),
   body("durationMinutes")
-    .isInt({ min: 15, max: 240 })
-    .withMessage("Duration must be between 15 and 240 minutes"),
+    .isInt({
+      min: INTERVIEW_LIMITS.MIN_DURATION_MINUTES,
+      max: INTERVIEW_LIMITS.MAX_DURATION_MINUTES,
+    })
+    .withMessage(
+      `Duration must be between ${INTERVIEW_LIMITS.MIN_DURATION_MINUTES} and ${INTERVIEW_LIMITS.MAX_DURATION_MINUTES} minutes`,
+    ),
   body("meetingUrl")
     .trim()
     .isURL({ protocols: ["http", "https"], require_protocol: true })
     .withMessage("Enter a valid meeting URL"),
-  body("instructions").optional({ values: "falsy" }).trim().isLength({ max: 1000 }),
+  body("instructions").optional({ values: "falsy" }).trim().isLength({
+    max: INTERVIEW_LIMITS.INSTRUCTIONS_MAX_LENGTH,
+  }),
 ];
 
 module.exports = { updateApplicationStatusValidators, scheduleInterviewValidators };

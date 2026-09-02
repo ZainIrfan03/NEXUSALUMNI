@@ -9,4 +9,6 @@ const SOCKET_EVENTS = {
   INTERVIEW_RESPONSE_UPDATED: "interviewResponseUpdated",
 };
 
-module.exports = { SOCKET_EVENTS };
+const MESSAGE_MAX_LENGTH = 4000;
+
+module.exports = { MESSAGE_MAX_LENGTH, SOCKET_EVENTS };

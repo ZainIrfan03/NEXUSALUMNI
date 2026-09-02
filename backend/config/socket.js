@@ -4,7 +4,11 @@ const { Server } = require("socket.io");
 const Conversation = require("../models/Conversation");
 const Message = require("../models/Message");
 const User = require("../models/User");
-const { AUTH_COOKIE_NAME, SOCKET_EVENTS } = require("../constants");
+const {
+  AUTH_COOKIE_NAME,
+  MESSAGE_MAX_LENGTH,
+  SOCKET_EVENTS,
+} = require("../constants");
 const { FRONTEND_URL, JWT_SECRET } = require("./env");
 
 const initializeSocket = (httpServer, app) => {
@@ -71,9 +75,13 @@ const initializeSocket = (httpServer, app) => {
       SOCKET_EVENTS.SEND_MESSAGE,
       async ({ conversationId, text } = {}) => {
         try {
-          if (typeof text !== "string" || !text.trim() || text.length > 4000) {
+          if (
+            typeof text !== "string" ||
+            !text.trim() ||
+            text.length > MESSAGE_MAX_LENGTH
+          ) {
             return socket.emit(SOCKET_EVENTS.MESSAGE_ERROR, {
-              message: "Message must contain between 1 and 4000 characters",
+              message: `Message must contain between 1 and ${MESSAGE_MAX_LENGTH} characters`,
             });
           }
 

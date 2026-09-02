@@ -4,6 +4,7 @@ module.exports = {
   ...require("./http"),
   ...require("./jobs"),
   ...require("./mentorship"),
+  ...require("./query"),
   ...require("./socket"),
   ...require("./uploads"),
 };

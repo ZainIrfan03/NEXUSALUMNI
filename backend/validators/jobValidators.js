@@ -4,6 +4,7 @@ const {
   JOB_STATUS,
   EXPERIENCE_LEVEL,
   INTERVIEW_RESPONSE,
+  JOB_REQUIREMENTS_MAX_COUNT,
 } = require("../constants");
 const createJobValidators = [
   body("title").trim().notEmpty().withMessage("Title is required"),
@@ -12,7 +13,7 @@ const createJobValidators = [
   body("department").optional({ values: "falsy" }).trim(),
   body("payRange").optional({ values: "falsy" }).trim(),
   body("description").optional({ values: "falsy" }).trim(),
-  body("requirements").optional().isArray({ max: 20 }).withMessage("Requirements must be a list"),
+  body("requirements").optional().isArray({ max: JOB_REQUIREMENTS_MAX_COUNT }).withMessage("Requirements must be a list"),
   body("requirements.*").optional().trim().notEmpty().withMessage("Requirements cannot be empty"),
   body("experienceLevel")
     .optional({ values: "falsy" })

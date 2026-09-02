@@ -6,6 +6,10 @@ const {
   HTTP_STATUS,
   JOB_STATUS,
   APPLICATION_STATUS,
+  JOB_FILTER,
+  JOB_SORT,
+  PAGINATION,
+  ROLES,
   SOCKET_EVENTS,
 } = require("../constants");
 
@@ -28,13 +32,22 @@ const getJobs = async (req, res) => {
     department,
     experienceLevel,
     savedOnly,
-    sort = "newest",
+    sort = JOB_SORT.NEWEST,
   } = req.query;
-  const page = Math.max(1, Number(req.query.page) || 1);
-  const pageSize = Math.min(24, Math.max(1, Number(req.query.pageSize) || 6));
+  const page = Math.max(
+    PAGINATION.DEFAULT_PAGE,
+    Number(req.query.page) || PAGINATION.DEFAULT_PAGE,
+  );
+  const pageSize = Math.min(
+    PAGINATION.JOBS_MAX_PAGE_SIZE,
+    Math.max(
+      1,
+      Number(req.query.pageSize) || PAGINATION.JOBS_DEFAULT_PAGE_SIZE,
+    ),
+  );
   const filter = activeJobFilter();
 
-  if (type && type !== "All Jobs") filter.type = type;
+  if (type && type !== JOB_FILTER.ALL_TYPES) filter.type = type;
   if (department) filter.department = department;
   if (experienceLevel) filter.experienceLevel = experienceLevel;
   if (location) filter.location = { $regex: escapeRegExp(location), $options: "i" };
@@ -45,20 +58,20 @@ const getJobs = async (req, res) => {
   if (savedOnly === "true") filter.savedBy = req.user.id;
 
   const sortOptions = {
-    oldest: { createdAt: 1 },
-    deadline: { deadline: 1, createdAt: -1 },
-    newest: { createdAt: -1 },
+    [JOB_SORT.OLDEST]: { createdAt: 1 },
+    [JOB_SORT.DEADLINE]: { deadline: 1, createdAt: -1 },
+    [JOB_SORT.NEWEST]: { createdAt: -1 },
   };
 
   const [jobDocs, totalCount, applications] = await Promise.all([
     Job.find(filter)
       .select("-savedBy")
       .populate("postedBy", "fullName")
-      .sort(sortOptions[sort] || sortOptions.newest)
+      .sort(sortOptions[sort] || sortOptions[JOB_SORT.NEWEST])
       .skip((page - 1) * pageSize)
       .limit(pageSize),
     Job.countDocuments(filter),
-    req.user.role === "student"
+    req.user.role === ROLES.STUDENT
       ? Application.find({ student: req.user.id }, "job")
       : Promise.resolve([]),
   ]);
