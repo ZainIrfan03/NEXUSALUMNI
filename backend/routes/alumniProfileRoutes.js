@@ -10,7 +10,11 @@ const {
   uploadResumeFile,
 } = require("../controllers/alumniProfileController");
 const { protect, authorize } = require("../middleware/authMiddleware");
-const { uploadAvatar, uploadResume } = require("../middleware/uploadMiddleware");
+const {
+  uploadAvatar,
+  uploadResume,
+  validateFileSignature,
+} = require("../middleware/uploadMiddleware");
 const validate = require("../middleware/validate");
 const { ROLES } = require("../constants");
 const { validateMongoIdParam } = require("../validators/paramValidators");
@@ -59,6 +63,7 @@ router.post(
   protect,
   authorize(ROLES.ALUMNI),
   uploadAvatar.single("avatar"),
+  validateFileSignature,
   uploadAvatarImage,
 );
 router.post(
@@ -66,6 +71,7 @@ router.post(
   protect,
   authorize(ROLES.ALUMNI),
   uploadResume.single("resume"),
+  validateFileSignature,
   uploadResumeFile,
 );
 router.delete(

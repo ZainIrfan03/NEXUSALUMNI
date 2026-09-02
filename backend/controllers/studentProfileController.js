@@ -1,8 +1,7 @@
 const Student = require("../models/Student");
 const User = require("../models/User");
-const fs = require("fs");
-const path = require("path");
 const { HTTP_STATUS } = require("../constants");
+const { replaceProfileUpload } = require("../services/profileUploadService");
 const getMyProfile = async (req, res) => {
   const student = await Student.findOne({ user: req.user.id }).populate(
     "user",
@@ -44,53 +43,26 @@ const updateMyProfile = async (req, res) => {
   res.json(student);
 };
 const uploadAvatarImage = async (req, res) => {
-  if (!req.file) {
-    return res.status(HTTP_STATUS.BAD_REQUEST).json({ message: "No image file uploaded." });
-  }
+  const avatarUrl = await replaceProfileUpload({
+    ProfileModel: Student,
+    userId: req.user.id,
+    file: req.file,
+    field: "avatarUrl",
+    profileName: "Student",
+  });
 
-  const avatarUrl = `/uploads/avatars/${req.file.filename}`;
-
-  const existing = await Student.findOne({ user: req.user.id });
-  if (!existing) {
-    return res.status(HTTP_STATUS.NOT_FOUND).json({ message: "Student profile not found" });
-  }
-  if (existing.avatarUrl) {
-    const oldPath = path.join(__dirname, "..", existing.avatarUrl);
-    fs.unlink(oldPath, () => {}); // ignore errors (e.g. file already gone)
-  }
-
-  const student = await Student.findOneAndUpdate(
-    { user: req.user.id },
-    { avatarUrl },
-    { new: true, runValidators: true }
-  ).populate("user", "fullName email");
-
-  res.json({ avatarUrl: student.avatarUrl });
+  res.json({ avatarUrl });
 };
 const uploadResumeFile = async (req, res) => {
-  if (!req.file) {
-    return res.status(HTTP_STATUS.BAD_REQUEST).json({ message: "No PDF file uploaded." });
-  }
+  const resumeUrl = await replaceProfileUpload({
+    ProfileModel: Student,
+    userId: req.user.id,
+    file: req.file,
+    field: "resumeUrl",
+    profileName: "Student",
+  });
 
-  const resumeUrl = `/uploads/resumes/${req.file.filename}`;
-
-  const existing = await Student.findOne({ user: req.user.id });
-  if (!existing) {
-    return res.status(HTTP_STATUS.NOT_FOUND).json({ message: "Student profile not found" });
-  }
-
-  if (existing.resumeUrl) {
-    const oldPath = path.join(__dirname, "..", existing.resumeUrl);
-    fs.unlink(oldPath, () => {});
-  }
-
-  const student = await Student.findOneAndUpdate(
-    { user: req.user.id },
-    { resumeUrl },
-    { new: true, runValidators: true }
-  ).populate("user", "fullName email");
-
-  res.json({ resumeUrl: student.resumeUrl });
+  res.json({ resumeUrl });
 };
 const addExperience = async (req, res) => {
   const { title, company, startDate, endDate, current, description } = req.body;

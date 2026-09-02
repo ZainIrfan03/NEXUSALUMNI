@@ -10,7 +10,11 @@ const {
   deleteEducation,
 } = require("../controllers/studentProfileController");
 const { protect, authorize } = require("../middleware/authMiddleware");
-const { uploadAvatar, uploadResume } = require("../middleware/uploadMiddleware");
+const {
+  uploadAvatar,
+  uploadResume,
+  validateFileSignature,
+} = require("../middleware/uploadMiddleware");
 const {
   updateProfileValidators,
   addExperienceValidators,
@@ -28,6 +32,7 @@ router.post(
   protect,
   authorize(ROLES.STUDENT),
   uploadAvatar.single("avatar"),
+  validateFileSignature,
   uploadAvatarImage
 );
 router.post(
@@ -35,6 +40,7 @@ router.post(
   protect,
   authorize(ROLES.STUDENT),
   uploadResume.single("resume"),
+  validateFileSignature,
   uploadResumeFile
 );
 

@@ -1,4 +1,3 @@
-const fs = require("fs");
 const path = require("path");
 const Conversation = require("../models/Conversation");
 const Message = require("../models/Message");
@@ -6,15 +5,7 @@ const MentorshipRequest = require("../models/MentorshipRequest");
 const Student = require("../models/Student");
 const Alumni = require("../models/Alumni");
 const { HTTP_STATUS, MENTORSHIP_STATUS, ROLES, UPLOAD_DIRS } = require("../constants");
-
-const removeFileIfPresent = async (filePath) => {
-  if (!filePath) return;
-  try {
-    await fs.promises.unlink(filePath);
-  } catch (error) {
-    if (error.code !== "ENOENT") throw error;
-  }
-};
+const { removeFileIfPresent } = require("../utils/fileStorage");
 // Counts unseen messages sent by other users across this user's conversations.
 const getUnreadMessageCount = async (req, res) => {
   const conversationIds = await Conversation.find({ participants: req.user.id }).distinct("_id");

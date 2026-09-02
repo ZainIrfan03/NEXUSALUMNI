@@ -9,7 +9,10 @@ const {
   markConversationRead,
 } = require("../controllers/messageController");
 const { protect } = require("../middleware/authMiddleware");
-const { uploadChat } = require("../middleware/uploadMiddleware");
+const {
+  uploadChat,
+  validateFileSignature,
+} = require("../middleware/uploadMiddleware");
 const { startConversationValidators, sendMessageValidators } = require("../validators/messageValidators");
 const { validateMongoIdParam } = require("../validators/paramValidators");
 const validate = require("../middleware/validate");
@@ -41,6 +44,7 @@ router.post(
   protect,
   validateMongoIdParam("conversationId"),
   uploadChat.single("file"),
+  validateFileSignature,
   sendMessageValidators,
   validate,
   sendMessage

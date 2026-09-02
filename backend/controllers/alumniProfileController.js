@@ -1,6 +1,7 @@
 const Alumni = require("../models/Alumni");
 const User = require("../models/User");
 const { HTTP_STATUS } = require("../constants");
+const { replaceProfileUpload } = require("../services/profileUploadService");
 const getMyProfile = async (req, res) => {
   const alumni = await Alumni.findOne({ user: req.user.id }).populate(
     "user",
@@ -117,41 +118,26 @@ const deleteEducation = async (req, res) => {
   res.json(alumni);
 };
 const uploadAvatarImage = async (req, res) => {
-  if (!req.file) {
-    return res.status(HTTP_STATUS.BAD_REQUEST).json({ message: "No file uploaded" });
-  }
-  const avatarUrl = `/uploads/avatars/${req.file.filename}`;
+  const avatarUrl = await replaceProfileUpload({
+    ProfileModel: Alumni,
+    userId: req.user.id,
+    file: req.file,
+    field: "avatarUrl",
+    profileName: "Alumni",
+  });
 
-  const alumni = await Alumni.findOneAndUpdate(
-    { user: req.user.id },
-    { avatarUrl },
-    { new: true }
-  ).populate("user", "fullName email");
-
-  if (!alumni) {
-    return res.status(HTTP_STATUS.NOT_FOUND).json({ message: "Alumni profile not found" });
-  }
-
-  res.json(alumni);
+  res.json({ avatarUrl });
 };
 const uploadResumeFile = async (req, res) => {
-  if (!req.file) {
-    return res.status(HTTP_STATUS.BAD_REQUEST).json({ message: "No file uploaded" });
-  }
+  const resumeUrl = await replaceProfileUpload({
+    ProfileModel: Alumni,
+    userId: req.user.id,
+    file: req.file,
+    field: "resumeUrl",
+    profileName: "Alumni",
+  });
 
-  const resumeUrl = `/uploads/resumes/${req.file.filename}`;
-
-  const alumni = await Alumni.findOneAndUpdate(
-    { user: req.user.id },
-    { resumeUrl },
-    { new: true }
-  ).populate("user", "fullName email");
-
-  if (!alumni) {
-    return res.status(HTTP_STATUS.NOT_FOUND).json({ message: "Alumni profile not found" });
-  }
-
-  res.json(alumni);
+  res.json({ resumeUrl });
 };
 
 module.exports = {
