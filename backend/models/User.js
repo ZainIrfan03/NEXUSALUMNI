@@ -1,12 +1,5 @@
 const mongoose = require("mongoose");
 const { ROLES } = require("../constants");
-
-/**
- * Base User model — common to every account regardless of role.
- * Role-specific details (department, company, etc.) live in their
- * own collections (Student / Alumni / Faculty), each referencing
- * this User's _id.
- */
 const userSchema = new mongoose.Schema(
   {
     fullName: { type: String, required: true },

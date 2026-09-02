@@ -15,8 +15,6 @@ const removeFileIfPresent = async (filePath) => {
     if (error.code !== "ENOENT") throw error;
   }
 };
-
-// @route GET /api/messages/unread-count
 // Counts unseen messages sent by other users across this user's conversations.
 const getUnreadMessageCount = async (req, res) => {
   const conversationIds = await Conversation.find({ participants: req.user.id }).distinct("_id");
@@ -28,8 +26,6 @@ const getUnreadMessageCount = async (req, res) => {
 
   res.json({ count });
 };
-
-// @route PATCH /api/messages/:conversationId/read
 // Marks only messages received by the current user as read.
 const markConversationRead = async (req, res) => {
   const { conversationId } = req.params;
@@ -55,8 +51,6 @@ const markConversationRead = async (req, res) => {
 
   res.json({ message: "Conversation marked as read" });
 };
-
-// @route  GET /api/messages/conversations
 // List of the logged-in user's conversations (for the Inbox list).
 const getMyConversations = async (req, res) => {
   const conversations = await Conversation.find({ participants: req.user.id })
@@ -95,9 +89,6 @@ const getMyConversations = async (req, res) => {
 
   res.json(response);
 };
-
-// @route  POST /api/messages/conversations
-// @body   { otherUserId }
 // Finds an existing 1:1 conversation or creates a new one —
 // called when a student clicks "Message" on an accepted mentor's card, or
 // an alumni clicks "Message" on an accepted mentee's profile.
@@ -136,8 +127,6 @@ const startConversation = async (req, res) => {
 
   res.json(conversation);
 };
-
-// @route  DELETE /api/messages/conversations/:conversationId
 // Deletes a conversation and all its messages permanently.
 // Called from the three-dots menu -> "Delete Chat".
 const deleteConversation = async (req, res) => {
@@ -177,8 +166,6 @@ const deleteConversation = async (req, res) => {
 
   res.json({ message: "Conversation deleted" });
 };
-
-// @route  GET /api/messages/:conversationId
 // Full message history for one conversation.
 // Only a participant of this conversation may read it.
 const getMessages = async (req, res) => {
@@ -200,10 +187,6 @@ const getMessages = async (req, res) => {
   });
   res.json(messages);
 };
-
-// @route  POST /api/messages/:conversationId
-// @body   { text }  (multipart/form-data)
-// @file   file       (optional — image or document, handled by uploadChat middleware)
 // Saves a message to the DB, with an optional attached image/file.
 // The socket layer (server.js) additionally emits it live to the other participant.
 // Only a participant of this conversation may send into it.

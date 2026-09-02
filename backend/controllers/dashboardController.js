@@ -2,8 +2,6 @@ const Alumni = require("../models/Alumni");
 const MentorshipRequest = require("../models/MentorshipRequest");
 const Job = require("../models/Job");
 const { MENTORSHIP_STATUS } = require("../constants");
-
-// @route  GET /api/student/dashboard
 // Powers the 4 stat cards on the Student Overview page.
 const getStudentOverview = async (req, res) => {
   const studentId = req.user.id;

@@ -23,8 +23,6 @@ const router = express.Router();
 
 router.get("/", protect, authorize(ROLES.STUDENT), getMyProfile);
 router.put("/", protect, authorize(ROLES.STUDENT), updateProfileValidators, validate, updateMyProfile);
-
-// Avatar/resume upload — multipart/form-data, handled by multer before the controller
 router.post(
   "/avatar",
   protect,

@@ -28,7 +28,6 @@ const protect = async (req, res, next) => {
   }
 };
 
-
 // Restricts a route to specific roles, e.g. authorize("admin", "faculty")
 const authorize = (...allowedRoles) => {
   return (req, res, next) => {

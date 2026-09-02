@@ -1,7 +1,5 @@
 const { body } = require("express-validator");
 const { APPLICATION_STATUS } = require("../constants");
-
-// @route PATCH /api/alumni/jobs/applications/:applicationId/status
 const updateApplicationStatusValidators = [
   body("status")
     .notEmpty()

@@ -4,10 +4,6 @@ const {
   PASSWORD_MIN_LENGTH,
   FULL_NAME_MAX_LENGTH,
 } = require("../constants");
-
-// Only student/alumni may self-register (mirrors the check already done
-// inside registerUser, but rejecting here means it never even reaches
-// the controller with a bad role).
 const allowedPublicRoles = [ROLES.STUDENT, ROLES.ALUMNI];
 
 const registerValidators = [
@@ -35,8 +31,6 @@ const registerValidators = [
     .withMessage("Role is required")
     .isIn(allowedPublicRoles)
     .withMessage("This role cannot be self-registered"),
-
-  // Student-only fields — required only when role === "student"
   body("department")
     .if(body("role").equals(ROLES.STUDENT))
     .trim()
@@ -52,8 +46,6 @@ const registerValidators = [
     .trim()
     .notEmpty()
     .withMessage("Roll number is required"),
-
-  // Alumni-only fields — required only when role === "alumni"
   body("graduationYear")
     .if(body("role").equals(ROLES.ALUMNI))
     .notEmpty()

@@ -1,12 +1,5 @@
 const mongoose = require("mongoose");
 const { MENTORSHIP_STATUS } = require("../constants");
-
-/**
- * MentorshipRequest — one document per "Send Request" click.
- * `student` and `alumni` reference the base User collection
- * (works whether request comes from student dashboard or is
- * viewed from the alumni side later).
- */
 const mentorshipRequestSchema = new mongoose.Schema(
   {
     student: {

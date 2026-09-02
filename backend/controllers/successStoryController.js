@@ -1,6 +1,4 @@
 const SuccessStory = require("../models/SuccessStory");
-
-// @route  GET /api/stories
 // @query  ?category=&search=&page=&limit=
 // Public — powers the /success-stories page. Sorts featured stories
 // first (then newest first) so page 1's first result is always the
@@ -32,8 +30,6 @@ const getStories = async (req, res) => {
     total,
   });
 };
-
-// @route  GET /api/stories/categories
 // Public — distinct category list for the filter pills, so new
 // categories added in the DB show up without a frontend deploy.
 const getStoryCategories = async (req, res) => {

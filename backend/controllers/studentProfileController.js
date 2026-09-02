@@ -3,9 +3,6 @@ const User = require("../models/User");
 const fs = require("fs");
 const path = require("path");
 const { HTTP_STATUS } = require("../constants");
-
-// @route  GET /api/student/profile
-// Returns the logged-in student's full profile (User + Student joined).
 const getMyProfile = async (req, res) => {
   const student = await Student.findOne({ user: req.user.id }).populate(
     "user",
@@ -18,10 +15,6 @@ const getMyProfile = async (req, res) => {
 
   res.json(student);
 };
-
-// @route  PUT /api/student/profile
-// @body   { fullName, location, headline, bio, skills, interests, isPublic, resumeUrl, openToNetworking }
-// Updates fields split across User (fullName) and Student (everything else).
 const updateMyProfile = async (req, res) => {
   const {
     fullName,
@@ -34,8 +27,6 @@ const updateMyProfile = async (req, res) => {
     resumeUrl,
     openToNetworking,
   } = req.body;
-
-  // fullName lives on the base User document
   if (fullName) {
     await User.findByIdAndUpdate(req.user.id, { fullName });
   }
@@ -52,10 +43,6 @@ const updateMyProfile = async (req, res) => {
 
   res.json(student);
 };
-
-// @route  POST /api/student/profile/avatar
-// multipart/form-data, field name "avatar" (see uploadAvatar middleware)
-// Saves the file path on the Student doc and deletes the old avatar file if one existed.
 const uploadAvatarImage = async (req, res) => {
   if (!req.file) {
     return res.status(HTTP_STATUS.BAD_REQUEST).json({ message: "No image file uploaded." });
@@ -67,8 +54,6 @@ const uploadAvatarImage = async (req, res) => {
   if (!existing) {
     return res.status(HTTP_STATUS.NOT_FOUND).json({ message: "Student profile not found" });
   }
-
-  // Clean up the previous avatar file, if any, so uploads/ doesn't fill up
   if (existing.avatarUrl) {
     const oldPath = path.join(__dirname, "..", existing.avatarUrl);
     fs.unlink(oldPath, () => {}); // ignore errors (e.g. file already gone)
@@ -82,9 +67,6 @@ const uploadAvatarImage = async (req, res) => {
 
   res.json({ avatarUrl: student.avatarUrl });
 };
-
-// @route  POST /api/student/profile/resume
-// multipart/form-data, field name "resume" (see uploadResume middleware)
 const uploadResumeFile = async (req, res) => {
   if (!req.file) {
     return res.status(HTTP_STATUS.BAD_REQUEST).json({ message: "No PDF file uploaded." });
@@ -110,10 +92,6 @@ const uploadResumeFile = async (req, res) => {
 
   res.json({ resumeUrl: student.resumeUrl });
 };
-
-// @route  POST /api/student/profile/experience
-// @body   { title, company, startDate, endDate, current, description }
-// Pushes a new experience entry — used by the "+ Add Role" button on the View page.
 const addExperience = async (req, res) => {
   const { title, company, startDate, endDate, current, description } = req.body;
 
@@ -133,8 +111,6 @@ const addExperience = async (req, res) => {
 
   res.status(HTTP_STATUS.CREATED).json(student);
 };
-
-// @route  DELETE /api/student/profile/experience/:experienceId
 const deleteExperience = async (req, res) => {
   const student = await Student.findOneAndUpdate(
     { user: req.user.id },
@@ -148,9 +124,6 @@ const deleteExperience = async (req, res) => {
 
   res.json(student);
 };
-
-// @route  POST /api/student/profile/education
-// @body   { school, degree, year }
 const addEducation = async (req, res) => {
   const { school, degree, year } = req.body;
 
@@ -170,8 +143,6 @@ const addEducation = async (req, res) => {
 
   res.status(HTTP_STATUS.CREATED).json(student);
 };
-
-// @route  DELETE /api/student/profile/education/:educationId
 const deleteEducation = async (req, res) => {
   const student = await Student.findOneAndUpdate(
     { user: req.user.id },

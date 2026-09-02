@@ -1,11 +1,5 @@
 const mongoose = require("mongoose");
 const { JOB_TYPE, JOB_STATUS, EXPERIENCE_LEVEL } = require("../constants");
-
-/**
- * Job — posted by an Alumni, browsed/applied to by Students.
- * `savedBy` is a simple bookmark list (student user IDs) — powers
- * the bookmark icon on each job card without needing a separate model.
- */
 const jobSchema = new mongoose.Schema(
   {
     title: { type: String, required: true },

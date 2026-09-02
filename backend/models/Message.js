@@ -1,10 +1,4 @@
 const mongoose = require("mongoose");
-
-/**
- * Message — one document per chat message, linked to its Conversation.
- * A message can have text, a file/image attachment, or both —
- * but not neither (enforced below).
- */
 const messageSchema = new mongoose.Schema(
   {
     conversation: {

@@ -1,6 +1,3 @@
-// One-off script to insert sample Success Stories for local testing.
-// Run from the BACKEND folder:   node scripts/seedSuccessStories.js
-// Safe to re-run — it clears existing stories first so you don't get duplicates.
 
 require("dotenv").config();
 const mongoose = require("mongoose");

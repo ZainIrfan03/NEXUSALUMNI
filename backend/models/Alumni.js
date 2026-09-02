@@ -1,15 +1,5 @@
 const mongoose = require("mongoose");
 const { educationSchema, experienceSchema } = require("./schemas/profileSections");
-
-/**
- * Alumni profile — extra fields specific to the "alumni" role.
- * `user` links back to the base User document.
- *
- * `graduationYear`, `company`, `jobTitle` are set at registration time.
- * Everything else is filled in later via PUT /api/alumni/profile,
- * mirroring the Student profile shape so the frontend can reuse the
- * same UI patterns (MyProfile / EditProfile) across both roles.
- */
 const alumniSchema = new mongoose.Schema(
   {
     user: {

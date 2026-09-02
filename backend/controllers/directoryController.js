@@ -1,7 +1,5 @@
 const Alumni = require("../models/Alumni");
 const { HTTP_STATUS } = require("../constants");
-
-// @route  GET /api/directory/featured
 // Public (no auth) — used on the marketing Home page's "Featured Alumni"
 // section, so it can't reuse getAlumniDirectory (that route requires login).
 // Picks a small set of alumni with a complete public profile so the
@@ -20,8 +18,6 @@ const getFeaturedAlumni = async (req, res) => {
 
   res.json({ results: alumni });
 };
-
-// @route  GET /api/directory
 // @query  ?industry=&department=&fromYear=&toYear=&location=&page=&limit=
 // Returns paginated alumni profiles (joined with their base User info).
 const getAlumniDirectory = async (req, res) => {
@@ -57,8 +53,6 @@ const getAlumniDirectory = async (req, res) => {
     totalPages: Math.ceil(total / Number(limit)),
   });
 };
-
-// @route  GET /api/directory/:id
 // Returns one alumni's full public profile — used by the "View Profile"
 // button on the student-side Directory page.
 // :id is the Alumni document's own _id (same id used in the directory list).

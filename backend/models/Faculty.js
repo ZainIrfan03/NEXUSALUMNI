@@ -1,10 +1,4 @@
 const mongoose = require("mongoose");
-
-/**
- * Faculty profile — extra fields specific to the "faculty" role.
- * Faculty accounts are created manually by an Admin, not through
- * public registration (same rule as Admin).
- */
 const facultySchema = new mongoose.Schema(
   {
     user: {

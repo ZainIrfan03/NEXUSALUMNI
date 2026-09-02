@@ -13,8 +13,6 @@ const getGraduationYear = (session) => {
   const parts = session.split("-");
   return parts[parts.length - 1].trim();
 };
-
-// @route  GET /api/alumni/directory
 // @query  ?department=&skills=&years=&sortBy=&page=
 // Returns a paginated, filterable list of students for alumni to browse.
 // `skills` and `years` arrive as comma-separated strings from the frontend.
@@ -91,8 +89,6 @@ const getStudentDirectory = async (req, res) => {
 
   res.json({ students: formatted, totalCount });
 };
-
-// @route  GET /api/alumni/directory/:id
 // Returns one student's full public profile — used by the "View Profile"
 // button on the alumni-side Student Directory page.
 // :id is the Student document's own _id (same id used in the directory list).

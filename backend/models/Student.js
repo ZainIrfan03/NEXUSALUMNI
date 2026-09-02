@@ -1,10 +1,5 @@
 const mongoose = require("mongoose");
 const { educationSchema, experienceSchema } = require("./schemas/profileSections");
-
-/**
- * Student profile — extra fields specific to the "student" role.
- * `user` links back to the base User document (auth + email + role).
- */
 const studentSchema = new mongoose.Schema(
   {
     user: {

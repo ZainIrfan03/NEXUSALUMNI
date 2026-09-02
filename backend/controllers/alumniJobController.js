@@ -40,8 +40,6 @@ const attachApplicantInfo = async (job) => {
     applicantCount,
   };
 };
-
-// @route  GET /api/alumni/jobs?page=&pageSize=
 // Returns this alumni's own postings (paginated) plus summary stats.
 const getMyJobs = async (req, res) => {
   const alumniUserId = req.user.id;
@@ -86,8 +84,6 @@ const getMyJobs = async (req, res) => {
     },
   });
 };
-
-// @route  DELETE /api/alumni/jobs/:id
 // Only the alumni who posted the job can delete it.
 const deleteMyJob = async (req, res) => {
   const job = await Job.findOneAndDelete({
@@ -104,8 +100,6 @@ const deleteMyJob = async (req, res) => {
 
   res.json({ message: "Job deleted" });
 };
-
-// @route  GET /api/alumni/jobs/:id/applicants
 // Only the alumni who posted the job can see its applicants.
 // Powers the "View Applicants" modal on the postings table.
 const getJobApplicants = async (req, res) => {
@@ -145,9 +139,6 @@ const getJobApplicants = async (req, res) => {
 
   res.json({ job: { _id: job._id, title: job.title }, applicants });
 };
-
-// @route  PATCH /api/alumni/jobs/applications/:applicationId/status
-// @body   { status } — one of applied / in_review / interview / rejected / accepted
 // Moves an applicant through the pipeline (e.g. "Move to Review",
 // "Schedule Interview") from the applicants modal. Only the alumni who
 // posted the underlying job can update it.
@@ -178,8 +169,6 @@ const updateApplicationStatus = async (req, res) => {
     status: application.status,
   });
 };
-
-// @route PATCH /api/alumni/jobs/applications/:applicationId/interview
 const scheduleInterview = async (req, res) => {
   const application = await Application.findById(req.params.applicationId).populate("job");
   if (!application) {

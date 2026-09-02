@@ -1,8 +1,6 @@
 const Alumni = require("../models/Alumni");
 const MentorshipRequest = require("../models/MentorshipRequest");
 const { HTTP_STATUS, MENTORSHIP_STATUS } = require("../constants");
-
-// @route  GET /api/mentorship/recommended
 // Returns alumni who are public and open to mentoring, for the student-side
 // "Recommended Mentors" grid.
 const getRecommendedMentors = async (req, res) => {
@@ -12,9 +10,6 @@ const getRecommendedMentors = async (req, res) => {
 
   res.json(mentors);
 };
-
-// @route  POST /api/mentorship/request
-// @body   { alumniId, message? }  — alumniId is the Alumni document's own _id
 // Creates a mentorship request from the logged-in student to that alumni.
 const sendMentorshipRequest = async (req, res) => {
   const { alumniId, message } = req.body;
@@ -47,8 +42,6 @@ const sendMentorshipRequest = async (req, res) => {
 
   res.status(HTTP_STATUS.CREATED).json(request);
 };
-
-// @route  GET /api/mentorship/my-requests
 // Returns every mentorship request the logged-in student has sent, newest first —
 // powers the "Request Status" panel.
 const getMyRequests = async (req, res) => {

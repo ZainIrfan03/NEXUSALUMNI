@@ -1,8 +1,6 @@
 const MentorshipRequest = require("../models/MentorshipRequest");
 const Job = require("../models/Job");
 const { MENTORSHIP_STATUS } = require("../constants");
-
-// @route  GET /api/alumni/dashboard
 // Powers the stat cards + "Incoming Mentorship Requests" preview on the
 // Alumni Dashboard page.
 const getAlumniOverview = async (req, res) => {

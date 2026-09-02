@@ -35,8 +35,6 @@ const formatMentee = async (reqDoc) => {
     avatarUrl: studentProfile?.avatarUrl,
   };
 };
-
-// @route  GET /api/alumni/mentorship
 // Returns active mentee count, pending requests, and the current mentees table.
 const getMentorshipOverview = async (req, res) => {
   const alumniUserId = req.user.id;
@@ -59,8 +57,6 @@ const getMentorshipOverview = async (req, res) => {
     mentees,
   });
 };
-
-// @route  POST /api/alumni/mentorship/requests/:id/accept
 const acceptRequest = async (req, res) => {
   const request = await MentorshipRequest.findOneAndUpdate(
     { _id: req.params.id, alumni: req.user.id },
@@ -74,8 +70,6 @@ const acceptRequest = async (req, res) => {
 
   res.json(request);
 };
-
-// @route  POST /api/alumni/mentorship/requests/:id/reject
 const rejectRequest = async (req, res) => {
   const request = await MentorshipRequest.findOneAndUpdate(
     { _id: req.params.id, alumni: req.user.id },
